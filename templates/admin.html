@@ -84,11 +84,18 @@
             align-items: center;
             margin-bottom: 20px;
             gap: 15px;
+            flex-wrap: wrap;
         }
 
         .panel-header h2 {
             margin: 0;
             font-size: 21px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .search {
@@ -97,6 +104,21 @@
             border-radius: 8px;
             width: 250px;
             font-size: 14px;
+        }
+
+        .excel-btn {
+            padding: 11px 18px;
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .excel-btn:hover {
+            background: #15803d;
         }
 
         .table-wrapper {
@@ -152,6 +174,7 @@
         }
 
         @media (max-width: 800px) {
+
             .stats {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -161,12 +184,21 @@
                 align-items: stretch;
             }
 
+            .actions {
+                width: 100%;
+            }
+
             .search {
+                width: 100%;
+            }
+
+            .excel-btn {
                 width: 100%;
             }
         }
 
         @media (max-width: 500px) {
+
             .stats {
                 grid-template-columns: 1fr;
             }
@@ -181,11 +213,19 @@
 <body>
 
 <div class="header">
+
     <div class="header-content">
+
         <h1>ƏMƏK MƏCƏLLƏSİ 2026</h1>
-        <p>Admin Panel — Test Nəticələri</p>
+
+        <p>
+            Admin Panel — Test Nəticələri
+        </p>
+
     </div>
+
 </div>
+
 
 <div class="container">
 
@@ -194,68 +234,115 @@
     {% if total_results > 0 %}
 
         {% set total_percent = results|map(attribute='percent')|sum %}
+
         {% set average = (total_percent / total_results)|round|int %}
+
         {% set highest = results|map(attribute='percent')|max %}
+
         {% set lowest = results|map(attribute='percent')|min %}
 
     {% else %}
 
         {% set average = 0 %}
+
         {% set highest = 0 %}
+
         {% set lowest = 0 %}
 
     {% endif %}
 
+
     <!-- STATİSTİKA -->
+
     <div class="stats">
 
         <div class="stat-card">
-            <div class="stat-title">İştirakçı sayı</div>
+
+            <div class="stat-title">
+                İştirakçı sayı
+            </div>
+
             <div class="stat-number">
                 {{ total_results }}
             </div>
+
         </div>
 
+
         <div class="stat-card">
-            <div class="stat-title">Orta nəticə</div>
+
+            <div class="stat-title">
+                Orta nəticə
+            </div>
+
             <div class="stat-number">
                 {{ average }}%
             </div>
+
         </div>
 
+
         <div class="stat-card">
-            <div class="stat-title">Ən yüksək nəticə</div>
+
+            <div class="stat-title">
+                Ən yüksək nəticə
+            </div>
+
             <div class="stat-number">
                 {{ highest }}%
             </div>
+
         </div>
 
+
         <div class="stat-card">
-            <div class="stat-title">Ən aşağı nəticə</div>
+
+            <div class="stat-title">
+                Ən aşağı nəticə
+            </div>
+
             <div class="stat-number">
                 {{ lowest }}%
             </div>
+
         </div>
 
     </div>
 
 
     <!-- NƏTİCƏLƏR -->
+
     <div class="panel">
 
         <div class="panel-header">
 
-            <h2>📊 Test nəticələri</h2>
+            <h2>
+                📊 Test nəticələri
+            </h2>
 
-            <input
-                type="text"
-                class="search"
-                id="search"
-                placeholder="Ad və soyad üzrə axtar..."
-                onkeyup="searchTable()"
-            >
+
+            <div class="actions">
+
+                <input
+                    type="text"
+                    class="search"
+                    id="search"
+                    placeholder="Ad və soyad üzrə axtar..."
+                    onkeyup="searchTable()"
+                >
+
+
+                <button
+                    class="excel-btn"
+                    onclick="exportToExcel()"
+                >
+                    📥 Excel-ə export et
+                </button>
+
+            </div>
 
         </div>
+
 
         <div class="table-wrapper">
 
@@ -264,15 +351,23 @@
                 <thead>
 
                     <tr>
+
                         <th>№</th>
+
                         <th>Ad və soyad</th>
+
                         <th>Düzgün</th>
+
                         <th>Səhv</th>
+
                         <th>Nəticə</th>
+
                         <th>Tarix</th>
+
                     </tr>
 
                 </thead>
+
 
                 <tbody>
 
@@ -287,7 +382,9 @@
                         </td>
 
                         <td>
-                            <strong>{{ r["name"] }}</strong>
+                            <strong>
+                                {{ r["name"] }}
+                            </strong>
                         </td>
 
                         <td>
@@ -313,9 +410,11 @@
                 {% else %}
 
                     <tr>
+
                         <td colspan="6" class="empty">
                             Hələ nəticə yoxdur.
                         </td>
+
                     </tr>
 
                 {% endif %}
@@ -329,7 +428,10 @@
     </div>
 
 
-    <a href="{{ url_for('admin_logout') }}" class="logout">
+    <a
+        href="{{ url_for('admin_logout') }}"
+        class="logout"
+    >
         Çıxış
     </a>
 
@@ -338,12 +440,18 @@
 
 <script>
 
+/* ================================
+   AXTARIŞ
+================================ */
+
 function searchTable() {
 
     let input =
-        document.getElementById("search")
+        document
+        .getElementById("search")
         .value
         .toLowerCase();
+
 
     let rows =
         document
@@ -351,11 +459,13 @@ function searchTable() {
         .getElementsByTagName("tbody")[0]
         .getElementsByTagName("tr");
 
+
     for (let i = 0; i < rows.length; i++) {
 
         let name =
             rows[i]
             .getElementsByTagName("td")[1];
+
 
         if (name) {
 
@@ -363,12 +473,108 @@ function searchTable() {
                 name.textContent
                 .toLowerCase();
 
+
             rows[i].style.display =
                 text.includes(input)
                 ? ""
                 : "none";
+
         }
+
     }
+
+}
+
+
+/* ================================
+   EXCEL EXPORT
+================================ */
+
+function exportToExcel() {
+
+    let table =
+        document.getElementById("resultsTable");
+
+
+    let rows =
+        table.getElementsByTagName("tr");
+
+
+    let csv = [];
+
+
+    for (let i = 0; i < rows.length; i++) {
+
+        let row = [];
+
+        let cells =
+            rows[i].querySelectorAll("th, td");
+
+
+        for (let j = 0; j < cells.length; j++) {
+
+            let text =
+                cells[j]
+                .innerText
+                .replace(/"/g, '""')
+                .replace(/\n/g, " ")
+                .trim();
+
+
+            row.push('"' + text + '"');
+
+        }
+
+
+        csv.push(row.join(","));
+
+    }
+
+
+    let csvContent =
+        "\uFEFF" + csv.join("\n");
+
+
+    let blob =
+        new Blob(
+            [csvContent],
+            {
+                type: "text/csv;charset=utf-8;"
+            }
+        );
+
+
+    let url =
+        URL.createObjectURL(blob);
+
+
+    let link =
+        document.createElement("a");
+
+
+    link.setAttribute(
+        "href",
+        url
+    );
+
+
+    link.setAttribute(
+        "download",
+        "emek-mecellesi-2026-netice.csv"
+    );
+
+
+    link.style.visibility = "hidden";
+
+
+    document.body.appendChild(link);
+
+
+    link.click();
+
+
+    document.body.removeChild(link);
+
 }
 
 </script>
