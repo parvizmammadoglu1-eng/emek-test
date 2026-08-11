@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="az">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Admin Panel — Əmək Məcəlləsi 2026</title>
 
+
     <style>
+
         * {
             box-sizing: border-box;
         }
+
 
         body {
             margin: 0;
@@ -18,26 +24,45 @@
             color: #1f2937;
         }
 
+
+        /* =========================
+           HEADER
+        ========================= */
+
         .header {
-            background: linear-gradient(135deg, #173b73, #2563eb);
+            background: linear-gradient(
+                135deg,
+                #173b73,
+                #2563eb
+            );
+
             color: white;
+
             padding: 30px 20px;
         }
+
 
         .header-content {
             max-width: 1200px;
             margin: auto;
         }
 
+
         .header h1 {
             margin: 0 0 8px;
             font-size: 28px;
         }
 
+
         .header p {
             margin: 0;
             opacity: 0.9;
         }
+
+
+        /* =========================
+           CONTAINER
+        ========================= */
 
         .container {
             max-width: 1200px;
@@ -45,178 +70,374 @@
             padding: 0 20px;
         }
 
+
+        /* =========================
+           STATISTICS
+        ========================= */
+
         .stats {
+
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
             gap: 20px;
+
             margin-bottom: 30px;
         }
 
+
         .stat-card {
+
             background: white;
+
             border-radius: 14px;
+
             padding: 22px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+
+            box-shadow:
+                0 4px 15px
+                rgba(0,0,0,0.06);
         }
 
+
         .stat-title {
+
             color: #6b7280;
+
             font-size: 14px;
+
             margin-bottom: 10px;
         }
 
+
         .stat-number {
+
             font-size: 30px;
+
             font-weight: bold;
+
             color: #173b73;
         }
 
+
+        /* =========================
+           PANEL
+        ========================= */
+
         .panel {
+
             background: white;
+
             border-radius: 14px;
+
             padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+
+            box-shadow:
+                0 4px 15px
+                rgba(0,0,0,0.06);
         }
 
+
         .panel-header {
+
             display: flex;
-            justify-content: space-between;
+
+            justify-content:
+                space-between;
+
             align-items: center;
+
             margin-bottom: 20px;
+
             gap: 15px;
+
             flex-wrap: wrap;
         }
 
+
         .panel-header h2 {
+
             margin: 0;
+
             font-size: 21px;
         }
 
+
+        /* =========================
+           ACTIONS
+        ========================= */
+
         .actions {
+
             display: flex;
+
+            align-items: center;
+
             gap: 10px;
+
             flex-wrap: wrap;
         }
 
+
+        /* =========================
+           SEARCH
+        ========================= */
+
         .search {
+
             padding: 11px 15px;
-            border: 1px solid #d1d5db;
+
+            border:
+                1px solid #d1d5db;
+
             border-radius: 8px;
+
             width: 250px;
+
             font-size: 14px;
+
+            outline: none;
         }
+
+
+        .search:focus {
+
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(37,99,235,0.10);
+        }
+
+
+        /* =========================
+           EXCEL BUTTON
+        ========================= */
 
         .excel-btn {
+
+            display: inline-block;
+
             padding: 11px 18px;
+
             background: #16a34a;
+
             color: white;
-            border: none;
+
+            text-decoration: none;
+
             border-radius: 8px;
+
             font-size: 14px;
+
             font-weight: bold;
+
             cursor: pointer;
+
+            transition: 0.2s;
         }
+
 
         .excel-btn:hover {
+
             background: #15803d;
+
+            transform: translateY(-1px);
         }
 
+
+        /* =========================
+           TABLE
+        ========================= */
+
         .table-wrapper {
+
             overflow-x: auto;
         }
 
+
         table {
+
             width: 100%;
-            border-collapse: collapse;
+
+            border-collapse:
+                collapse;
         }
+
 
         th {
+
             background: #f3f4f6;
+
             color: #374151;
+
             text-align: left;
+
             padding: 14px;
+
             font-size: 14px;
+
+            white-space: nowrap;
         }
+
 
         td {
+
             padding: 14px;
-            border-bottom: 1px solid #e5e7eb;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
             font-size: 14px;
         }
 
+
         tr:hover {
+
             background: #f9fafb;
         }
 
+
         .result {
+
             font-weight: bold;
+
             color: #16a34a;
         }
 
+
+        /* =========================
+           LOGOUT
+        ========================= */
+
         .logout {
+
             display: inline-block;
+
             margin-top: 25px;
+
             padding: 11px 18px;
+
             background: #dc2626;
+
             color: white;
+
             text-decoration: none;
+
             border-radius: 8px;
+
+            font-weight: bold;
         }
 
+
         .logout:hover {
+
             background: #b91c1c;
         }
 
+
+        /* =========================
+           EMPTY
+        ========================= */
+
         .empty {
+
             text-align: center;
+
             padding: 40px;
+
             color: #6b7280;
         }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
 
         @media (max-width: 800px) {
 
             .stats {
-                grid-template-columns: repeat(2, 1fr);
+
+                grid-template-columns:
+                    repeat(2, 1fr);
             }
+
 
             .panel-header {
-                flex-direction: column;
-                align-items: stretch;
+
+                flex-direction:
+                    column;
+
+                align-items:
+                    stretch;
             }
+
 
             .actions {
+
                 width: 100%;
+
+                flex-direction:
+                    column;
+
+                align-items:
+                    stretch;
             }
+
 
             .search {
+
                 width: 100%;
             }
 
+
             .excel-btn {
+
                 width: 100%;
+
+                text-align: center;
             }
+
         }
+
 
         @media (max-width: 500px) {
 
             .stats {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
             }
+
 
             .header h1 {
+
                 font-size: 22px;
             }
+
         }
+
     </style>
+
 </head>
 
+
 <body>
+
+
+<!-- =========================
+     HEADER
+========================= -->
 
 <div class="header">
 
     <div class="header-content">
 
-        <h1>ƏMƏK MƏCƏLLƏSİ 2026</h1>
+        <h1>
+            ƏMƏK MƏCƏLLƏSİ 2026
+        </h1>
 
         <p>
             Admin Panel — Test Nəticələri
@@ -229,17 +450,31 @@
 
 <div class="container">
 
+
+    <!-- =========================
+         STATISTICS
+    ========================= -->
+
     {% set total_results = results|length %}
+
 
     {% if total_results > 0 %}
 
-        {% set total_percent = results|map(attribute='percent')|sum %}
+        {% set total_percent =
+            results|map(attribute='percent')|sum
+        %}
 
-        {% set average = (total_percent / total_results)|round|int %}
+        {% set average =
+            (total_percent / total_results)|round|int
+        %}
 
-        {% set highest = results|map(attribute='percent')|max %}
+        {% set highest =
+            results|map(attribute='percent')|max
+        %}
 
-        {% set lowest = results|map(attribute='percent')|min %}
+        {% set lowest =
+            results|map(attribute='percent')|min
+        %}
 
     {% else %}
 
@@ -252,9 +487,8 @@
     {% endif %}
 
 
-    <!-- STATİSTİKA -->
-
     <div class="stats">
+
 
         <div class="stat-card">
 
@@ -307,14 +541,19 @@
 
         </div>
 
+
     </div>
 
 
-    <!-- NƏTİCƏLƏR -->
+    <!-- =========================
+         RESULTS PANEL
+    ========================= -->
 
     <div class="panel">
 
+
         <div class="panel-header">
+
 
             <h2>
                 📊 Test nəticələri
@@ -323,46 +562,85 @@
 
             <div class="actions">
 
+
+                <!-- SEARCH -->
+
                 <input
+
                     type="text"
+
                     class="search"
+
                     id="search"
-                    placeholder="Ad və soyad üzrə axtar..."
-                    onkeyup="searchTable()"
+
+                    placeholder=
+                    "Ad və soyad üzrə axtar..."
+
+                    onkeyup=
+                    "searchTable()"
+
                 >
 
 
-                <button
+                <!-- EXCEL -->
+
+                <a
+
+                    href=
+                    "{{ url_for('admin_export') }}"
+
                     class="excel-btn"
-                    onclick="exportToExcel()"
+
                 >
+
                     📥 Excel-ə export et
-                </button>
+
+                </a>
+
 
             </div>
+
 
         </div>
 
 
+        <!-- =========================
+             TABLE
+        ========================= -->
+
         <div class="table-wrapper">
 
+
             <table id="resultsTable">
+
 
                 <thead>
 
                     <tr>
 
-                        <th>№</th>
+                        <th>
+                            №
+                        </th>
 
-                        <th>Ad və soyad</th>
+                        <th>
+                            Ad və soyad
+                        </th>
 
-                        <th>Düzgün</th>
+                        <th>
+                            Düzgün
+                        </th>
 
-                        <th>Səhv</th>
+                        <th>
+                            Səhv
+                        </th>
 
-                        <th>Nəticə</th>
+                        <th>
+                            Nəticə
+                        </th>
 
-                        <th>Tarix</th>
+                        <th>
+                            Tarix
+                        </th>
 
                     </tr>
 
@@ -371,213 +649,205 @@
 
                 <tbody>
 
+
                 {% if results %}
+
 
                     {% for r in results %}
 
+
                     <tr>
+
 
                         <td>
                             {{ loop.index }}
                         </td>
 
+
                         <td>
+
                             <strong>
                                 {{ r["name"] }}
                             </strong>
+
                         </td>
 
-                        <td>
-                            {{ r["correct"] }} / {{ r["total"] }}
-                        </td>
 
                         <td>
-                            {{ r["total"] - r["correct"] }}
+
+                            {{ r["correct"] }}
+                            /
+                            {{ r["total"] }}
+
                         </td>
+
+
+                        <td>
+
+                            {{ r["total"] -
+                               r["correct"] }}
+
+                        </td>
+
 
                         <td class="result">
+
                             {{ r["percent"] }}%
+
                         </td>
+
 
                         <td>
+
                             {{ r["created_at"] }}
+
                         </td>
 
+
                     </tr>
+
 
                     {% endfor %}
 
+
                 {% else %}
+
 
                     <tr>
 
-                        <td colspan="6" class="empty">
+                        <td
+                            colspan="6"
+                            class="empty"
+                        >
+
                             Hələ nəticə yoxdur.
+
                         </td>
 
                     </tr>
 
+
                 {% endif %}
+
 
                 </tbody>
 
+
             </table>
 
+
         </div>
+
 
     </div>
 
 
+    <!-- =========================
+         LOGOUT
+    ========================= -->
+
     <a
-        href="{{ url_for('admin_logout') }}"
+
+        href=
+        "{{ url_for('admin_logout') }}"
+
         class="logout"
+
     >
+
         Çıxış
+
     </a>
+
 
 </div>
 
 
+<!-- =========================
+     SEARCH JAVASCRIPT
+========================= -->
+
 <script>
 
-/* ================================
-   AXTARIŞ
-================================ */
 
 function searchTable() {
 
+
     let input =
+
         document
         .getElementById("search")
         .value
         .toLowerCase();
 
 
-    let rows =
+    let table =
+
         document
-        .getElementById("resultsTable")
-        .getElementsByTagName("tbody")[0]
+        .getElementById("resultsTable");
+
+
+    let tbody =
+
+        table
+        .getElementsByTagName("tbody")[0];
+
+
+    let rows =
+
+        tbody
         .getElementsByTagName("tr");
 
 
-    for (let i = 0; i < rows.length; i++) {
+    for (
+        let i = 0;
+        i < rows.length;
+        i++
+    ) {
 
-        let name =
+
+        let cells =
+
             rows[i]
-            .getElementsByTagName("td")[1];
+            .getElementsByTagName("td");
 
 
-        if (name) {
+        if (cells.length > 1) {
 
-            let text =
-                name.textContent
+
+            let name =
+
+                cells[1]
+                .textContent
                 .toLowerCase();
 
 
-            rows[i].style.display =
-                text.includes(input)
-                ? ""
-                : "none";
+            if (
+                name.includes(input)
+            ) {
 
-        }
+                rows[i].style.display =
+                    "";
 
-    }
-
-}
-
-
-/* ================================
-   EXCEL EXPORT
-================================ */
-
-function exportToExcel() {
-
-    let table =
-        document.getElementById("resultsTable");
-
-
-    let rows =
-        table.getElementsByTagName("tr");
-
-
-    let csv = [];
-
-
-    for (let i = 0; i < rows.length; i++) {
-
-        let row = [];
-
-        let cells =
-            rows[i].querySelectorAll("th, td");
-
-
-        for (let j = 0; j < cells.length; j++) {
-
-            let text =
-                cells[j]
-                .innerText
-                .replace(/"/g, '""')
-                .replace(/\n/g, " ")
-                .trim();
-
-
-            row.push('"' + text + '"');
-
-        }
-
-
-        csv.push(row.join(","));
-
-    }
-
-
-    let csvContent =
-        "\uFEFF" + csv.join("\n");
-
-
-    let blob =
-        new Blob(
-            [csvContent],
-            {
-                type: "text/csv;charset=utf-8;"
             }
-        );
 
+            else {
 
-    let url =
-        URL.createObjectURL(blob);
+                rows[i].style.display =
+                    "none";
 
+            }
 
-    let link =
-        document.createElement("a");
+        }
 
-
-    link.setAttribute(
-        "href",
-        url
-    );
-
-
-    link.setAttribute(
-        "download",
-        "emek-mecellesi-2026-netice.csv"
-    );
-
-
-    link.style.visibility = "hidden";
-
-
-    document.body.appendChild(link);
-
-
-    link.click();
-
-
-    document.body.removeChild(link);
+    }
 
 }
+
 
 </script>
 
+
 </body>
+
 </html>
