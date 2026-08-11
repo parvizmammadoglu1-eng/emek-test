@@ -3,383 +3,142 @@
 {% block content %}
 
 <style>
-
-    /* Giriş səhifəsinin fonu */
-    body {
-        background:
-            radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.18), transparent 30%),
-            radial-gradient(circle at 85% 80%, rgba(23, 59, 115, 0.20), transparent 30%),
-            linear-gradient(135deg, #eef4ff 0%, #f7f9fc 50%, #eaf1ff 100%);
-        min-height: 100vh;
-    }
-
-    .welcome-wrapper {
-        min-height: calc(100vh - 20px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 30px 15px;
-    }
-
     .welcome-card {
-        width: 100%;
         max-width: 620px;
-        background: rgba(255, 255, 255, 0.96);
-        border-radius: 24px;
-        padding: 45px 40px;
+        margin: 70px auto;
         text-align: center;
-
-        box-shadow:
-            0 25px 70px rgba(23, 59, 115, 0.16),
-            0 5px 20px rgba(0, 0, 0, 0.05);
-
-        border: 1px solid rgba(255,255,255,0.8);
+        padding: 50px 40px;
     }
 
-    .brand-icon {
+    .welcome-icon {
         width: 82px;
         height: 82px;
-        margin: 0 auto 20px;
-
-        border-radius: 22px;
-
-        background: linear-gradient(
-            135deg,
-            #173b73,
-            #2563eb
-        );
-
+        margin: 0 auto 25px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #173b73, #2563eb);
         display: flex;
         align-items: center;
         justify-content: center;
-
-        font-size: 38px;
-
-        box-shadow:
-            0 12px 30px rgba(37, 99, 235, 0.28);
+        font-size: 40px;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
     }
 
-    .brand-name {
-        margin: 0;
-
-        font-size: 28px;
-        font-weight: 800;
-
-        color: #173b73;
-
-        letter-spacing: 0.5px;
-    }
-
-    .brand-subtitle {
-        margin-top: 7px;
-        margin-bottom: 28px;
-
-        font-size: 15px;
-        font-weight: 600;
-
-        color: #64748b;
-
-        letter-spacing: 0.5px;
-    }
-
-    .exam-label {
-        display: inline-block;
-
-        padding: 9px 18px;
-
-        border-radius: 30px;
-
-        background: linear-gradient(
-            135deg,
-            #eff6ff,
-            #dbeafe
-        );
-
-        color: #1d4ed8;
-
-        font-size: 13px;
-        font-weight: 800;
-
-        margin-bottom: 18px;
-
-        border: 1px solid #bfdbfe;
-    }
-
-    .welcome-title {
+    .welcome-card h1 {
         margin: 0 0 12px;
-
-        font-size: 30px;
-        font-weight: 800;
-
-        color: #111827;
+        font-size: 32px;
+        color: #173b73;
     }
 
-    .welcome-text {
-        max-width: 500px;
+    .welcome-card .subtitle {
+        margin: 0 auto 30px;
+        max-width: 480px;
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.6;
+    }
 
-        margin: 0 auto 28px;
+    .welcome-card input {
+        width: 100%;
+        padding: 15px 18px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        font-size: 16px;
+        outline: none;
+        margin-bottom: 15px;
+    }
 
-        color: #64748b;
+    .welcome-card input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
 
+    .welcome-card button {
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #173b73, #2563eb);
+        color: white;
         font-size: 15px;
-        line-height: 1.7;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .welcome-card button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
     }
 
     .error {
-        background: #fef2f2;
-        color: #dc2626;
-
-        border: 1px solid #fecaca;
-
-        border-radius: 10px;
-
-        padding: 12px 15px;
-
-        margin-bottom: 18px;
-
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
         font-size: 14px;
     }
 
-    .name-input {
-        width: 100%;
-        height: 56px;
-
-        padding: 0 18px;
-
-        border: 1px solid #d1d5db;
-        border-radius: 12px;
-
-        font-size: 16px;
-
-        outline: none;
-
-        background: #ffffff;
-
-        transition: 0.2s;
-
-        margin-bottom: 14px;
+    .brand {
+        font-size: 14px;
+        font-weight: bold;
+        color: #2563eb;
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
     }
-
-    .name-input::placeholder {
-        color: #9ca3af;
-    }
-
-    .name-input:focus {
-        border-color: #2563eb;
-
-        box-shadow:
-            0 0 0 4px rgba(37, 99, 235, 0.10);
-    }
-
-    .start-button {
-        width: 100%;
-        height: 56px;
-
-        border: none;
-        border-radius: 12px;
-
-        background: linear-gradient(
-            135deg,
-            #173b73,
-            #2563eb
-        );
-
-        color: white;
-
-        font-size: 15px;
-        font-weight: 800;
-
-        cursor: pointer;
-
-        transition: 0.2s;
-
-        box-shadow:
-            0 8px 20px rgba(37, 99, 235, 0.20);
-    }
-
-    .start-button:hover {
-        transform: translateY(-2px);
-
-        box-shadow:
-            0 12px 25px rgba(37, 99, 235, 0.30);
-    }
-
-    .start-button:active {
-        transform: translateY(0);
-    }
-
-    .info-row {
-        display: flex;
-
-        justify-content: center;
-
-        gap: 25px;
-
-        margin-top: 28px;
-
-        padding-top: 22px;
-
-        border-top: 1px solid #e5e7eb;
-
-        color: #64748b;
-
-        font-size: 13px;
-    }
-
-    .info-item {
-        display: flex;
-
-        align-items: center;
-
-        gap: 7px;
-    }
-
-    .info-item span {
-        white-space: nowrap;
-    }
-
-
-    /* Telefon */
 
     @media (max-width: 600px) {
-
-        .welcome-wrapper {
-            padding: 20px 10px;
-        }
-
         .welcome-card {
+            margin: 30px auto;
             padding: 35px 22px;
-            border-radius: 20px;
         }
 
-        .brand-name {
-            font-size: 23px;
-        }
-
-        .brand-subtitle {
-            font-size: 13px;
-        }
-
-        .welcome-title {
-            font-size: 25px;
-        }
-
-        .welcome-text {
-            font-size: 14px;
-        }
-
-        .info-row {
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
+        .welcome-card h1 {
+            font-size: 26px;
         }
     }
-
 </style>
 
+<section class="card login welcome-card">
 
-<div class="welcome-wrapper">
+```
+<div class="welcome-icon">📚</div>
 
-    <section class="welcome-card">
-
-        <div class="brand-icon">
-            📚
-        </div>
-
-
-        <h1 class="brand-name">
-            PƏRVİZ HÜSEYNOV
-        </h1>
-
-
-        <div class="brand-subtitle">
-            RƏQƏMSAL İMTAHAN MƏRKƏZİ
-        </div>
-
-
-        <div class="exam-label">
-            ƏMƏK MƏCƏLLƏSİ 2026
-        </div>
-
-
-        <h2 class="welcome-title">
-            Testə xoş gəlmisiniz!
-        </h2>
-
-
-        <p class="welcome-text">
-
-            Əmək Məcəlləsi 2026 üzrə
-            biliklərinizi yoxlamaq üçün
-            rəqəmsal testə başlayın.
-
-            <br>
-
-            Başlamaq üçün ad və soyadınızı
-            aşağıdakı xanaya daxil edin.
-
-        </p>
-
-
-        {% if error %}
-
-            <div class="error">
-                {{ error }}
-            </div>
-
-        {% endif %}
-
-
-        <form method="post">
-
-            <input
-                class="name-input"
-                type="text"
-                name="name"
-                placeholder="Ad və soyadınızı daxil edin"
-                autocomplete="name"
-                autofocus
-                required
-            >
-
-
-            <button
-                type="submit"
-                class="start-button"
-            >
-
-                TESTƏ BAŞLA
-                &nbsp; →
-
-            </button>
-
-        </form>
-
-
-        <div class="info-row">
-
-            <div class="info-item">
-                🔒
-                <span>Təhlükəsiz test</span>
-            </div>
-
-
-            <div class="info-item">
-                📝
-                <span>Əmək Məcəlləsi 2026</span>
-            </div>
-
-
-            <div class="info-item">
-                💻
-                <span>Rəqəmsal imtahan</span>
-            </div>
-
-        </div>
-
-    </section>
-
+<div class="brand">
+    PƏRVİZ HÜSEYNOV
 </div>
 
+<h1>Rəqəmsal İmtahan Mərkəzi</h1>
+
+<p class="subtitle">
+    Əmək Məcəlləsi 2026 üzrə test imtahanına xoş gəlmisiniz.
+    İmtahana başlamaq üçün ad və soyadınızı daxil edin.
+</p>
+
+{% if error %}
+    <div class="error">
+        {{ error }}
+    </div>
+{% endif %}
+
+<form method="post">
+
+    <input
+        type="text"
+        name="name"
+        placeholder="Ad və soyadınızı daxil edin"
+        autocomplete="name"
+        autofocus
+        required
+    >
+
+    <button type="submit">
+        TESTƏ BAŞLA →
+    </button>
+
+</form>
+```
+
+</section>
 
 {% endblock %}
