@@ -1,3 +1,255 @@
+import os
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+from functools import wraps
+
+from flask import Flask, render_template, request, redirect, url_for, session
+
+
+app = Flask(__name__)
+
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "temporary-secret-key-change-me"
+)
+
+ADMIN_PASSWORD = os.environ.get(
+    "ADMIN_PASSWORD",
+    "12345"
+)
+
+DB = Path(__file__).with_name("test.db")
+
+
+QUESTIONS = [
+    (
+        "Əmək müqaviləsi hansı formada bağlanır?",
+        "A) Şifahi",
+        "B) Yazılı",
+        "C) İstənilən formada",
+        "D) Heç biri",
+        "B"
+    ),
+    (
+        "Əmək münasibətlərini əsasən hansı sənəd tənzimləyir?",
+        "A) Mülki Məcəllə",
+        "B) Vergi Məcəlləsi",
+        "C) Əmək Məcəlləsi",
+        "D) Konstitusiya",
+        "C"
+    ),
+    (
+        "İşçinin əsas hüquqlarından biri hansıdır?",
+        "A) Əmək haqqı almaq",
+        "B) İşə gəlməmək",
+        "C) Qaydaları pozmaq",
+        "D) Müqaviləsiz işləmək",
+        "A"
+    ),
+]
+
+
+def db():
+    con = sqlite3.connect(DB)
+    con.row_factory = sqlite3.Row
+    return con
+
+
+def init_db():
+    con = db()
+
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question TEXT NOT NULL,
+            a TEXT NOT NULL,
+            b TEXT NOT NULL,
+            c TEXT NOT NULL,
+            d TEXT NOT NULL,
+            answer TEXT NOT NULL
+        )
+    """)
+
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            correct INTEGER NOT NULL,
+            total INTEGER NOT NULL,
+            percent INTEGER NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+
+    count = con.execute(
+        "SELECT COUNT(*) FROM questions"
+    ).fetchone()[0]
+
+    if count == 0:
+        con.executemany(
+            """
+            INSERT INTO questions
+            (question, a, b, c, d, answer)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            QUESTIONS
+        )
+
+    con.commit()
+    con.close()
+
+
+init_db()
+
+
+def admin_required(function):
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+
+        if not session.get("admin"):
+            return redirect(url_for("admin_login"))
+
+        return function(*args, **kwargs)
+
+    return wrapper
+
+
+@app.route("/", methods=["GET", "POST"])
+def home():
+
+    if request.method == "POST":
+
+        name = request.form.get("name", "").strip()
+
+        if not name:
+            return render_template(
+                "home.html",
+                error="Ad və soyad daxil edin."
+            )
+
+        session["name"] = name
+        session["answers"] = {}
+
+        return redirect(
+            url_for("question", n=0)
+        )
+
+    return render_template("home.html")
+
+
+@app.route("/question/<int:n>", methods=["GET", "POST"])
+def question(n):
+
+    if "name" not in session:
+        return redirect(url_for("home"))
+
+    con = db()
+
+    questions = con.execute(
+        "SELECT * FROM questions ORDER BY id"
+    ).fetchall()
+
+    con.close()
+
+    if n >= len(questions):
+        return redirect(url_for("finish"))
+
+    if request.method == "POST":
+
+        selected = request.form.get("answer")
+
+        if selected not in ["A", "B", "C", "D"]:
+            return redirect(
+                url_for("question", n=n)
+            )
+
+        answers = session.get("answers", {})
+
+        answers[str(n)] = selected
+
+        session["answers"] = answers
+
+        return redirect(
+            url_for("question", n=n + 1)
+        )
+
+    return render_template(
+        "question.html",
+        q=questions[n],
+        n=n,
+        total=len(questions),
+        name=session["name"]
+    )
+
+
+@app.route("/finish")
+def finish():
+
+    if "name" not in session:
+        return redirect(url_for("home"))
+
+    con = db()
+
+    questions = con.execute(
+        "SELECT * FROM questions ORDER BY id"
+    ).fetchall()
+
+    con.close()
+
+    answers = session.get("answers", {})
+
+    correct = sum(
+        1
+        for i, q in enumerate(questions)
+        if answers.get(str(i)) == q["answer"]
+    )
+
+    total = len(questions)
+
+    percent = round(
+        correct / total * 100
+    ) if total else 0
+
+    name = session["name"]
+
+    con = db()
+
+    con.execute(
+        """
+        INSERT INTO results
+        (name, correct, total, percent, created_at)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            name,
+            correct,
+            total,
+            percent,
+            datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        )
+    )
+
+    con.commit()
+    con.close()
+
+    session.clear()
+
+    return render_template(
+        "finish.html",
+        name=name,
+        correct=correct,
+        total=total,
+        percent=percent
+    )
+
+
+# ==========================
+# ADMIN LOGIN
+# ==========================
+
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
 
@@ -6,167 +258,56 @@ def admin_login():
         password = request.form.get("password", "")
 
         if password == ADMIN_PASSWORD:
+
             session["admin"] = True
-            return redirect(url_for("admin"))
 
-        return """
-        <!DOCTYPE html>
-        <html lang="az">
-        <head>
-            <meta charset="UTF-8">
-            <title>Admin giriş</title>
-            <style>
-                body {
-                    font-family: Arial;
-                    background: #f3f6fb;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
-                    margin: 0;
-                }
+            return redirect(
+                url_for("admin")
+            )
 
-                .box {
-                    background: white;
-                    padding: 40px;
-                    border-radius: 20px;
-                    width: 350px;
-                    text-align: center;
-                    box-shadow: 0 10px 30px rgba(0,0,0,.15);
-                }
+        return render_template(
+            "admin_login.html",
+            error="Parol yanlışdır."
+        )
 
-                input {
-                    width: 100%;
-                    box-sizing: border-box;
-                    padding: 14px;
-                    margin: 20px 0;
-                    border-radius: 10px;
-                    border: 1px solid #ddd;
-                }
+    return render_template("admin_login.html")
 
-                button {
-                    width: 100%;
-                    padding: 14px;
-                    background: #2563eb;
-                    color: white;
-                    border: none;
-                    border-radius: 10px;
-                    cursor: pointer;
-                }
 
-                .error {
-                    color: red;
-                    margin-bottom: 15px;
-                }
-            </style>
-        </head>
+@app.route("/admin/logout")
+def admin_logout():
 
-        <body>
+    session.pop("admin", None)
 
-        <div class="box">
+    return redirect(
+        url_for("admin_login")
+    )
 
-            <h1>🔐 Admin panel</h1>
 
-            <p>Admin parolunu daxil edin</p>
+@app.route("/admin")
+@admin_required
+def admin():
 
-            <div class="error">
-                Parol yanlışdır.
-            </div>
+    con = db()
 
-            <form method="POST">
+    results = con.execute(
+        "SELECT * FROM results ORDER BY id DESC"
+    ).fetchall()
 
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Admin parolu"
-                    required
-                >
+    questions = con.execute(
+        "SELECT * FROM questions ORDER BY id"
+    ).fetchall()
 
-                <button type="submit">
-                    DAXİL OL
-                </button>
+    con.close()
 
-            </form>
+    return render_template(
+        "admin.html",
+        results=results,
+        questions=questions
+    )
 
-        </div>
 
-        </body>
-        </html>
-        """
-
-    return """
-    <!DOCTYPE html>
-    <html lang="az">
-    <head>
-        <meta charset="UTF-8">
-        <title>Admin giriş</title>
-
-        <style>
-            body {
-                font-family: Arial;
-                background: #f3f6fb;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-            }
-
-            .box {
-                background: white;
-                padding: 40px;
-                border-radius: 20px;
-                width: 350px;
-                text-align: center;
-                box-shadow: 0 10px 30px rgba(0,0,0,.15);
-            }
-
-            input {
-                width: 100%;
-                box-sizing: border-box;
-                padding: 14px;
-                margin: 20px 0;
-                border-radius: 10px;
-                border: 1px solid #ddd;
-            }
-
-            button {
-                width: 100%;
-                padding: 14px;
-                background: #2563eb;
-                color: white;
-                border: none;
-                border-radius: 10px;
-                cursor: pointer;
-            }
-        </style>
-    </head>
-
-    <body>
-
-    <div class="box">
-
-        <h1>🔐 Admin panel</h1>
-
-        <p>Nəticələrə baxmaq üçün daxil olun</p>
-
-        <form method="POST">
-
-            <input
-                type="password"
-                name="password"
-                placeholder="Admin parolu"
-                required
-            >
-
-            <button type="submit">
-                DAXİL OL
-            </button>
-
-        </form>
-
-    </div>
-
-    </body>
-    </html>
-    """
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000))
+    )
