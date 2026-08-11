@@ -2,18 +2,24 @@ import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from functools import wraps
 
 from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__)
 
-# Render-də Environment Variable-dan götürülür
 app.secret_key = os.environ.get(
     "SECRET_KEY",
     "temporary-secret-key-change-me"
 )
 
+ADMIN_PASSWORD = os.environ.get(
+    "ADMIN_PASSWORD",
+    "12345"
+)
+
 DB = Path(__file__).with_name("test.db")
+
 
 QUESTIONS = [
     (
@@ -93,8 +99,19 @@ def init_db():
     con.close()
 
 
-# Tətbiq Render/Gunicorn ilə açılanda da bazanı yaradır
 init_db()
+
+
+def admin_required(function):
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+
+        if not session.get("admin"):
+            return redirect(url_for("admin_login"))
+
+        return function(*args, **kwargs)
+
+    return wrapper
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -113,7 +130,9 @@ def home():
         session["name"] = name
         session["answers"] = {}
 
-        return redirect(url_for("question", n=0))
+        return redirect(
+            url_for("question", n=0)
+        )
 
     return render_template("home.html")
 
@@ -226,7 +245,45 @@ def finish():
     )
 
 
+# ==========================
+# ADMIN LOGIN
+# ==========================
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+
+    if request.method == "POST":
+
+        password = request.form.get("password", "")
+
+        if password == ADMIN_PASSWORD:
+
+            session["admin"] = True
+
+            return redirect(
+                url_for("admin")
+            )
+
+        return render_template(
+            "admin_login.html",
+            error="Parol yanlışdır."
+        )
+
+    return render_template("admin_login.html")
+
+
+@app.route("/admin/logout")
+def admin_logout():
+
+    session.pop("admin", None)
+
+    return redirect(
+        url_for("admin_login")
+    )
+
+
 @app.route("/admin")
+@admin_required
 def admin():
 
     con = db()
@@ -235,9 +292,21 @@ def admin():
         "SELECT * FROM results ORDER BY id DESC"
     ).fetchall()
 
+    questions = con.execute(
+        "SELECT * FROM questions ORDER BY id"
+    ).fetchall()
+
     con.close()
 
     return render_template(
         "admin.html",
-        results=results
+        results=results,
+        questions=questions
+    )
+
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000))
     )
