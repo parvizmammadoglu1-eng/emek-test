@@ -3,142 +3,337 @@
 {% block content %}
 
 <style>
-    .welcome-card {
-        max-width: 620px;
-        margin: 70px auto;
-        text-align: center;
-        padding: 50px 40px;
-    }
-
-    .welcome-icon {
-        width: 82px;
-        height: 82px;
-        margin: 0 auto 25px;
-        border-radius: 24px;
-        background: linear-gradient(135deg, #173b73, #2563eb);
+    .home-page {
+        min-height: 75vh;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 40px;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+        padding: 30px 10px;
     }
 
-    .welcome-card h1 {
-        margin: 0 0 12px;
-        font-size: 32px;
-        color: #173b73;
-    }
-
-    .welcome-card .subtitle {
-        margin: 0 auto 30px;
-        max-width: 480px;
-        color: #6b7280;
-        font-size: 16px;
-        line-height: 1.6;
-    }
-
-    .welcome-card input {
+    .welcome-card {
         width: 100%;
-        padding: 15px 18px;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        font-size: 16px;
-        outline: none;
-        margin-bottom: 15px;
+        max-width: 720px;
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
     }
 
-    .welcome-card input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-    }
-
-    .welcome-card button {
-        width: 100%;
-        padding: 15px;
-        border: none;
-        border-radius: 10px;
+    .welcome-top {
         background: linear-gradient(135deg, #173b73, #2563eb);
         color: white;
-        font-size: 15px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.2s;
+        padding: 42px 35px;
+        text-align: center;
     }
 
-    .welcome-card button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+    .book-icon {
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 18px;
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 38px;
+    }
+
+    .welcome-top h1 {
+        margin: 0 0 8px;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+    }
+
+    .welcome-top .subtitle {
+        margin: 0;
+        font-size: 16px;
+        opacity: 0.9;
+    }
+
+    .welcome-body {
+        padding: 35px;
+    }
+
+    .description {
+        text-align: center;
+        color: #4b5563;
+        line-height: 1.65;
+        font-size: 15px;
+        margin: 0 auto 28px;
+        max-width: 570px;
+    }
+
+    .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .feature {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 13px;
+        padding: 16px 10px;
+        text-align: center;
+    }
+
+    .feature-icon {
+        font-size: 22px;
+        margin-bottom: 7px;
+    }
+
+    .feature strong {
+        display: block;
+        color: #173b73;
+        font-size: 13px;
+        margin-bottom: 3px;
+    }
+
+    .feature span {
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .form-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 9px;
+    }
+
+    .name-input {
+        width: 100%;
+        padding: 16px 17px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 16px;
+        outline: none;
+        transition: 0.2s;
+        color: #1f2937;
+        background: white;
+    }
+
+    .name-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+    }
+
+    .name-input::placeholder {
+        color: #9ca3af;
+    }
+
+    .start-button {
+        width: 100%;
+        margin-top: 15px;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #173b73, #2563eb);
+        color: white;
+        font-size: 16px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.2s;
+        box-shadow: 0 6px 18px rgba(37,99,235,0.22);
+    }
+
+    .start-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 9px 24px rgba(37,99,235,0.28);
+    }
+
+    .security {
+        margin-top: 18px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 12px;
     }
 
     .error {
-        background: #fee2e2;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
         color: #b91c1c;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 15px;
+        padding: 12px 15px;
+        border-radius: 10px;
+        margin-bottom: 18px;
         font-size: 14px;
-    }
-
-    .brand {
-        font-size: 14px;
-        font-weight: bold;
-        color: #2563eb;
-        margin-bottom: 10px;
-        letter-spacing: 0.5px;
+        text-align: center;
     }
 
     @media (max-width: 600px) {
-        .welcome-card {
-            margin: 30px auto;
-            padding: 35px 22px;
+
+        .home-page {
+            padding: 15px 5px;
         }
 
-        .welcome-card h1 {
-            font-size: 26px;
+        .welcome-card {
+            border-radius: 17px;
+        }
+
+        .welcome-top {
+            padding: 32px 20px;
+        }
+
+        .welcome-top h1 {
+            font-size: 24px;
+        }
+
+        .welcome-top .subtitle {
+            font-size: 14px;
+        }
+
+        .welcome-body {
+            padding: 25px 18px;
+        }
+
+        .features {
+            grid-template-columns: 1fr;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            text-align: left;
+            gap: 10px;
+            padding: 12px 14px;
+        }
+
+        .feature-icon {
+            margin: 0;
         }
     }
 </style>
 
-<section class="card login welcome-card">
 
-```
-<div class="welcome-icon">📚</div>
+<div class="home-page">
 
-<div class="brand">
-    PƏRVİZ HÜSEYNOV
-</div>
+    <div class="welcome-card">
 
-<h1>Rəqəmsal İmtahan Mərkəzi</h1>
+        <!-- BAŞLIQ -->
+        <div class="welcome-top">
 
-<p class="subtitle">
-    Əmək Məcəlləsi 2026 üzrə test imtahanına xoş gəlmisiniz.
-    İmtahana başlamaq üçün ad və soyadınızı daxil edin.
-</p>
+            <div class="book-icon">
+                📚
+            </div>
 
-{% if error %}
-    <div class="error">
-        {{ error }}
+            <h1>
+                ƏMƏK MƏCƏLLƏSİ 2026
+            </h1>
+
+            <p class="subtitle">
+                Onlayn Test Sistemi
+            </p>
+
+        </div>
+
+
+        <!-- MƏZMUN -->
+        <div class="welcome-body">
+
+            <p class="description">
+                Əmək Məcəlləsi üzrə biliklərinizi yoxlamaq üçün
+                hazırlanmış test sisteminə xoş gəlmisiniz.
+                Testə başlamaq üçün ad və soyadınızı daxil edin.
+            </p>
+
+
+            <!-- ÜSTÜNLÜKLƏR -->
+            <div class="features">
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+                        📝
+                    </div>
+
+                    <div>
+                        <strong>Test sualları</strong>
+                        <span>Biliklərinizi yoxlayın</span>
+                    </div>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+                        📊
+                    </div>
+
+                    <div>
+                        <strong>Nəticə</strong>
+                        <span>Test sonunda hesablanır</span>
+                    </div>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+                        🎯
+                    </div>
+
+                    <div>
+                        <strong>Qiymətləndirmə</strong>
+                        <span>Düzgün cavab faizi</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {% if error %}
+
+            <div class="error">
+                {{ error }}
+            </div>
+
+            {% endif %}
+
+
+            <!-- FORM -->
+            <form method="post">
+
+                <div class="form-title">
+                    Ad və soyad
+                </div>
+
+                <input
+                    type="text"
+                    name="name"
+                    class="name-input"
+                    placeholder="Məsələn: Pərviz Hüseynov"
+                    autocomplete="name"
+                    autofocus
+                    required
+                >
+
+
+                <button
+                    type="submit"
+                    class="start-button"
+                >
+                    TESTƏ BAŞLA →
+                </button>
+
+            </form>
+
+
+            <div class="security">
+                🔒 Nəticəniz test tamamlandıqdan sonra qeydə alınır.
+            </div>
+
+        </div>
+
     </div>
-{% endif %}
 
-<form method="post">
-
-    <input
-        type="text"
-        name="name"
-        placeholder="Ad və soyadınızı daxil edin"
-        autocomplete="name"
-        autofocus
-        required
-    >
-
-    <button type="submit">
-        TESTƏ BAŞLA →
-    </button>
-
-</form>
-```
-
-</section>
+</div>
 
 {% endblock %}
