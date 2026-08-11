@@ -1,245 +1,383 @@
 ```html
-<!DOCTYPE html>
-<html lang="az">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <title>Əmək Məcəlləsi 2026 - Test</title>
+{% block content %}
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f6fa;
-            margin: 0;
+<style>
+    .test-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px 10px 40px;
+    }
+
+    .test-header {
+        background: linear-gradient(135deg, #173b73, #2563eb);
+        color: white;
+        border-radius: 20px;
+        padding: 25px 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(23, 59, 115, 0.18);
+    }
+
+    .test-title {
+        margin: 0 0 6px;
+        font-size: 26px;
+        font-weight: 800;
+    }
+
+    .test-subtitle {
+        margin: 0;
+        opacity: 0.85;
+        font-size: 14px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-top: 22px;
+        flex-wrap: wrap;
+    }
+
+    .user-name {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .question-count {
+        background: rgba(255,255,255,0.15);
+        padding: 9px 15px;
+        border-radius: 10px;
+        font-weight: 700;
+    }
+
+    .progress-area {
+        margin-top: 18px;
+    }
+
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        margin-bottom: 8px;
+        opacity: 0.9;
+    }
+
+    .progress {
+        width: 100%;
+        height: 9px;
+        background: rgba(255,255,255,0.22);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        width: {{ ((n+1)/total*100)|round }}%;
+        background: white;
+        border-radius: 20px;
+        transition: width 0.3s ease;
+    }
+
+    .question-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.07);
+        border: 1px solid #e5e7eb;
+    }
+
+    .question-number {
+        display: inline-block;
+        background: #eff6ff;
+        color: #2563eb;
+        padding: 7px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 18px;
+    }
+
+    .question-text {
+        font-size: 23px;
+        line-height: 1.45;
+        margin: 0 0 28px;
+        color: #172033;
+        font-weight: 700;
+    }
+
+    .options {
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+    }
+
+    .option {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 17px 18px;
+        border: 2px solid #e5e7eb;
+        border-radius: 13px;
+        cursor: pointer;
+        background: #fff;
+        transition: all 0.2s ease;
+        font-size: 16px;
+        color: #374151;
+    }
+
+    .option:hover {
+        border-color: #2563eb;
+        background: #f8fbff;
+        transform: translateY(-1px);
+    }
+
+    .option input {
+        display: none;
+    }
+
+    .letter {
+        min-width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #f3f4f6;
+        color: #374151;
+        font-weight: 800;
+        font-size: 14px;
+    }
+
+    .option:has(input:checked) {
+        border-color: #2563eb;
+        background: #eff6ff;
+        color: #173b73;
+    }
+
+    .option:has(input:checked) .letter {
+        background: #2563eb;
+        color: white;
+    }
+
+    .bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        gap: 15px;
+    }
+
+    .hint {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .next-button {
+        border: none;
+        background: linear-gradient(135deg, #173b73, #2563eb);
+        color: white;
+        padding: 14px 25px;
+        border-radius: 11px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(37,99,235,0.25);
+        transition: all 0.2s ease;
+    }
+
+    .next-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+    }
+
+    /* TESTİ BİTİR düyməsi */
+    .finish-button {
+        border: none;
+        background: #dc2626;
+        color: white;
+        padding: 14px 22px;
+        border-radius: 11px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(220,38,38,0.20);
+        transition: all 0.2s ease;
+    }
+
+    .finish-button:hover {
+        background: #b91c1c;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(220,38,38,0.25);
+    }
+
+    @media (max-width: 600px) {
+
+        .test-page {
+            padding: 10px 5px 25px;
+        }
+
+        .test-header {
             padding: 20px;
+            border-radius: 15px;
         }
 
-        .container {
-            max-width: 750px;
-            margin: 30px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        .test-title {
+            font-size: 21px;
         }
 
-        .top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
+        .question-card {
+            padding: 22px 17px;
+            border-radius: 15px;
         }
 
-        .name {
-            font-weight: bold;
-        }
-
-        .progress {
-            color: #666;
-        }
-
-        h2 {
-            margin-bottom: 25px;
-            line-height: 1.5;
+        .question-text {
+            font-size: 19px;
         }
 
         .option {
-            display: block;
-            padding: 15px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
+            padding: 14px;
+            font-size: 15px;
         }
 
-        .option:hover {
-            background: #f0f4ff;
+        .bottom {
+            flex-direction: column;
+            align-items: stretch;
         }
 
-        .option input {
-            margin-right: 10px;
-        }
-
-        .buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 30px;
-        }
-
-        button,
+        .next-button,
         .finish-button {
-            flex: 1;
-            padding: 14px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
+            width: 100%;
         }
 
-        .next-button {
-            background: #2563eb;
-            color: white;
-        }
-
-        .next-button:hover {
-            background: #1d4ed8;
-        }
-
-        .finish-button {
-            background: #dc2626;
-            color: white;
-        }
-
-        .finish-button:hover {
-            background: #b91c1c;
-        }
-
-        .warning {
-            margin-top: 15px;
-            color: #b91c1c;
-            font-size: 14px;
+        .hint {
             text-align: center;
         }
+    }
+</style>
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
 
-            .buttons {
-                flex-direction: column;
-            }
+<div class="test-page">
 
-            .top {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-        }
-    </style>
-</head>
+    <!-- BAŞLIQ -->
+    <div class="test-header">
 
-<body>
+        <h1 class="test-title">
+            ƏMƏK MƏCƏLLƏSİ 2026
+        </h1>
 
-<div class="container">
+        <p class="test-subtitle">
+            Test sistemi
+        </p>
 
-    <div class="top">
-        <div class="name">
-            {{ name }}
+        <div class="info-row">
+
+            <div class="user-name">
+                👤 {{ name }}
+            </div>
+
+            <div class="question-count">
+                Sual {{ n + 1 }} / {{ total }}
+            </div>
+
         </div>
 
-        <div class="progress">
-            Sual {{ n + 1 }} / {{ total }}
+        <div class="progress-area">
+
+            <div class="progress-info">
+                <span>Testin gedişi</span>
+                <span>{{ ((n+1)/total*100)|round }}%</span>
+            </div>
+
+            <div class="progress">
+                <div class="progress-fill"></div>
+            </div>
+
         </div>
+
     </div>
 
 
-    <form method="POST">
+    <!-- SUAL -->
+    <div class="question-card">
 
-        <h2>
-            {{ q["question"] }}
+        <div class="question-number">
+            SUAL {{ n + 1 }}
+        </div>
+
+        <h2 class="question-text">
+            {{ q.question }}
         </h2>
 
 
-        <label class="option">
-            <input
-                type="radio"
-                name="answer"
-                value="A"
-                {% if current_answer == "A" %}checked{% endif %}
-            >
-            {{ q["a"] }}
-        </label>
+        <form method="post">
+
+            <div class="options">
+
+                {% for letter,text in [('A',q.a),('B',q.b),('C',q.c),('D',q.d)] %}
+
+                <label class="option">
+
+                    <input
+                        type="radio"
+                        name="answer"
+                        value="{{ letter }}"
+                        required
+                    >
+
+                    <span class="letter">
+                        {{ letter }}
+                    </span>
+
+                    <span>
+                        {{ text[3:] }}
+                    </span>
+
+                </label>
+
+                {% endfor %}
+
+            </div>
 
 
-        <label class="option">
-            <input
-                type="radio"
-                name="answer"
-                value="B"
-                {% if current_answer == "B" %}checked{% endif %}
-            >
-            {{ q["b"] }}
-        </label>
+            <div class="bottom">
 
+                <div class="hint">
+                    Cavablardan birini seçin
+                </div>
 
-        <label class="option">
-            <input
-                type="radio"
-                name="answer"
-                value="C"
-                {% if current_answer == "C" %}checked{% endif %}
-            >
-            {{ q["c"] }}
-        </label>
+                <!-- NÖVBƏTİ SUAL -->
+                {% if n + 1 < total %}
+                    <button
+                        type="submit"
+                        class="next-button"
+                    >
+                        NÖVBƏTİ SUAL →
+                    </button>
+                {% endif %}
 
+                <!-- TESTİ BİTİR -->
+                <button
+                    type="submit"
+                    name="finish"
+                    value="1"
+                    class="finish-button"
+                    onclick="return confirm('Testi bitirmək istədiyinizə əminsiniz? Cavablandırdığınız suallar yadda saxlanılacaq və nəticə hesablanacaq.');"
+                >
+                    TESTİ BİTİR ✓
+                </button>
 
-        <label class="option">
-            <input
-                type="radio"
-                name="answer"
-                value="D"
-                {% if current_answer == "D" %}checked{% endif %}
-            >
-            {{ q["d"] }}
-        </label>
+            </div>
 
+        </form>
 
-        <div class="buttons">
-
-            <!-- NÖVBƏTİ -->
-            <button
-                type="submit"
-                class="next-button"
-            >
-                NÖVBƏTİ
-            </button>
-
-
-            <!-- TESTİ BİTİR -->
-            <button
-                type="button"
-                class="finish-button"
-                onclick="finishTest()"
-            >
-                TESTİ BİTİR
-            </button>
-
-        </div>
-
-    </form>
-
-
-    <div class="warning">
-        Testi bitirdikdə yalnız cavablandırdığınız suallar nəticəyə daxil ediləcək.
     </div>
 
 </div>
 
-
-<script>
-
-function finishTest() {
-
-    const confirmed = confirm(
-        "Testi bitirmək istədiyinizə əminsiniz?\n\n" +
-        "Cavablandırdığınız suallar yadda saxlanılacaq və nəticə hesablanacaq."
-    );
-
-    if (confirmed) {
-
-        window.location.href = "{{ url_for('finish') }}";
-
-    }
-
-}
-
-</script>
-
-</body>
-</html>
+{% endblock %}
 ```
