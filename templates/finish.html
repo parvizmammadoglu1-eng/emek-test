@@ -1,6 +1,323 @@
+{% extends "base.html" %}
 
-{% extends "base.html" %}{% block content %}
-<section class="card center"><div class="icon">🎉</div><h1>{{name}}, test tamamlandı!</h1>
-<div class="score">{{percent}}%</div><div class="stats"><div><b>{{correct}}</b><small>Düzgün</small></div><div><b>{{total-correct}}</b><small>Səhv</small></div><div><b>{{total}}</b><small>Ümumi</small></div></div>
-<a class="button" href="{{url_for('home')}}">YENİDƏN BAŞLA</a></section>
+{% block content %}
+
+<style>
+    .result-page {
+        min-height: 75vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+    }
+
+    .result-card {
+        width: 100%;
+        max-width: 720px;
+        background: #ffffff;
+        border-radius: 28px;
+        padding: 45px 40px;
+        text-align: center;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.10);
+        border: 1px solid #e5e7eb;
+    }
+
+    .success-icon {
+        width: 82px;
+        height: 82px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        background: #dcfce7;
+        color: #16a34a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        font-weight: 800;
+    }
+
+    .result-title {
+        margin: 0;
+        color: #172033;
+        font-size: 32px;
+        font-weight: 800;
+    }
+
+    .result-subtitle {
+        margin: 10px 0 30px;
+        color: #6b7280;
+        font-size: 16px;
+    }
+
+    .name-box {
+        display: inline-block;
+        background: #eff6ff;
+        color: #173b73;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 700;
+        margin-bottom: 30px;
+    }
+
+    .score-circle {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 35px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #173b73, #2563eb);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 15px 35px rgba(37, 99, 235, 0.25);
+    }
+
+    .score-percent {
+        font-size: 48px;
+        line-height: 1;
+        font-weight: 900;
+    }
+
+    .score-label {
+        margin-top: 8px;
+        font-size: 14px;
+        opacity: 0.85;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .stat {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px 10px;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 800;
+        color: #173b73;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .result-message {
+        padding: 16px 20px;
+        border-radius: 14px;
+        background: #f8fafc;
+        color: #374151;
+        font-size: 15px;
+        margin-bottom: 30px;
+    }
+
+    .result-message strong {
+        color: #173b73;
+    }
+
+    .finish-info {
+        color: #9ca3af;
+        font-size: 13px;
+        margin-bottom: 25px;
+    }
+
+    .home-button {
+        display: inline-block;
+        text-decoration: none;
+        background: linear-gradient(135deg, #173b73, #2563eb);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+        transition: all 0.2s ease;
+    }
+
+    .home-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.32);
+    }
+
+    @media (max-width: 600px) {
+
+        .result-page {
+            padding: 25px 10px;
+        }
+
+        .result-card {
+            padding: 35px 20px;
+            border-radius: 22px;
+        }
+
+        .result-title {
+            font-size: 26px;
+        }
+
+        .score-circle {
+            width: 155px;
+            height: 155px;
+        }
+
+        .score-percent {
+            font-size: 40px;
+        }
+
+        .stats {
+            gap: 8px;
+        }
+
+        .stat {
+            padding: 15px 5px;
+        }
+
+        .stat-number {
+            font-size: 23px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+        }
+
+        .home-button {
+            width: 100%;
+            box-sizing: border-box;
+        }
+    }
+</style>
+
+<div class="result-page">
+
+```
+<div class="result-card">
+
+    <div class="success-icon">
+        ✓
+    </div>
+
+    <h1 class="result-title">
+        Test tamamlandı!
+    </h1>
+
+    <p class="result-subtitle">
+        Əmək Məcəlləsi 2026 testinin nəticəsi
+    </p>
+
+    <div class="name-box">
+        👤 {{ name }}
+    </div>
+
+
+    <!-- FAİZ -->
+    <div class="score-circle">
+
+        <div class="score-percent">
+            {{ percent }}%
+        </div>
+
+        <div class="score-label">
+            Ümumi nəticə
+        </div>
+
+    </div>
+
+
+    <!-- STATİSTİKA -->
+    <div class="stats">
+
+        <div class="stat">
+
+            <div class="stat-number">
+                {{ correct }}
+            </div>
+
+            <div class="stat-label">
+                Düzgün cavab
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-number">
+                {{ total - correct }}
+            </div>
+
+            <div class="stat-label">
+                Səhv / boş
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-number">
+                {{ total }}
+            </div>
+
+            <div class="stat-label">
+                Ümumi sual
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- MESAJ -->
+    <div class="result-message">
+
+        {% if percent >= 90 %}
+
+            🌟 <strong>Əla nəticə!</strong>
+            Əmək Məcəlləsi üzrə bilikləriniz çox yaxşı səviyyədədir.
+
+        {% elif percent >= 70 %}
+
+            👏 <strong>Çox yaxşı!</strong>
+            Nəticəniz yaxşıdır. Bir az da çalışaraq daha yüksək nəticə əldə edə bilərsiniz.
+
+        {% elif percent >= 50 %}
+
+            👍 <strong>Yaxşı nəticə!</strong>
+            Biliklərinizi bir qədər də möhkəmləndirməklə nəticənizi artıra bilərsiniz.
+
+        {% else %}
+
+            📚 <strong>Daha çox məşq edin!</strong>
+            Əmək Məcəlləsi üzrə mövzuları təkrar etməyiniz faydalı olacaq.
+
+        {% endif %}
+
+    </div>
+
+
+    <div class="finish-info">
+        Nəticəniz sistemdə yadda saxlanıldı.
+    </div>
+
+
+    <a
+        href="{{ url_for('home') }}"
+        class="home-button"
+    >
+        YENİ TESTƏ BAŞLA →
+    </a>
+
+</div>
+```
+
+</div>
+
 {% endblock %}
