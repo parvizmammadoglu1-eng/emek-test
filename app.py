@@ -1,9 +1,10 @@
 import os
-import sqlite3
 from datetime import datetime
-from pathlib import Path
-from functools import wraps
 from io import BytesIO
+from functools import wraps
+
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 from flask import (
     Flask,
@@ -21,6 +22,10 @@ from openpyxl.styles import Font, Alignment
 
 app = Flask(__name__)
 
+# ==========================================================
+# SETTINGS
+# ==========================================================
+
 app.secret_key = os.environ.get(
     "SECRET_KEY",
     "temporary-secret-key-change-me"
@@ -31,8 +36,12 @@ ADMIN_PASSWORD = os.environ.get(
     "12345"
 )
 
-DB = Path(__file__).with_name("test.db")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
+
+# ==========================================================
+# QUESTIONS
+# ==========================================================
 
 QUESTIONS = [
     (
@@ -62,18 +71,37 @@ QUESTIONS = [
 ]
 
 
-def db():
-    con = sqlite3.connect(DB)
-    con.row_factory = sqlite3.Row
-    return con
+# ==========================================================
+# DATABASE CONNECTION
+# ==========================================================
 
+def db():
+    if not DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL Render Environment Variables bölməsində "
+            "əlavə edilməyib."
+        )
+
+    return psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
+
+
+# ==========================================================
+# DATABASE INITIALIZATION
+# ==========================================================
 
 def init_db():
+
     con = db()
 
-    con.execute("""
+    cur = con.cursor()
+
+    # QUESTIONS TABLE
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS questions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             question TEXT NOT NULL,
             a TEXT NOT NULL,
             b TEXT NOT NULL,
@@ -83,37 +111,56 @@ def init_db():
         )
     """)
 
-    con.execute("""
+    # RESULTS TABLE
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             correct INTEGER NOT NULL,
             total INTEGER NOT NULL,
             percent INTEGER NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TIMESTAMP NOT NULL
         )
     """)
 
-    count = con.execute(
-        "SELECT COUNT(*) FROM questions"
-    ).fetchone()[0]
+    # Əgər suallar bazada yoxdursa,
+    # ilkin sualları əlavə et
+    cur.execute(
+        "SELECT COUNT(*) AS count FROM questions"
+    )
+
+    count = cur.fetchone()["count"]
 
     if count == 0:
-        con.executemany(
-            """
-            INSERT INTO questions
-            (question, a, b, c, d, answer)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            QUESTIONS
-        )
+
+        for question in QUESTIONS:
+
+            cur.execute(
+                """
+                INSERT INTO questions
+                (question, a, b, c, d, answer)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                question
+            )
 
     con.commit()
+
+    cur.close()
     con.close()
 
 
-init_db()
+# ==========================================================
+# INITIALIZE DATABASE
+# ==========================================================
 
+if DATABASE_URL:
+    init_db()
+
+
+# ==========================================================
+# ADMIN AUTHENTICATION
+# ==========================================================
 
 def admin_required(function):
 
@@ -121,70 +168,125 @@ def admin_required(function):
     def wrapper(*args, **kwargs):
 
         if not session.get("admin"):
-            return redirect(url_for("admin_login"))
+            return redirect(
+                url_for("admin_login")
+            )
 
         return function(*args, **kwargs)
 
     return wrapper
 
 
+# ==========================================================
+# HOME
+# ==========================================================
+
 @app.route("/", methods=["GET", "POST"])
 def home():
 
     if request.method == "POST":
 
-        name = request.form.get("name", "").strip()
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
 
         if not name:
+
             return render_template(
                 "home.html",
                 error="Ad və soyad daxil edin."
             )
 
         session["name"] = name
+
         session["answers"] = {}
 
         return redirect(
-            url_for("question", n=0)
+            url_for(
+                "question",
+                n=0
+            )
         )
 
-    return render_template("home.html")
+    return render_template(
+        "home.html"
+    )
 
 
-@app.route("/question/<int:n>", methods=["GET", "POST"])
+# ==========================================================
+# QUESTIONS
+# ==========================================================
+
+@app.route(
+    "/question/<int:n>",
+    methods=["GET", "POST"]
+)
 def question(n):
 
     if "name" not in session:
-        return redirect(url_for("home"))
+
+        return redirect(
+            url_for("home")
+        )
 
     con = db()
 
-    questions = con.execute(
-        "SELECT * FROM questions ORDER BY id"
-    ).fetchall()
+    cur = con.cursor()
 
+    cur.execute(
+        """
+        SELECT *
+        FROM questions
+        ORDER BY id
+        """
+    )
+
+    questions = cur.fetchall()
+
+    cur.close()
     con.close()
 
     if n >= len(questions):
-        return redirect(url_for("finish"))
+
+        return redirect(
+            url_for("finish")
+        )
 
     if request.method == "POST":
 
-        selected = request.form.get("answer")
+        selected = request.form.get(
+            "answer"
+        )
 
-        if selected not in ["A", "B", "C", "D"]:
+        if selected not in [
+            "A",
+            "B",
+            "C",
+            "D"
+        ]:
+
             return redirect(
-                url_for("question", n=n)
+                url_for(
+                    "question",
+                    n=n
+                )
             )
 
-        answers = session.get("answers", {})
+        answers = session.get(
+            "answers",
+            {}
+        )
 
         answers[str(n)] = selected
 
         session["answers"] = answers
 
         return redirect(
-            url_for("question", n=n + 1)
+            url_for(
+                "question",
+                n=n + 1
+            )
         )
 
     return render_template(
@@ -196,21 +298,37 @@ def question(n):
     )
 
 
+# ==========================================================
+# FINISH
+# ==========================================================
+
 @app.route("/finish")
 def finish():
 
     if "name" not in session:
-        return redirect(url_for("home"))
+
+        return redirect(
+            url_for("home")
+        )
 
     con = db()
 
-    questions = con.execute(
-        "SELECT * FROM questions ORDER BY id"
-    ).fetchall()
+    cur = con.cursor()
 
-    con.close()
+    cur.execute(
+        """
+        SELECT *
+        FROM questions
+        ORDER BY id
+        """
+    )
 
-    answers = session.get("answers", {})
+    questions = cur.fetchall()
+
+    answers = session.get(
+        "answers",
+        {}
+    )
 
     correct = sum(
         1
@@ -220,32 +338,39 @@ def finish():
 
     total = len(questions)
 
-    percent = round(
-        correct / total * 100
-    ) if total else 0
+    percent = (
+        round(correct / total * 100)
+        if total
+        else 0
+    )
 
     name = session["name"]
 
-    con = db()
-
-    con.execute(
+    # NƏTİCƏNİ POSTGRESQL-Ə YAZ
+    cur.execute(
         """
         INSERT INTO results
-        (name, correct, total, percent, created_at)
-        VALUES (?, ?, ?, ?, ?)
+        (
+            name,
+            correct,
+            total,
+            percent,
+            created_at
+        )
+        VALUES (%s, %s, %s, %s, %s)
         """,
         (
             name,
             correct,
             total,
             percent,
-            datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+            datetime.now()
         )
     )
 
     con.commit()
+
+    cur.close()
     con.close()
 
     session.clear()
@@ -259,16 +384,22 @@ def finish():
     )
 
 
-# ==========================
+# ==========================================================
 # ADMIN LOGIN
-# ==========================
+# ==========================================================
 
-@app.route("/admin/login", methods=["GET", "POST"])
+@app.route(
+    "/admin/login",
+    methods=["GET", "POST"]
+)
 def admin_login():
 
     if request.method == "POST":
 
-        password = request.form.get("password", "")
+        password = request.form.get(
+            "password",
+            ""
+        )
 
         if password == ADMIN_PASSWORD:
 
@@ -283,22 +414,31 @@ def admin_login():
             error="Parol yanlışdır."
         )
 
-    return render_template("admin_login.html")
+    return render_template(
+        "admin_login.html"
+    )
 
+
+# ==========================================================
+# ADMIN LOGOUT
+# ==========================================================
 
 @app.route("/admin/logout")
 def admin_logout():
 
-    session.pop("admin", None)
+    session.pop(
+        "admin",
+        None
+    )
 
     return redirect(
         url_for("admin_login")
     )
 
 
-# ==========================
+# ==========================================================
 # ADMIN PANEL
-# ==========================
+# ==========================================================
 
 @app.route("/admin")
 @admin_required
@@ -306,14 +446,31 @@ def admin():
 
     con = db()
 
-    results = con.execute(
-        "SELECT * FROM results ORDER BY id DESC"
-    ).fetchall()
+    cur = con.cursor()
 
-    questions = con.execute(
-        "SELECT * FROM questions ORDER BY id"
-    ).fetchall()
+    # NƏTİCƏLƏR
+    cur.execute(
+        """
+        SELECT *
+        FROM results
+        ORDER BY id DESC
+        """
+    )
 
+    results = cur.fetchall()
+
+    # SUALLAR
+    cur.execute(
+        """
+        SELECT *
+        FROM questions
+        ORDER BY id
+        """
+    )
+
+    questions = cur.fetchall()
+
+    cur.close()
     con.close()
 
     return render_template(
@@ -323,9 +480,9 @@ def admin():
     )
 
 
-# ==========================
+# ==========================================================
 # EXCEL EXPORT
-# ==========================
+# ==========================================================
 
 @app.route("/admin/export")
 @admin_required
@@ -333,19 +490,29 @@ def admin_export():
 
     con = db()
 
-    results = con.execute(
-        "SELECT * FROM results ORDER BY id DESC"
-    ).fetchall()
+    cur = con.cursor()
 
+    cur.execute(
+        """
+        SELECT *
+        FROM results
+        ORDER BY id DESC
+        """
+    )
+
+    results = cur.fetchall()
+
+    cur.close()
     con.close()
 
+    # EXCEL YARAT
     workbook = Workbook()
 
     sheet = workbook.active
+
     sheet.title = "Test nəticələri"
 
     # BAŞLIQLAR
-
     headers = [
         "№",
         "Ad və soyad",
@@ -356,7 +523,10 @@ def admin_export():
         "Tarix"
     ]
 
-    for col, header in enumerate(headers, 1):
+    for col, header in enumerate(
+        headers,
+        1
+    ):
 
         cell = sheet.cell(
             row=1,
@@ -364,16 +534,19 @@ def admin_export():
             value=header
         )
 
-        cell.font = Font(bold=True)
+        cell.font = Font(
+            bold=True
+        )
 
         cell.alignment = Alignment(
             horizontal="center"
         )
 
-
     # NƏTİCƏLƏR
-
-    for row_number, r in enumerate(results, 2):
+    for row_number, r in enumerate(
+        results,
+        2
+    ):
 
         sheet.cell(
             row=row_number,
@@ -414,12 +587,14 @@ def admin_export():
         sheet.cell(
             row=row_number,
             column=7,
-            value=r["created_at"]
+            value=r["created_at"].strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            if r["created_at"]
+            else ""
         )
 
-
     # SÜTUN ENLİKLƏRİ
-
     widths = {
         "A": 8,
         "B": 30,
@@ -432,22 +607,20 @@ def admin_export():
 
     for column, width in widths.items():
 
-        sheet.column_dimensions[column].width = width
+        sheet.column_dimensions[
+            column
+        ].width = width
 
-
-    # EXCEL FAYLINI YADDAŞDA YARAT
-
+    # FAYLI YADDAŞDA YARAT
     output = BytesIO()
 
     workbook.save(output)
 
     output.seek(0)
 
-
     filename = (
         "emek_mecellesi_2026_test_neticeleri.xlsx"
     )
-
 
     return send_file(
         output,
@@ -460,9 +633,9 @@ def admin_export():
     )
 
 
-# ==========================
+# ==========================================================
 # RUN
-# ==========================
+# ==========================================================
 
 if __name__ == "__main__":
 
