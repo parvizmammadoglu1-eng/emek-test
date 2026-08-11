@@ -3,6 +3,7 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 from functools import wraps
+from io import BytesIO
 
 from flask import (
     Flask,
@@ -16,6 +17,7 @@ from flask import (
 
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
+
 
 app = Flask(__name__)
 
@@ -31,6 +33,10 @@ ADMIN_PASSWORD = os.environ.get(
 
 DB = Path(__file__).with_name("test.db")
 
+
+# =========================================================
+# İLK SUALLAR
+# =========================================================
 
 QUESTIONS = [
     (
@@ -60,6 +66,10 @@ QUESTIONS = [
 ]
 
 
+# =========================================================
+# DATABASE
+# =========================================================
+
 def db():
     con = sqlite3.connect(DB)
     con.row_factory = sqlite3.Row
@@ -69,6 +79,7 @@ def db():
 def init_db():
     con = db()
 
+    # Suallar
     con.execute("""
         CREATE TABLE IF NOT EXISTS questions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,6 +92,7 @@ def init_db():
         )
     """)
 
+    # Nəticələr
     con.execute("""
         CREATE TABLE IF NOT EXISTS results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,6 +103,33 @@ def init_db():
             created_at TEXT NOT NULL
         )
     """)
+
+    # -----------------------------------------------------
+    # Mövcud DB-də yeni sütunlar yoxdursa əlavə edirik
+    # -----------------------------------------------------
+
+    columns = [
+        row["name"]
+        for row in con.execute(
+            "PRAGMA table_info(results)"
+        ).fetchall()
+    ]
+
+    if "answered" not in columns:
+        con.execute(
+            "ALTER TABLE results "
+            "ADD COLUMN answered INTEGER NOT NULL DEFAULT 0"
+        )
+
+    if "wrong" not in columns:
+        con.execute(
+            "ALTER TABLE results "
+            "ADD COLUMN wrong INTEGER NOT NULL DEFAULT 0"
+        )
+
+    # -----------------------------------------------------
+    # Əgər sual bazası boşdursa ilkin sualları əlavə et
+    # -----------------------------------------------------
 
     count = con.execute(
         "SELECT COUNT(*) FROM questions"
@@ -113,22 +152,28 @@ def init_db():
 init_db()
 
 
+# =========================================================
+# ADMIN DECORATOR
+# =========================================================
+
 def admin_required(function):
 
     @wraps(function)
     def wrapper(*args, **kwargs):
 
         if not session.get("admin"):
-            return redirect(url_for("admin_login"))
+            return redirect(
+                url_for("admin_login")
+            )
 
         return function(*args, **kwargs)
 
     return wrapper
 
 
-# =========================
+# =========================================================
 # İSTİFADƏÇİ
-# =========================
+# =========================================================
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -146,8 +191,12 @@ def home():
                 error="Ad və soyad daxil edin."
             )
 
+        # Yeni test başlayır
         session["name"] = name
         session["answers"] = {}
+
+        # Test artıq tamamlanmayıb
+        session["test_finished"] = False
 
         return redirect(
             url_for(
@@ -159,11 +208,26 @@ def home():
     return render_template("home.html")
 
 
-@app.route("/question/<int:n>", methods=["GET", "POST"])
+# =========================================================
+# SUAL
+# =========================================================
+
+@app.route(
+    "/question/<int:n>",
+    methods=["GET", "POST"]
+)
 def question(n):
 
     if "name" not in session:
-        return redirect(url_for("home"))
+        return redirect(
+            url_for("home")
+        )
+
+    # Əgər test artıq bitibsə
+    if session.get("test_finished"):
+        return redirect(
+            url_for("finish")
+        )
 
     con = db()
 
@@ -173,13 +237,23 @@ def question(n):
 
     con.close()
 
+    # Sual sayı bitibsə avtomatik nəticəyə keç
     if n >= len(questions):
-        return redirect(url_for("finish"))
+        return redirect(
+            url_for("finish")
+        )
+
+    # -----------------------------------------------------
+    # NÖVBƏTİ düyməsi
+    # -----------------------------------------------------
 
     if request.method == "POST":
 
-        selected = request.form.get("answer")
+        selected = request.form.get(
+            "answer"
+        )
 
+        # Cavab seçilməyibsə
         if selected not in [
             "A",
             "B",
@@ -198,10 +272,13 @@ def question(n):
             {}
         )
 
+        # Cavabı yadda saxla
         answers[str(n)] = selected
 
         session["answers"] = answers
+        session.modified = True
 
+        # Növbəti suala keç
         return redirect(
             url_for(
                 "question",
@@ -209,20 +286,51 @@ def question(n):
             )
         )
 
+    # Hazırkı cavab
+    answers = session.get(
+        "answers",
+        {}
+    )
+
+    current_answer = answers.get(
+        str(n)
+    )
+
     return render_template(
         "question.html",
         q=questions[n],
         n=n,
         total=len(questions),
-        name=session["name"]
+        name=session["name"],
+        current_answer=current_answer
     )
 
 
-@app.route("/finish")
+# =========================================================
+# TESTİ BİTİR
+# =========================================================
+
+@app.route("/finish", methods=["GET", "POST"])
 def finish():
 
     if "name" not in session:
-        return redirect(url_for("home"))
+        return redirect(
+            url_for("home")
+        )
+
+    # Əgər nəticə artıq hesablanıbsa,
+    # yenidən DB-yə yazma
+    if session.get("test_finished"):
+
+        return render_template(
+            "finish.html",
+            name=session.get("finished_name", ""),
+            correct=session.get("finished_correct", 0),
+            wrong=session.get("finished_wrong", 0),
+            answered=session.get("finished_answered", 0),
+            total=session.get("finished_total", 0),
+            percent=session.get("finished_percent", 0)
+        )
 
     con = db()
 
@@ -237,29 +345,63 @@ def finish():
         {}
     )
 
-    correct = sum(
-        1
-        for i, q in enumerate(questions)
-        if answers.get(str(i)) == q["answer"]
-    )
+    # -----------------------------------------------------
+    # Nəticənin hesablanması
+    # -----------------------------------------------------
+
+    correct = 0
+    answered = 0
+
+    for i, q in enumerate(questions):
+
+        selected = answers.get(
+            str(i)
+        )
+
+        # Cavablandırılmayıbsa heç bir
+        # kateqoriyaya daxil edilmir
+        if selected is None:
+            continue
+
+        answered += 1
+
+        if selected == q["answer"]:
+            correct += 1
 
     total = len(questions)
 
-    percent = (
-        round(correct / total * 100)
-        if total
-        else 0
-    )
+    # Cavablandırılan sualların içindən
+    # düzgün cavabların faizi
+    if answered > 0:
+        percent = round(
+            correct / answered * 100
+        )
+    else:
+        percent = 0
+
+    wrong = answered - correct
 
     name = session["name"]
+
+    # -----------------------------------------------------
+    # Nəticəni database-ə yaz
+    # -----------------------------------------------------
 
     con = db()
 
     con.execute(
         """
         INSERT INTO results
-        (name, correct, total, percent, created_at)
-        VALUES (?, ?, ?, ?, ?)
+        (
+            name,
+            correct,
+            total,
+            percent,
+            created_at,
+            answered,
+            wrong
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
             name,
@@ -268,27 +410,45 @@ def finish():
             percent,
             datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
-            )
+            ),
+            answered,
+            wrong
         )
     )
 
     con.commit()
     con.close()
 
-    session.clear()
+    # -----------------------------------------------------
+    # Nəticəni session-da saxla
+    # -----------------------------------------------------
+
+    session["test_finished"] = True
+
+    session["finished_name"] = name
+    session["finished_correct"] = correct
+    session["finished_wrong"] = wrong
+    session["finished_answered"] = answered
+    session["finished_total"] = total
+    session["finished_percent"] = percent
+
+    # Testin aktiv cavablarını artıq lazım deyil
+    session.pop("answers", None)
 
     return render_template(
         "finish.html",
         name=name,
         correct=correct,
+        wrong=wrong,
+        answered=answered,
         total=total,
         percent=percent
     )
 
 
-# =========================
+# =========================================================
 # ADMIN LOGIN
-# =========================
+# =========================================================
 
 @app.route(
     "/admin/login",
@@ -321,6 +481,10 @@ def admin_login():
     )
 
 
+# =========================================================
+# ADMIN LOGOUT
+# =========================================================
+
 @app.route("/admin/logout")
 def admin_logout():
 
@@ -334,9 +498,9 @@ def admin_logout():
     )
 
 
-# =========================
+# =========================================================
 # ADMIN PANEL
-# =========================
+# =========================================================
 
 @app.route("/admin")
 @admin_required
@@ -345,11 +509,19 @@ def admin():
     con = db()
 
     results = con.execute(
-        "SELECT * FROM results ORDER BY id DESC"
+        """
+        SELECT *
+        FROM results
+        ORDER BY id DESC
+        """
     ).fetchall()
 
     questions = con.execute(
-        "SELECT * FROM questions ORDER BY id"
+        """
+        SELECT *
+        FROM questions
+        ORDER BY id
+        """
     ).fetchall()
 
     con.close()
@@ -361,9 +533,9 @@ def admin():
     )
 
 
-# =========================
+# =========================================================
 # EXCEL EXPORT
-# =========================
+# =========================================================
 
 @app.route("/admin/export")
 @admin_required
@@ -372,7 +544,11 @@ def admin_export():
     con = db()
 
     results = con.execute(
-        "SELECT * FROM results ORDER BY id DESC"
+        """
+        SELECT *
+        FROM results
+        ORDER BY id DESC
+        """
     ).fetchall()
 
     con.close()
@@ -382,12 +558,17 @@ def admin_export():
     sheet = workbook.active
     sheet.title = "Test nəticələri"
 
+    # -----------------------------------------------------
+    # Başlıqlar
+    # -----------------------------------------------------
+
     headers = [
         "№",
         "Ad və soyad",
+        "Cavablandırılan",
         "Düzgün cavab",
-        "Ümumi sual",
         "Səhv cavab",
+        "Ümumi sual",
         "Nəticə",
         "Tarix"
     ]
@@ -411,6 +592,10 @@ def admin_export():
             horizontal="center"
         )
 
+    # -----------------------------------------------------
+    # Nəticələr
+    # -----------------------------------------------------
+
     for row_number, r in enumerate(
         results,
         2
@@ -431,32 +616,42 @@ def admin_export():
         sheet.cell(
             row=row_number,
             column=3,
-            value=r["correct"]
+            value=r["answered"]
         )
 
         sheet.cell(
             row=row_number,
             column=4,
-            value=r["total"]
+            value=r["correct"]
         )
 
         sheet.cell(
             row=row_number,
             column=5,
-            value=r["total"] - r["correct"]
+            value=r["wrong"]
         )
 
         sheet.cell(
             row=row_number,
             column=6,
-            value=f'{r["percent"]}%'
+            value=r["total"]
         )
 
         sheet.cell(
             row=row_number,
             column=7,
+            value=f'{r["percent"]}%'
+        )
+
+        sheet.cell(
+            row=row_number,
+            column=8,
             value=r["created_at"]
         )
+
+    # -----------------------------------------------------
+    # Sütun genişlikləri
+    # -----------------------------------------------------
 
     widths = {
         "A": 8,
@@ -465,7 +660,8 @@ def admin_export():
         "D": 18,
         "E": 15,
         "F": 15,
-        "G": 25
+        "G": 15,
+        "H": 25
     }
 
     for column, width in widths.items():
@@ -473,6 +669,10 @@ def admin_export():
         sheet.column_dimensions[
             column
         ].width = width
+
+    # -----------------------------------------------------
+    # Excel faylı
+    # -----------------------------------------------------
 
     output = BytesIO()
 
@@ -495,9 +695,9 @@ def admin_export():
     )
 
 
-# =========================
+# =========================================================
 # RUN
-# =========================
+# =========================================================
 
 if __name__ == "__main__":
 
