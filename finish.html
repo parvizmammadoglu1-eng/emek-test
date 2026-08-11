@@ -1,0 +1,6 @@
+
+{% extends "base.html" %}{% block content %}
+<section class="card center"><div class="icon">🎉</div><h1>{{name}}, test tamamlandı!</h1>
+<div class="score">{{percent}}%</div><div class="stats"><div><b>{{correct}}</b><small>Düzgün</small></div><div><b>{{total-correct}}</b><small>Səhv</small></div><div><b>{{total}}</b><small>Ümumi</small></div></div>
+<a class="button" href="{{url_for('home')}}">YENİDƏN BAŞLA</a></section>
+{% endblock %}

@@ -1,0 +1,7 @@
+
+{% extends "base.html" %}{% block content %}
+<section class="card login"><div class="icon">📚</div><h1>Testə xoş gəlmisiniz</h1>
+<p>Əmək Məcəlləsi 2026 üzrə nümunə test. Başlamaq üçün ad və soyadınızı daxil edin.</p>
+{% if error %}<div class="error">{{error}}</div>{% endif %}
+<form method="post"><input name="name" placeholder="Ad və soyad" autofocus required><button>TESTƏ BAŞLA →</button></form></section>
+{% endblock %}

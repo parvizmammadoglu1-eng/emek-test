@@ -1,0 +1,6 @@
+
+{% extends "base.html" %}{% block content %}
+<section class="card"><div class="row"><h1>Admin panel — Nəticələr</h1><b>{{results|length}} nəticə</b></div>
+<table><tr><th>№</th><th>Ad və soyad</th><th>Düzgün</th><th>Nəticə</th><th>Tarix</th></tr>
+{% for r in results %}<tr><td>{{r.id}}</td><td>{{r.name}}</td><td>{{r.correct}} / {{r.total}}</td><td><b>{{r.percent}}%</b></td><td>{{r.created_at}}</td></tr>{% else %}<tr><td colspan="5">Hələ nəticə yoxdur.</td></tr>{% endfor %}
+</table></section>{% endblock %}

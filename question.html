@@ -1,0 +1,13 @@
+
+{% extends "base.html" %}{% block content %}
+<section class="card">
+<div class="row"><span>{{name}}</span><b>Sual {{n+1}} / {{total}}</b></div>
+<div class="bar"><i style="width:{{ ((n+1)/total*100)|round }}%"></i></div>
+<h1>{{q.question}}</h1>
+<form method="post">
+{% for letter,text in [('A',q.a),('B',q.b),('C',q.c),('D',q.d)] %}
+<label class="option"><input type="radio" name="answer" value="{{letter}}" required><span class="letter">{{letter}}</span><span>{{text[3:]}}</span></label>
+{% endfor %}
+<div class="right"><button>NÖVBƏTİ →</button></div>
+</form></section>
+{% endblock %}
