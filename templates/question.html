@@ -3,6 +3,7 @@
 {% block content %}
 
 <style>
+
     .test-page {
         max-width: 900px;
         margin: 0 auto;
@@ -200,7 +201,6 @@
         box-shadow: 0 8px 20px rgba(37,99,235,0.3);
     }
 
-    /* TESTİ YARIMÇIQ BİTİR */
     .finish-button {
         border: 1px solid #fecaca;
         background: #fff1f2;
@@ -266,12 +266,14 @@
             text-align: center;
         }
     }
+
 </style>
 
 
 <div class="test-page">
 
-    <!-- BAŞLIQ -->
+
+    <!-- TEST BAŞLIĞI -->
 
     <div class="test-header">
 
@@ -282,6 +284,7 @@
         <p class="test-subtitle">
             Test sistemi
         </p>
+
 
         <div class="info-row">
 
@@ -295,20 +298,34 @@
 
         </div>
 
+
+        <!-- PROQRESS -->
+
         <div class="progress-area">
 
             <div class="progress-info">
-                <span>Testin gedişi</span>
-                <span>{{ ((n+1)/total*100)|round }}%</span>
+
+                <span>
+                    Testin gedişi
+                </span>
+
+                <span>
+                    {{ ((n+1)/total*100)|round }}%
+                </span>
+
             </div>
 
+
             <div class="progress">
+
                 <div class="progress-fill"></div>
+
             </div>
 
         </div>
 
     </div>
+
 
 
     <!-- SUAL -->
@@ -319,16 +336,28 @@
             SUAL {{ n + 1 }}
         </div>
 
+
         <h2 class="question-text">
             {{ q.question }}
         </h2>
 
 
-        <form method="post" id="questionForm">
+        <form
+            method="post"
+            id="questionForm"
+        >
+
+
+            <!-- CAVAB VARİANTLARI -->
 
             <div class="options">
 
-                {% for letter,text in [('A',q.a),('B',q.b),('C',q.c),('D',q.d)] %}
+                {% for letter,text in [
+                    ('A',q.a),
+                    ('B',q.b),
+                    ('C',q.c),
+                    ('D',q.d)
+                ] %}
 
                 <label class="option">
 
@@ -336,7 +365,6 @@
                         type="radio"
                         name="answer"
                         value="{{ letter }}"
-                        required
                     >
 
                     <span class="letter">
@@ -354,16 +382,21 @@
             </div>
 
 
+
+            <!-- AŞAĞI HİSSƏ -->
+
             <div class="bottom">
 
+
                 <div class="hint">
-                    Cavablardan birini seçin
+                    Cavab seçmək məcburi deyil
                 </div>
 
 
                 <div class="bottom-buttons">
 
-                    <!-- YARIMÇIQ BİTİR DÜYMƏSİ -->
+
+                    <!-- YARIMÇIQ BİTİR -->
 
                     <button
                         type="button"
@@ -393,9 +426,11 @@
 
                     </button>
 
+
                 </div>
 
             </div>
+
 
         </form>
 
@@ -404,39 +439,45 @@
 </div>
 
 
+
 <script>
 
 function finishTest() {
+
+    /*
+       Əgər iştirakçı bu sualda cavab seçibsə,
+       cavabı əvvəlcə serverə göndəririk.
+    */
 
     const selected =
         document.querySelector(
             'input[name="answer"]:checked'
         );
 
-    /*
-       Əgər bu sualda cavab seçilibsə,
-       əvvəlcə cavabı serverə göndəririk.
-    */
 
     if (selected) {
 
         const form =
             document.getElementById("questionForm");
 
+
         /*
-           finish route-una gedirik.
-           Cavabı da form ilə göndəririk.
+           Cavabı saxlayaraq birbaşa
+           nəticə səhifəsinə gedirik.
         */
 
-        form.action = "{{ url_for('finish') }}";
+        form.action =
+            "{{ url_for('finish') }}";
+
 
         form.submit();
+
 
     } else {
 
         /*
            Cavab seçilməyibsə,
-           birbaşa nəticə səhifəsinə keçirik.
+           birbaşa nəticəyə keçirik.
         */
 
         window.location.href =
