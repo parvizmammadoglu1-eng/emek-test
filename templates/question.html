@@ -76,7 +76,6 @@
 
     .progress-fill {
         height: 100%;
-        width: {{ ((n + 1) / total * 100) | round }}%;
         background: white;
         border-radius: 20px;
         transition: width 0.3s ease;
@@ -204,18 +203,19 @@
     }
 
     .finish-anytime {
-        margin-top: 18px;
+        margin-top: 20px;
         text-align: center;
     }
 
     .finish-anytime button {
-        background: transparent;
+        background: white;
         border: 1px solid #d1d5db;
         color: #6b7280;
         padding: 10px 18px;
         border-radius: 10px;
         cursor: pointer;
         font-size: 13px;
+        transition: 0.2s;
     }
 
     .finish-anytime button:hover {
@@ -302,8 +302,15 @@
         <div class="progress-area">
 
             <div class="progress-info">
-                <span>Testin gedişi</span>
-                <span>{{ ((n + 1) / total * 100) | round }}%</span>
+
+                <span>
+                    Testin gedişi
+                </span>
+
+                <span>
+                    {{ ((n + 1) / total * 100) | round }}%
+                </span>
+
             </div>
 
             <div class="progress">
@@ -333,9 +340,12 @@
         </h2>
 
 
-        <!-- CAVABLAR -->
+        <!-- CAVAB FORMU -->
 
-        <form method="post">
+        <form
+            method="POST"
+            action="{{ url_for('question', n=n) }}"
+        >
 
             <div class="options">
 
@@ -376,25 +386,24 @@
                     Cavablardan birini seçin
                 </div>
 
+
                 {% if n + 1 == total %}
 
-                <button
-                    type="submit"
-                    name="finish"
-                    value="1"
-                    class="next-button finish-button"
-                >
-                    TESTİ BİTİR ✓
-                </button>
+                    <button
+                        type="submit"
+                        class="next-button finish-button"
+                    >
+                        TESTİ BİTİR ✓
+                    </button>
 
                 {% else %}
 
-                <button
-                    type="submit"
-                    class="next-button"
-                >
-                    NÖVBƏTİ SUAL →
-                </button>
+                    <button
+                        type="submit"
+                        class="next-button"
+                    >
+                        NÖVBƏTİ SUAL →
+                    </button>
 
                 {% endif %}
 
@@ -403,12 +412,12 @@
         </form>
 
 
-        <!-- İSTƏNİLƏN ANDA BİTİR -->
+        <!-- TESTİ İSTƏNİLƏN ANDA BİTİR -->
 
         {% if n + 1 < total %}
 
         <form
-            method="post"
+            method="POST"
             action="{{ url_for('finish') }}"
             class="finish-anytime"
             onsubmit="return confirm('Testi indi bitirmək və nəticəni görmək istəyirsiniz?');"
@@ -421,6 +430,7 @@
         </form>
 
         {% endif %}
+
 
     </div>
 
