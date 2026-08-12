@@ -1,5 +1,4 @@
 import os
-import json
 from datetime import datetime
 from io import BytesIO
 
@@ -46,24 +45,42 @@ GOOGLE_SHEET_NAME = "Emek Test 2026"
 
 def get_google_client():
 
-    private_key = os.environ.get("GOOGLE_PRIVATE_KEY", "")
+    private_key = os.environ.get(
+        "GOOGLE_PRIVATE_KEY",
+        ""
+    )
 
     if not private_key:
         raise RuntimeError(
             "GOOGLE_PRIVATE_KEY Render Environment Variables bölməsində yoxdur."
         )
 
-    # Render-də \n bəzən mətn kimi gəlir.
-    # Onu real yeni sətirə çeviririk.
-    private_key = private_key.replace("\\n", "\n")
+    # Render-də \n mətn kimi gəlirsə,
+    # onu real yeni sətrə çeviririk.
+    private_key = private_key.replace(
+        "\\n",
+        "\n"
+    )
 
     service_account_info = {
         "type": "service_account",
-        "project_id": os.environ.get("GOOGLE_PROJECT_ID"),
-        "private_key_id": os.environ.get("GOOGLE_PRIVATE_KEY_ID"),
+
+        "project_id": os.environ.get(
+            "GOOGLE_PROJECT_ID"
+        ),
+
+        "private_key_id": os.environ.get(
+            "GOOGLE_PRIVATE_KEY_ID"
+        ),
+
         "private_key": private_key,
-        "client_email": os.environ.get("GOOGLE_CLIENT_EMAIL"),
-        "token_uri": "https://oauth2.googleapis.com/token"
+
+        "client_email": os.environ.get(
+            "GOOGLE_CLIENT_EMAIL"
+        ),
+
+        "token_uri":
+            "https://oauth2.googleapis.com/token"
     }
 
     scopes = [
@@ -76,17 +93,25 @@ def get_google_client():
         scopes=scopes
     )
 
-    return gspread.authorize(credentials)
+    return gspread.authorize(
+        credentials
+    )
 
 
 def get_sheet():
 
     client = get_google_client()
 
-    spreadsheet = client.open(GOOGLE_SHEET_NAME)
+    spreadsheet = client.open(
+        GOOGLE_SHEET_NAME
+    )
 
     try:
-        sheet = spreadsheet.worksheet("Nəticələr")
+
+        sheet = spreadsheet.worksheet(
+            "Nəticələr"
+        )
+
     except gspread.WorksheetNotFound:
 
         sheet = spreadsheet.add_worksheet(
@@ -95,16 +120,18 @@ def get_sheet():
             cols=8
         )
 
-        sheet.append_row([
-            "№",
-            "Ad və soyad",
-            "Düzgün cavab",
-            "Ümumi sual",
-            "Səhv cavab",
-            "Nəticə",
-            "Tarix",
-            "Status"
-        ])
+        sheet.append_row(
+            [
+                "№",
+                "Ad və soyad",
+                "Düzgün cavab",
+                "Ümumi sual",
+                "Səhv cavab",
+                "Nəticə",
+                "Tarix",
+                "Status"
+            ]
+        )
 
     return sheet
 
@@ -116,93 +143,203 @@ def get_sheet():
 QUESTIONS = [
 
     {
-        "question": "Əmək Məcəlləsi kimlərə şamil edilir?",
-        "a": "a) əcnəbilərə;",
-        "b": "b) hərbi qulluqçulara;",
-        "c": "c) məhkəmə hakimlərinə;",
-        "d": "d) AR-nın Milli Məclisinin deputatlarına və bələdiyyələrə seçilmiş şəxslərə;",
-        "answer": "A"
+        "question":
+            "Əmək Məcəlləsi kimlərə şamil edilir?",
+
+        "a":
+            "a) əcnəbilərə;",
+
+        "b":
+            "b) hərbi qulluqçulara;",
+
+        "c":
+            "c) məhkəmə hakimlərinə;",
+
+        "d":
+            "d) AR-nın Milli Məclisinin deputatlarına və bələdiyyələrə seçilmiş şəxslərə;",
+
+        "answer":
+            "A"
     },
 
     {
-        "question": "Əmək qanunvericiliyinə əməl olunmasına dövlət nəzarətini hansı orqan həyata keçirir?",
-        "a": "a) rayon (şəhər) məhkəməsi;",
-        "b": "b) rayon (şəhər) məşğulluq mərkəzləri;",
-        "c": "c) Azərbaycan Həmkarlar İttifaqları Konfederasiyası;",
-        "d": "d) Dövlət Əmək Müfəttişliyi;",
-        "answer": "D"
+        "question":
+            "Əmək qanunvericiliyinə əməl olunmasına dövlət nəzarətini hansı orqan həyata keçirir?",
+
+        "a":
+            "a) rayon (şəhər) məhkəməsi;",
+
+        "b":
+            "b) rayon (şəhər) məşğulluq mərkəzləri;",
+
+        "c":
+            "c) Azərbaycan Həmkarlar İttifaqları Konfederasiyası;",
+
+        "d":
+            "d) Dövlət Əmək Müfəttişliyi;",
+
+        "answer":
+            "D"
     },
 
     {
-        "question": "Əmək müqaviləsinin tərəfləri kimlər olur?",
-        "a": "a) işçi və işəgötürən;",
-        "b": "b) işçi və həmkarlar ittifaqı təşkilatı;",
-        "c": "c) işçi və əmək kollektivi;",
-        "d": "d) işəgötürən və həmkarlar ittifaqı təşkilatı",
-        "answer": "A"
+        "question":
+            "Əmək müqaviləsinin tərəfləri kimlər olur?",
+
+        "a":
+            "a) işçi və işəgötürən;",
+
+        "b":
+            "b) işçi və həmkarlar ittifaqı təşkilatı;",
+
+        "c":
+            "c) işçi və əmək kollektivi;",
+
+        "d":
+            "d) işəgötürən və həmkarlar ittifaqı təşkilatı",
+
+        "answer":
+            "A"
     },
 
     {
-        "question": "Hansı yaşdan hər bir şəxs işçi kimi əmək müqaviləsinin tərəfi ola bilər?",
-        "a": "a) 13 yaşdan;",
-        "b": "b) 14 yaşdan;",
-        "c": "c) 15 yaşdan;",
-        "d": "d) 16 yaşdan",
-        "answer": "C"
+        "question":
+            "Hansı yaşdan hər bir şəxs işçi kimi əmək müqaviləsinin tərəfi ola bilər?",
+
+        "a":
+            "a) 13 yaşdan;",
+
+        "b":
+            "b) 14 yaşdan;",
+
+        "c":
+            "c) 15 yaşdan;",
+
+        "d":
+            "d) 16 yaşdan",
+
+        "answer":
+            "C"
     },
 
     {
-        "question": "Əmək münasibətlərini hansı hüquqi fakt yaradır?",
-        "a": "a) kollektiv müqavilə;",
-        "b": "b) əmək müqaviləsi;",
-        "c": "c) mülki-hüquqi müqavilə;",
-        "d": "d) işəgötürənin əmri (sərəncamı, qərarı)",
-        "answer": "B"
+        "question":
+            "Əmək münasibətlərini hansı hüquqi fakt yaradır?",
+
+        "a":
+            "a) kollektiv müqavilə;",
+
+        "b":
+            "b) əmək müqaviləsi;",
+
+        "c":
+            "c) mülki-hüquqi müqavilə;",
+
+        "d":
+            "d) işəgötürənin əmri (sərəncamı, qərarı)",
+
+        "answer":
+            "B"
     },
 
     {
-        "question": "Ezamiyyətin müddəti neçə gündən artıq ola bilməz?",
-        "a": "a) 30 təqvim günündən",
-        "b": "b) 40 təqvim günündən",
-        "c": "c) 45 təqvim günündən",
-        "d": "d) 25 təqvim günündən",
-        "answer": "A"
+        "question":
+            "Ezamiyyətin müddəti neçə gündən artıq ola bilməz?",
+
+        "a":
+            "a) 30 təqvim günündən",
+
+        "b":
+            "b) 40 təqvim günündən",
+
+        "c":
+            "c) 45 təqvim günündən",
+
+        "d":
+            "d) 25 təqvim günündən",
+
+        "answer":
+            "A"
     },
 
     {
-        "question": "İşçiyə məzuniyyət vaxtı üçün orta əmək haqqı məzuniyyətin başlanmasına ən azı neçə gün qalmış ödənilir?",
-        "a": "a) 3 gün qalmış",
-        "b": "b) 4 gün qalmış",
-        "c": "c) 5 gün qalmış",
-        "d": "d) 6 gün qalmış",
-        "answer": "C"
+        "question":
+            "İşçiyə məzuniyyət vaxtı üçün orta əmək haqqı məzuniyyətin başlanmasına ən azı neçə gün qalmış ödənilir?",
+
+        "a":
+            "a) 3 gün qalmış",
+
+        "b":
+            "b) 4 gün qalmış",
+
+        "c":
+            "c) 5 gün qalmış",
+
+        "d":
+            "d) 6 gün qalmış",
+
+        "answer":
+            "C"
     },
 
     {
-        "question": "İşçinin on ildən on beş ilədək əmək stajı olduqda əlavə necə gün məzuniyyət verilir?",
-        "a": "a) 8 təqvim günü",
-        "b": "b) 5 təqvim günü",
-        "c": "c) 6 təqvim günü",
-        "d": "d) 4 təqvim günü",
-        "answer": "B"
+        "question":
+            "İşçinin on ildən on beş ilədək əmək stajı olduqda əlavə necə gün məzuniyyət verilir?",
+
+        "a":
+            "a) 8 təqvim günü",
+
+        "b":
+            "b) 5 təqvim günü",
+
+        "c":
+            "c) 6 təqvim günü",
+
+        "d":
+            "d) 4 təqvim günü",
+
+        "answer":
+            "B"
     },
 
     {
-        "question": "İşçinin bir iş günü ilə növbəti iş günü arasındakı gündəlik istirahət vaxtı azı neçə saat olmalıdır?",
-        "a": "a) azı 8 saat",
-        "b": "b) azı 10 saat",
-        "c": "c) azı 12 saat",
-        "d": "d) azı 14 saat",
-        "answer": "C"
+        "question":
+            "İşçinin bir iş günü ilə növbəti iş günü arasındakı gündəlik istirahət vaxtı azı neçə saat olmalıdır?",
+
+        "a":
+            "a) azı 8 saat",
+
+        "b":
+            "b) azı 10 saat",
+
+        "c":
+            "c) azı 12 saat",
+
+        "d":
+            "d) azı 14 saat",
+
+        "answer":
+            "C"
     },
 
     {
-        "question": "16 yaşdan 18 yaşadək olan işçilərə qısaldılmış iş vaxtının müddəti həftə ərzində neçə saat təşkil edir?",
-        "a": "a) 24 saat",
-        "b": "b) 36 saat",
-        "c": "c) 40 saat",
-        "d": "d) 32 saat",
-        "answer": "B"
+        "question":
+            "16 yaşdan 18 yaşadək olan işçilərə qısaldılmış iş vaxtının müddəti həftə ərzində neçə saat təşkil edir?",
+
+        "a":
+            "a) 24 saat",
+
+        "b":
+            "b) 36 saat",
+
+        "c":
+            "c) 40 saat",
+
+        "d":
+            "d) 32 saat",
+
+        "answer":
+            "B"
     }
 
 ]
@@ -217,9 +354,15 @@ def admin_required(function):
     def wrapper(*args, **kwargs):
 
         if not session.get("admin"):
-            return redirect(url_for("admin_login"))
 
-        return function(*args, **kwargs)
+            return redirect(
+                url_for("admin_login")
+            )
+
+        return function(
+            *args,
+            **kwargs
+        )
 
     wrapper.__name__ = function.__name__
 
@@ -230,7 +373,10 @@ def admin_required(function):
 # HOME
 # =========================================================
 
-@app.route("/", methods=["GET", "POST"])
+@app.route(
+    "/",
+    methods=["GET", "POST"]
+)
 def home():
 
     if request.method == "POST":
@@ -279,9 +425,11 @@ def question(n):
             url_for("home")
         )
 
-    total = len(QUESTIONS)
+    total = len(
+        QUESTIONS
+    )
 
-    # Test bitibsə
+    # Sual sayı bitibsə nəticəyə keç
     if n >= total:
 
         return redirect(
@@ -306,11 +454,17 @@ def question(n):
 
             return render_template(
                 "question.html",
+
                 q=q,
+
                 n=n,
+
                 total=total,
+
                 name=session["name"],
-                error="Zəhmət olmasa cavablardan birini seçin."
+
+                error=
+                    "Zəhmət olmasa cavablardan birini seçin."
             )
 
         answers = session.get(
@@ -322,7 +476,7 @@ def question(n):
 
         session["answers"] = answers
 
-        # Son sualdırsa nəticəyə get
+        # Son sualdırsa nəticəyə keç
         if n + 1 >= total:
 
             return redirect(
@@ -338,9 +492,13 @@ def question(n):
 
     return render_template(
         "question.html",
+
         q=q,
+
         n=n,
+
         total=total,
+
         name=session["name"]
     )
 
@@ -348,8 +506,19 @@ def question(n):
 # =========================================================
 # TESTİ İSTƏNİLƏN YERDƏ BİTİR
 # =========================================================
+#
+# ƏSAS DÜZƏLİŞ BURADADIR:
+#
+# methods=["GET", "POST"]
+#
+# Beləliklə "Testi indi bitir" düyməsi
+# POST göndərəndə Method Not Allowed olmayacaq.
+# =========================================================
 
-@app.route("/finish")
+@app.route(
+    "/finish",
+    methods=["GET", "POST"]
+)
 def finish():
 
     if "name" not in session:
@@ -363,13 +532,23 @@ def finish():
         {}
     )
 
-    total = len(QUESTIONS)
+    total = len(
+        QUESTIONS
+    )
 
     correct = 0
 
-    answered = len(answers)
+    answered = len(
+        answers
+    )
 
-    for index, q in enumerate(QUESTIONS):
+    # =====================================================
+    # DÜZGÜN CAVABLARI HESABLA
+    # =====================================================
+
+    for index, q in enumerate(
+        QUESTIONS
+    ):
 
         selected = answers.get(
             str(index)
@@ -379,8 +558,10 @@ def finish():
 
             correct += 1
 
+    # Cavablandırılan suallar daxilində səhvlər
     wrong = answered - correct
 
+    # Faiz bütün test üzrə hesablanır
     percent = round(
         correct / total * 100
     ) if total else 0
@@ -391,14 +572,20 @@ def finish():
         "%d.%m.%Y %H:%M:%S"
     )
 
-    status = (
-        "Tamamlandı"
-        if answered == total
-        else f"Yarımçıq bitirildi ({answered}/{total})"
-    )
+    if answered == total:
+
+        status = "Tamamlandı"
+
+    else:
+
+        status = (
+            f"Yarımçıq bitirildi "
+            f"({answered}/{total})"
+        )
+
 
     # =====================================================
-    # GOOGLE SHEETS-Ə YAZ
+    # GOOGLE SHEETS
     # =====================================================
 
     try:
@@ -407,7 +594,10 @@ def finish():
 
         all_values = sheet.get_all_values()
 
-        number = len(all_values)
+        # Başlıq sətrini nəzərə al
+        number = len(
+            all_values
+        )
 
         sheet.append_row(
             [
@@ -423,6 +613,10 @@ def finish():
             value_input_option="USER_ENTERED"
         )
 
+        print(
+            "GOOGLE SHEETS: nəticə əlavə edildi."
+        )
+
     except Exception as e:
 
         print(
@@ -430,18 +624,36 @@ def finish():
             str(e)
         )
 
-    # Sessiyanı təmizlə
+
+    # =====================================================
+    # SESSION TƏMİZLƏ
+    # =====================================================
+
     session.clear()
 
+
+    # =====================================================
+    # NƏTİCƏ SƏHİFƏSİ
+    # =====================================================
+
     return render_template(
+
         "finish.html",
+
         name=name,
+
         correct=correct,
+
         total=total,
+
         percent=percent,
+
         answered=answered,
+
         wrong=wrong,
+
         status=status
+
     )
 
 
@@ -472,6 +684,7 @@ def admin_login():
 
         return render_template(
             "admin_login.html",
+
             error="Parol yanlışdır."
         )
 
@@ -484,7 +697,9 @@ def admin_login():
 # ADMIN LOGOUT
 # =========================================================
 
-@app.route("/admin/logout")
+@app.route(
+    "/admin/logout"
+)
 def admin_logout():
 
     session.pop(
@@ -501,7 +716,9 @@ def admin_logout():
 # ADMIN PANEL
 # =========================================================
 
-@app.route("/admin")
+@app.route(
+    "/admin"
+)
 @admin_required
 def admin():
 
@@ -522,7 +739,9 @@ def admin():
 
     return render_template(
         "admin.html",
+
         results=values,
+
         questions=QUESTIONS
     )
 
@@ -531,7 +750,9 @@ def admin():
 # EXCEL EXPORT
 # =========================================================
 
-@app.route("/admin/export")
+@app.route(
+    "/admin/export"
+)
 @admin_required
 def admin_export():
 
@@ -550,22 +771,38 @@ def admin_export():
 
         results = []
 
+
     workbook = Workbook()
 
     worksheet = workbook.active
 
     worksheet.title = "Test nəticələri"
 
+
+    # =====================================================
+    # BAŞLIQLAR
+    # =====================================================
+
     headers = [
+
         "№",
+
         "Ad və soyad",
+
         "Düzgün cavab",
+
         "Ümumi sual",
+
         "Səhv cavab",
+
         "Nəticə",
+
         "Tarix",
+
         "Status"
+
     ]
+
 
     for column, header in enumerate(
         headers,
@@ -586,6 +823,11 @@ def admin_export():
             horizontal="center"
         )
 
+
+    # =====================================================
+    # NƏTİCƏLƏR
+    # =====================================================
+
     for row_number, result in enumerate(
         results,
         2
@@ -594,7 +836,10 @@ def admin_export():
         worksheet.cell(
             row=row_number,
             column=1,
-            value=result.get("№", row_number - 1)
+            value=result.get(
+                "№",
+                row_number - 1
+            )
         )
 
         worksheet.cell(
@@ -660,16 +905,31 @@ def admin_export():
             )
         )
 
+
+    # =====================================================
+    # SÜTUN ENLİKLƏRİ
+    # =====================================================
+
     widths = {
+
         "A": 8,
+
         "B": 30,
+
         "C": 18,
+
         "D": 18,
+
         "E": 15,
+
         "F": 15,
+
         "G": 25,
+
         "H": 30
+
     }
+
 
     for column, width in widths.items():
 
@@ -677,24 +937,38 @@ def admin_export():
             column
         ].width = width
 
+
+    # =====================================================
+    # EXCEL FAYLI
+    # =====================================================
+
     output = BytesIO()
 
-    workbook.save(output)
+    workbook.save(
+        output
+    )
 
     output.seek(0)
+
 
     filename = (
         "emek_mecellesi_2026_test_neticeleri.xlsx"
     )
 
+
     return send_file(
+
         output,
+
         as_attachment=True,
+
         download_name=filename,
+
         mimetype=(
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"
         )
+
     )
 
 
@@ -705,11 +979,14 @@ def admin_export():
 if __name__ == "__main__":
 
     app.run(
+
         host="0.0.0.0",
+
         port=int(
             os.environ.get(
                 "PORT",
                 5000
             )
         )
+
     )
