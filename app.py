@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from io import BytesIO
-from functools import wraps
 
 from flask import (
     Flask,
@@ -57,7 +57,7 @@ def get_google_client():
         )
 
     # Render-də \n mətn kimi gəlirsə,
-    # real yeni sətrə çeviririk.
+    # onu real yeni sətrə çeviririk.
     private_key = private_key.replace(
         "\\n",
         "\n"
@@ -347,12 +347,11 @@ QUESTIONS = [
 
 
 # =========================================================
-# ADMIN DECORATOR
+# ADMIN
 # =========================================================
 
 def admin_required(function):
 
-    @wraps(function)
     def wrapper(*args, **kwargs):
 
         if not session.get("admin"):
@@ -365,6 +364,8 @@ def admin_required(function):
             *args,
             **kwargs
         )
+
+    wrapper.__name__ = function.__name__
 
     return wrapper
 
@@ -392,9 +393,6 @@ def home():
                 "home.html",
                 error="Ad və soyad daxil edin."
             )
-
-        # Yeni test başlayanda köhnə məlumatları sil
-        session.clear()
 
         session["name"] = name
 
@@ -432,7 +430,7 @@ def question(n):
         QUESTIONS
     )
 
-    # Suallar bitibsə nəticəyə keç
+    # Sual sayı bitibsə nəticəyə keç
     if n >= total:
 
         return redirect(
@@ -443,35 +441,41 @@ def question(n):
 
     if request.method == "POST":
 
-        # Cavab seçilməsə belə boş qəbul olunur
         selected = request.form.get(
-            "answer",
-            ""
+            "answer"
         )
 
-        answers = session.get(
-            "answers",
-            {}
-        )
-
-        # Yalnız düzgün formatdakı cavabı yadda saxla
-        if selected in [
+        # Cavab seçilməyibsə
+        if selected not in [
             "A",
             "B",
             "C",
             "D"
         ]:
 
-            answers[str(n)] = selected
+            return render_template(
+                "question.html",
 
-        else:
+                q=q,
 
-            # Cavab seçilməyibsə boş saxla
-            answers[str(n)] = ""
+                n=n,
+
+                total=total,
+
+                name=session["name"],
+
+                error=
+                    "Zəhmət olmasa cavablardan birini seçin."
+            )
+
+        answers = session.get(
+            "answers",
+            {}
+        )
+
+        answers[str(n)] = selected
 
         session["answers"] = answers
-
-        session.modified = True
 
         # Son sualdırsa nəticəyə keç
         if n + 1 >= total:
@@ -480,7 +484,6 @@ def question(n):
                 url_for("finish")
             )
 
-        # Növbəti sual
         return redirect(
             url_for(
                 "question",
@@ -497,9 +500,7 @@ def question(n):
 
         total=total,
 
-        name=session.get(
-            "name"
-        )
+        name=session["name"]
     )
 
 
@@ -530,10 +531,12 @@ def finish():
 
     correct = 0
 
-    answered = 0
+    answered = len(
+        answers
+    )
 
     # =====================================================
-    # CAVABLARI HESABLA
+    # DÜZGÜN CAVABLARI HESABLA
     # =====================================================
 
     for index, q in enumerate(
@@ -541,37 +544,31 @@ def finish():
     ):
 
         selected = answers.get(
-            str(index),
-            ""
+            str(index)
         )
 
-        # Cavab seçilibsə
-        if selected in [
-            "A",
-            "B",
-            "C",
-            "D"
-        ]:
+        if selected == q["answer"]:
 
-            answered += 1
+            correct += 1
 
-            if selected == q["answer"]:
-
-                correct += 1
-
-    # Cavablandırılmayanlar da səhv hesab olunur
-    wrong = total - correct
+    # Cavablandırılan suallar daxilində səhvlər
+    wrong = answered - correct
 
     # Faiz bütün test üzrə hesablanır
     percent = round(
         correct / total * 100
     ) if total else 0
 
-    name = session.get(
-        "name"
-    )
+    name = session["name"]
 
-    created_at = datetime.now().strftime(
+    # =====================================================
+    # BAKI VAXTI
+    # Render UTC işlədiyi üçün Asia/Baku istifadə olunur
+    # =====================================================
+
+    created_at = datetime.now(
+        ZoneInfo("Asia/Baku")
+    ).strftime(
         "%d.%m.%Y %H:%M:%S"
     )
 
@@ -596,14 +593,10 @@ def finish():
 
         all_values = sheet.get_all_values()
 
-        # Başlıq sətrindən sonra sıra nömrəsi
+        # Başlıq sətrini nəzərə al
         number = len(
             all_values
         )
-
-        if number < 1:
-
-            number = 1
 
         sheet.append_row(
             [
@@ -631,26 +624,17 @@ def finish():
         )
 
     # =====================================================
-    # NƏTİCƏDƏN ƏVVƏL MƏLUMATLARI SAXLA
+    # SESSION TƏMİZLƏ
     # =====================================================
 
-    result_data = {
-        "name": name,
-        "correct": correct,
-        "total": total,
-        "percent": percent,
-        "answered": answered,
-        "wrong": wrong,
-        "status": status
-    }
-
-    # Session təmizlə
     session.clear()
 
-    # Nəticəni ayrıca session-da saxla
-    session["last_result"] = result_data
+    # =====================================================
+    # NƏTİCƏ SƏHİFƏSİ
+    # =====================================================
 
     return render_template(
+
         "finish.html",
 
         name=name,
@@ -666,6 +650,7 @@ def finish():
         wrong=wrong,
 
         status=status
+
     )
 
 
@@ -738,7 +723,7 @@ def admin():
 
         sheet = get_sheet()
 
-        results = sheet.get_all_records()
+        values = sheet.get_all_records()
 
     except Exception as e:
 
@@ -747,12 +732,12 @@ def admin():
             str(e)
         )
 
-        results = []
+        values = []
 
     return render_template(
         "admin.html",
 
-        results=results,
+        results=values,
 
         questions=QUESTIONS
     )
@@ -944,7 +929,7 @@ def admin_export():
         ].width = width
 
     # =====================================================
-    # EXCEL
+    # EXCEL FAYLI
     # =====================================================
 
     output = BytesIO()
