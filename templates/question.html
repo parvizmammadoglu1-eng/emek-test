@@ -3,273 +3,254 @@
 {% block content %}
 
 <style>
+
+.test-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 10px 40px;
+}
+
+.test-header {
+    background: linear-gradient(135deg, #173b73, #2563eb);
+    color: white;
+    border-radius: 20px;
+    padding: 25px 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(23, 59, 115, 0.18);
+}
+
+.test-title {
+    margin: 0 0 6px;
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.test-subtitle {
+    margin: 0;
+    opacity: 0.85;
+    font-size: 14px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+}
+
+.user-name {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.question-count {
+    background: rgba(255,255,255,0.15);
+    padding: 9px 15px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.progress-area {
+    margin-top: 18px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+    opacity: 0.9;
+}
+
+.progress {
+    width: 100%;
+    height: 9px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: {{ ((n+1)/total*100)|round }}%;
+    background: white;
+    border-radius: 20px;
+}
+
+.question-card {
+    background: white;
+    border-radius: 20px;
+    padding: 35px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.07);
+    border: 1px solid #e5e7eb;
+}
+
+.question-number {
+    display: inline-block;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.question-text {
+    font-size: 23px;
+    line-height: 1.45;
+    margin: 0 0 28px;
+    color: #172033;
+    font-weight: 700;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 17px 18px;
+    border: 2px solid #e5e7eb;
+    border-radius: 13px;
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.2s ease;
+    font-size: 16px;
+    color: #374151;
+}
+
+.option:hover {
+    border-color: #2563eb;
+    background: #f8fbff;
+    transform: translateY(-1px);
+}
+
+.option input {
+    display: none;
+}
+
+.letter {
+    min-width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #f3f4f6;
+    color: #374151;
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.option:has(input:checked) {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #173b73;
+}
+
+.option:has(input:checked) .letter {
+    background: #2563eb;
+    color: white;
+}
+
+.bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    gap: 15px;
+}
+
+.hint {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.next-button {
+    border: none;
+    background: linear-gradient(135deg, #173b73, #2563eb);
+    color: white;
+    padding: 14px 25px;
+    border-radius: 11px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(37,99,235,0.25);
+}
+
+.finish-anytime {
+    margin-top: 14px;
+}
+
+.finish-anytime button {
+    width: 100%;
+    border: 1px solid #fecaca;
+    background: #fff5f5;
+    color: #b91c1c;
+    padding: 12px 18px;
+    border-radius: 11px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.finish-anytime button:hover {
+    background: #fee2e2;
+}
+
+@media (max-width: 600px) {
+
     .test-page {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px 10px 40px;
+        padding: 10px 5px 25px;
     }
 
     .test-header {
-        background: linear-gradient(135deg, #173b73, #2563eb);
-        color: white;
-        border-radius: 20px;
-        padding: 25px 30px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(23, 59, 115, 0.18);
+        padding: 20px;
+        border-radius: 15px;
     }
 
     .test-title {
-        margin: 0 0 6px;
-        font-size: 26px;
-        font-weight: 800;
-    }
-
-    .test-subtitle {
-        margin: 0;
-        opacity: 0.85;
-        font-size: 14px;
-    }
-
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-        margin-top: 22px;
-        flex-wrap: wrap;
-    }
-
-    .user-name {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        font-size: 15px;
-        font-weight: 600;
-    }
-
-    .question-count {
-        background: rgba(255,255,255,0.15);
-        padding: 9px 15px;
-        border-radius: 10px;
-        font-weight: 700;
-    }
-
-    .progress-area {
-        margin-top: 18px;
-    }
-
-    .progress-info {
-        display: flex;
-        justify-content: space-between;
-        font-size: 13px;
-        margin-bottom: 8px;
-        opacity: 0.9;
-    }
-
-    .progress {
-        width: 100%;
-        height: 9px;
-        background: rgba(255,255,255,0.22);
-        border-radius: 20px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: white;
-        border-radius: 20px;
-        transition: width 0.3s ease;
+        font-size: 21px;
     }
 
     .question-card {
-        background: white;
-        border-radius: 20px;
-        padding: 35px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.07);
-        border: 1px solid #e5e7eb;
-    }
-
-    .question-number {
-        display: inline-block;
-        background: #eff6ff;
-        color: #2563eb;
-        padding: 7px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 700;
-        margin-bottom: 18px;
+        padding: 22px 17px;
+        border-radius: 15px;
     }
 
     .question-text {
-        font-size: 23px;
-        line-height: 1.45;
-        margin: 0 0 28px;
-        color: #172033;
-        font-weight: 700;
-    }
-
-    .options {
-        display: flex;
-        flex-direction: column;
-        gap: 13px;
+        font-size: 19px;
     }
 
     .option {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 17px 18px;
-        border: 2px solid #e5e7eb;
-        border-radius: 13px;
-        cursor: pointer;
-        background: #fff;
-        transition: all 0.2s ease;
-        font-size: 16px;
-        color: #374151;
-    }
-
-    .option:hover {
-        border-color: #2563eb;
-        background: #f8fbff;
-        transform: translateY(-1px);
-    }
-
-    .option input {
-        display: none;
-    }
-
-    .letter {
-        min-width: 38px;
-        height: 38px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
-        background: #f3f4f6;
-        color: #374151;
-        font-weight: 800;
-        font-size: 14px;
-    }
-
-    .option:has(input:checked) {
-        border-color: #2563eb;
-        background: #eff6ff;
-        color: #173b73;
-    }
-
-    .option:has(input:checked) .letter {
-        background: #2563eb;
-        color: white;
+        padding: 14px;
+        font-size: 15px;
     }
 
     .bottom {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 30px;
-        gap: 15px;
-    }
-
-    .hint {
-        color: #6b7280;
-        font-size: 13px;
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .next-button {
-        border: none;
-        background: linear-gradient(135deg, #173b73, #2563eb);
-        color: white;
-        padding: 14px 25px;
-        border-radius: 11px;
-        font-size: 15px;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 5px 15px rgba(37,99,235,0.25);
-        transition: all 0.2s ease;
+        width: 100%;
     }
 
-    .next-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(37,99,235,0.3);
-    }
-
-    .finish-button {
-        background: linear-gradient(135deg, #15803d, #22c55e);
-        box-shadow: 0 5px 15px rgba(34,197,94,0.25);
-    }
-
-    .finish-button:hover {
-        box-shadow: 0 8px 20px rgba(34,197,94,0.3);
-    }
-
-    .finish-anytime {
-        margin-top: 20px;
+    .hint {
         text-align: center;
     }
+}
 
-    .finish-anytime button {
-        background: white;
-        border: 1px solid #d1d5db;
-        color: #6b7280;
-        padding: 10px 18px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 13px;
-        transition: 0.2s;
-    }
-
-    .finish-anytime button:hover {
-        border-color: #ef4444;
-        color: #dc2626;
-        background: #fff7f7;
-    }
-
-    @media (max-width: 600px) {
-
-        .test-page {
-            padding: 10px 5px 25px;
-        }
-
-        .test-header {
-            padding: 20px;
-            border-radius: 15px;
-        }
-
-        .test-title {
-            font-size: 21px;
-        }
-
-        .question-card {
-            padding: 22px 17px;
-            border-radius: 15px;
-        }
-
-        .question-text {
-            font-size: 19px;
-        }
-
-        .option {
-            padding: 14px;
-            font-size: 15px;
-        }
-
-        .bottom {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .next-button {
-            width: 100%;
-        }
-
-        .hint {
-            text-align: center;
-        }
-
-        .finish-anytime button {
-            width: 100%;
-        }
-    }
 </style>
 
 
@@ -308,17 +289,14 @@
                 </span>
 
                 <span>
-                    {{ ((n + 1) / total * 100) | round }}%
+                    {{ ((n+1)/total*100)|round }}%
                 </span>
 
             </div>
 
             <div class="progress">
 
-                <div
-                    class="progress-fill"
-                    style="width: {{ ((n + 1) / total * 100) | round }}%;"
-                ></div>
+                <div class="progress-fill"></div>
 
             </div>
 
@@ -332,11 +310,16 @@
     <div class="question-card">
 
         <div class="question-number">
+
             SUAL {{ n + 1 }}
+
         </div>
 
+
         <h2 class="question-text">
+
             {{ q.question }}
+
         </h2>
 
 
@@ -349,11 +332,11 @@
 
             <div class="options">
 
-                {% for letter, text in [
-                    ('A', q.a),
-                    ('B', q.b),
-                    ('C', q.c),
-                    ('D', q.d)
+                {% for letter,text in [
+                    ('A',q.a),
+                    ('B',q.b),
+                    ('C',q.c),
+                    ('D',q.d)
                 ] %}
 
                 <label class="option">
@@ -362,7 +345,6 @@
                         type="radio"
                         name="answer"
                         value="{{ letter }}"
-                        required
                     >
 
                     <span class="letter">
@@ -383,57 +365,52 @@
             <div class="bottom">
 
                 <div class="hint">
-                    Cavablardan birini seçin
+                    Cavab seçmək məcburi deyil
                 </div>
 
 
-                {% if n + 1 == total %}
+                <button
+                    type="submit"
+                    class="next-button"
+                >
 
-                    <button
-                        type="submit"
-                        class="next-button finish-button"
-                    >
+                    {% if n + 1 == total %}
+
                         TESTİ BİTİR ✓
-                    </button>
 
-                {% else %}
+                    {% else %}
 
-                    <button
-                        type="submit"
-                        class="next-button"
-                    >
                         NÖVBƏTİ SUAL →
-                    </button>
 
-                {% endif %}
+                    {% endif %}
+
+                </button>
 
             </div>
 
         </form>
 
 
-        <!-- TESTİ İSTƏNİLƏN ANDA BİTİR -->
-
-        {% if n + 1 < total %}
+        <!-- İSTƏNİLƏN AN BİTİR -->
 
         <form
             method="POST"
             action="{{ url_for('finish') }}"
             class="finish-anytime"
-            onsubmit="return confirm('Testi indi bitirmək və nəticəni görmək istəyirsiniz?');"
+            onsubmit="return confirm('Testi indi bitirmək və nəticənizə baxmaq istəyirsiniz?');"
         >
 
             <button type="submit">
-                Testi indi bitir və nəticəmə bax
+
+                🏁 TESTİ İNDİ BİTİR VƏ NƏTİCƏMƏ BAX
+
             </button>
 
         </form>
 
-        {% endif %}
-
-
     </div>
 
 </div>
+
 
 {% endblock %}
