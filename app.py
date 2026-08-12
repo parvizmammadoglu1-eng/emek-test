@@ -1,10 +1,10 @@
 import os
-import sqlite3
+import json
 from datetime import datetime
-from pathlib import Path
 from functools import wraps
 from io import BytesIO
 
+import requests
 from flask import (
     Flask,
     render_template,
@@ -19,6 +19,10 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 
 
+# =========================================================
+# APP
+# =========================================================
+
 app = Flask(__name__)
 
 app.secret_key = os.environ.get(
@@ -31,169 +35,281 @@ ADMIN_PASSWORD = os.environ.get(
     "12345"
 )
 
-DB = Path(__file__).with_name("test.db")
+
+# =========================================================
+# GOOGLE SHEETS
+# =========================================================
+
+GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
+GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get(
+    "GOOGLE_SERVICE_ACCOUNT_JSON",
+    ""
+)
+
+
+def google_sheets_available():
+    return bool(
+        GOOGLE_SHEET_ID and
+        GOOGLE_SERVICE_ACCOUNT_JSON
+    )
+
+
+def get_google_credentials():
+    """
+    Google Service Account məlumatlarını oxuyur.
+    """
+    if not GOOGLE_SERVICE_ACCOUNT_JSON:
+        return None
+
+    try:
+        from google.oauth2.service_account import Credentials
+
+        data = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets"
+        ]
+
+        credentials = Credentials.from_service_account_info(
+            data,
+            scopes=scopes
+        )
+
+        return credentials
+
+    except Exception as e:
+        print("Google credentials error:", e)
+        return None
+
+
+def save_result_to_google_sheet(
+    name,
+    correct,
+    total,
+    percent,
+    created_at
+):
+    """
+    Nəticəni Google Sheets-ə əlavə edir.
+    """
+
+    if not google_sheets_available():
+        print("Google Sheets environment variables yoxdur.")
+        return False
+
+    try:
+
+        import gspread
+
+        credentials = get_google_credentials()
+
+        if credentials is None:
+            return False
+
+        client = gspread.authorize(credentials)
+
+        spreadsheet = client.open_by_key(
+            GOOGLE_SHEET_ID
+        )
+
+        worksheet = spreadsheet.sheet1
+
+        wrong = total - correct
+
+        worksheet.append_row(
+            [
+                name,
+                correct,
+                total,
+                wrong,
+                percent,
+                created_at
+            ],
+            value_input_option="USER_ENTERED"
+        )
+
+        return True
+
+    except Exception as e:
+
+        print("Google Sheets save error:", e)
+
+        return False
+
+
+def get_results_from_google_sheet():
+    """
+    Google Sheets-dən bütün nəticələri oxuyur.
+    """
+
+    if not google_sheets_available():
+        return []
+
+    try:
+
+        import gspread
+
+        credentials = get_google_credentials()
+
+        if credentials is None:
+            return []
+
+        client = gspread.authorize(credentials)
+
+        spreadsheet = client.open_by_key(
+            GOOGLE_SHEET_ID
+        )
+
+        worksheet = spreadsheet.sheet1
+
+        rows = worksheet.get_all_records()
+
+        results = []
+
+        for index, row in enumerate(rows, 1):
+
+            results.append(
+                {
+                    "id": index,
+                    "name": row.get("Ad və soyad", ""),
+                    "correct": int(
+                        row.get("Düzgün cavab", 0) or 0
+                    ),
+                    "total": int(
+                        row.get("Ümumi sual", 0) or 0
+                    ),
+                    "percent": int(
+                        row.get("Nəticə", 0) or 0
+                    ),
+                    "created_at": row.get(
+                        "Tarix",
+                        ""
+                    )
+                }
+            )
+
+        results.reverse()
+
+        return results
+
+    except Exception as e:
+
+        print("Google Sheets read error:", e)
+
+        return []
 
 
 # =========================================================
-# SUALLAR
+# QUESTIONS
 # =========================================================
 
 QUESTIONS = [
 
-    (
-        "Əmək Məcəlləsi kimlərə şamil edilir?",
-        "a) əcnəbilərə",
-        "b) hərbi qulluqçulara",
-        "c) məhkəmə hakimlərinə",
-        "d) AR-nın Milli Məclisinin deputatlarına və bələdiyyələrə seçilmiş şəxslərə",
-        "A"
-    ),
+    {
+        "id": 1,
+        "question": "Əmək Məcəlləsi kimlərə şamil edilir?",
+        "a": "a) əcnəbilərə;",
+        "b": "b) hərbi qulluqçulara;",
+        "c": "c) məhkəmə hakimlərinə;",
+        "d": "d) AR-nın Milli Məclisinin deputatlarına və bələdiyyələrə seçilmiş şəxslərə;",
+        "answer": "A"
+    },
 
-    (
-        "Əmək qanunvericiliyinə əməl olunmasına dövlət nəzarətini hansı orqan həyata keçirir?",
-        "a) rayon (şəhər) məhkəməsi",
-        "b) rayon (şəhər) məşğulluq mərkəzləri",
-        "c) Azərbaycan Həmkarlar İttifaqları Konfederasiyası",
-        "d) Dövlət Əmək Müfəttişliyi",
-        "D"
-    ),
+    {
+        "id": 2,
+        "question": "Əmək qanunvericiliyinə əməl olunmasına dövlət nəzarətini hansı orqan həyata keçirir?",
+        "a": "a) rayon (şəhər) məhkəməsi;",
+        "b": "b) rayon (şəhər) məşğulluq mərkəzləri;",
+        "c": "c) Azərbaycan Həmkarlar İttifaqları Konfederasiyası;",
+        "d": "d) Dövlət Əmək Müfəttişliyi;",
+        "answer": "D"
+    },
 
-    (
-        "Əmək müqaviləsinin tərəfləri kimlər olur?",
-        "a) işçi və işəgötürən",
-        "b) işçi və həmkarlar ittifaqı təşkilatı",
-        "c) işçi və əmək kollektivi",
-        "d) işəgötürən və həmkarlar ittifaqı təşkilatı",
-        "A"
-    ),
+    {
+        "id": 3,
+        "question": "Əmək müqaviləsinin tərəfləri kimlər olur?",
+        "a": "a) işçi və işəgötürən;",
+        "b": "b) işçi və həmkarlar ittifaqı təşkilatı;",
+        "c": "c) işçi və əmək kollektivi;",
+        "d": "d) işəgötürən və həmkarlar ittifaqı təşkilatı",
+        "answer": "A"
+    },
 
-    (
-        "Hansı yaşdan hər bir şəxs işçi kimi əmək müqaviləsinin tərəfi ola bilər?",
-        "a) 13 yaşdan",
-        "b) 14 yaşdan",
-        "c) 15 yaşdan",
-        "d) 16 yaşdan",
-        "C"
-    ),
+    {
+        "id": 4,
+        "question": "Hansı yaşdan hər bir şəxs işçi kimi əmək müqaviləsinin tərəfi ola bilər?",
+        "a": "a) 13 yaşdan;",
+        "b": "b) 14 yaşdan;",
+        "c": "c) 15 yaşdan;",
+        "d": "d) 16 yaşdan",
+        "answer": "D"
+    },
 
-    (
-        "Əmək münasibətlərini hansı hüquqi fakt yaradır?",
-        "a) kollektiv müqavilə",
-        "b) əmək müqaviləsi",
-        "c) mülki-hüquqi müqavilə",
-        "d) işəgötürənin əmri (sərəncamı, qərarı)",
-        "B"
-    ),
+    {
+        "id": 5,
+        "question": "Əmək münasibətlərini hansı hüquqi fakt yaradır?",
+        "a": "a) kollektiv müqavilə;",
+        "b": "b) əmək müqaviləsi;",
+        "c": "c) mülki-hüquqi müqavilə;",
+        "d": "d) işəgötürənin əmri (sərəncamı, qərarı)",
+        "answer": "B"
+    },
 
-    (
-        "Ezamiyyətin müddəti neçə gündən artıq ola bilməz?",
-        "a) 30 təqvim günündən",
-        "b) 40 təqvim günündən",
-        "c) 45 təqvim günündən",
-        "d) 25 təqvim günündən",
-        "A"
-    ),
+    {
+        "id": 6,
+        "question": "Ezamiyyətin müddəti neçə gündən artıq ola bilməz?",
+        "a": "a) 30 təqvim günündən",
+        "b": "b) 40 təqvim günündən",
+        "c": "c) 45 təqvim günündən",
+        "d": "d) 25 təqvim günündən",
+        "answer": "A"
+    },
 
-    (
-        "İşçiyə məzuniyyət vaxtı üçün orta əmək haqqı məzuniyyətin başlanmasına ən azı neçə gün qalmış ödənilir?",
-        "a) 3 gün qalmış",
-        "b) 4 gün qalmış",
-        "c) 5 gün qalmış",
-        "d) 6 gün qalmış",
-        "A"
-    ),
+    {
+        "id": 7,
+        "question": "İşçiyə məzuniyyət vaxtı üçün orta əmək haqqı məzuniyyətin başlanmasına ən azı neçə gün qalmış ödənilir?",
+        "a": "a) 3 gün qalmış",
+        "b": "b) 4 gün qalmış",
+        "c": "c) 5 gün qalmış",
+        "d": "d) 6 gün qalmış",
+        "answer": "C"
+    },
 
-    (
-        "İşçinin on ildən on beş ilədək əmək stajı olduqda əlavə neçə gün məzuniyyət verilir?",
-        "a) 8 təqvim günü",
-        "b) 5 təqvim günü",
-        "c) 6 təqvim günü",
-        "d) 4 təqvim günü",
-        "B"
-    ),
+    {
+        "id": 8,
+        "question": "İşçinin on ildən on beş ilədək əmək stajı olduqda əlavə necə gün məzuniyyət verilir?",
+        "a": "a) 8 təqvim günü",
+        "b": "b) 5 təqvim günü",
+        "c": "c) 6 təqvim günü",
+        "d": "d) 4 təqvim günü",
+        "answer": "B"
+    },
 
-    (
-        "İşçinin bir iş günü ilə növbəti iş günü arasındakı gündəlik istirahət vaxtı azı neçə saat olmalıdır?",
-        "a) azı 8 saat",
-        "b) azı 10 saat",
-        "c) azı 12 saat",
-        "d) azı 14 saat",
-        "C"
-    ),
+    {
+        "id": 9,
+        "question": "İşçinin bir iş günü ilə növbəti iş günü arasındakı gündəlik istirahət vaxtı azı neçə saat olmalıdır?",
+        "a": "a) azı 8 saat",
+        "b": "b) azı 10 saat",
+        "c": "c) azı 12 saat",
+        "d": "d) azı 14 saat",
+        "answer": "C"
+    },
 
-    (
-        "16 yaşdan 18 yaşadək olan işçilərə qısaldılmış iş vaxtının müddəti həftə ərzində neçə saat təşkil edir?",
-        "a) 24 saat",
-        "b) 36 saat",
-        "c) 40 saat",
-        "d) 32 saat",
-        "B"
-    )
+    {
+        "id": 10,
+        "question": "16 yaşdan 18 yaşadək olan işçilərə qısaldılmış iş vaxtının müddəti həftə ərzində neçə saat təşkil edir?",
+        "a": "a) 24 saat",
+        "b": "b) 36 saat",
+        "c": "c) 40 saat",
+        "d": "d) 32 saat",
+        "answer": "B"
+    }
 
 ]
 
 
 # =========================================================
-# DATABASE
-# =========================================================
-
-def db():
-    con = sqlite3.connect(DB)
-    con.row_factory = sqlite3.Row
-    return con
-
-
-def init_db():
-
-    con = db()
-
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS questions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question TEXT NOT NULL,
-            a TEXT NOT NULL,
-            b TEXT NOT NULL,
-            c TEXT NOT NULL,
-            d TEXT NOT NULL,
-            answer TEXT NOT NULL
-        )
-    """)
-
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            correct INTEGER NOT NULL,
-            total INTEGER NOT NULL,
-            percent INTEGER NOT NULL,
-            created_at TEXT NOT NULL
-        )
-    """)
-
-    count = con.execute(
-        "SELECT COUNT(*) FROM questions"
-    ).fetchone()[0]
-
-    if count == 0:
-
-        con.executemany(
-            """
-            INSERT INTO questions
-            (question, a, b, c, d, answer)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            QUESTIONS
-        )
-
-    con.commit()
-    con.close()
-
-
-init_db()
-
-
-# =========================================================
-# ADMIN YOXLANIŞI
+# ADMIN
 # =========================================================
 
 def admin_required(function):
@@ -212,7 +328,7 @@ def admin_required(function):
 
 
 # =========================================================
-# ANA SƏHİFƏ
+# HOME
 # =========================================================
 
 @app.route("/", methods=["GET", "POST"])
@@ -248,7 +364,7 @@ def home():
 
 
 # =========================================================
-# TEST SUALLARI
+# QUESTION
 # =========================================================
 
 @app.route(
@@ -262,25 +378,14 @@ def question(n):
             url_for("home")
         )
 
-    con = db()
-
-    questions = con.execute(
-        "SELECT * FROM questions ORDER BY id"
-    ).fetchall()
-
-    con.close()
-
-    total = len(questions)
-
-    if total == 0:
-        return redirect(
-            url_for("home")
-        )
+    total = len(QUESTIONS)
 
     if n >= total:
         return redirect(
             url_for("finish")
         )
+
+    q = QUESTIONS[n]
 
     if request.method == "POST":
 
@@ -288,30 +393,42 @@ def question(n):
             "answer"
         )
 
+        finish_now = request.form.get(
+            "finish_now"
+        )
+
+        if selected not in [
+            "A",
+            "B",
+            "C",
+            "D"
+        ]:
+
+            return render_template(
+                "question.html",
+                q=q,
+                n=n,
+                total=total,
+                name=session["name"],
+                error="Zəhmət olmasa cavablardan birini seçin."
+            )
+
         answers = session.get(
             "answers",
             {}
         )
 
-        # Cavab verilibsə yadda saxla
-        if selected in ["A", "B", "C", "D"]:
+        answers[str(n)] = selected
 
-            answers[str(n)] = selected
+        session["answers"] = answers
 
-            session["answers"] = answers
-
-        # TESTİ BİTİR düyməsi
-        action = request.form.get(
-            "action"
-        )
-
-        if action == "finish":
+        # İştirakçı "TESTİ BİTİR" düyməsini basıbsa
+        if finish_now:
 
             return redirect(
                 url_for("finish")
             )
 
-        # NÖVBƏTİ
         return redirect(
             url_for(
                 "question",
@@ -321,7 +438,7 @@ def question(n):
 
     return render_template(
         "question.html",
-        q=questions[n],
+        q=q,
         n=n,
         total=total,
         name=session["name"]
@@ -329,80 +446,61 @@ def question(n):
 
 
 # =========================================================
-# NƏTİCƏ
+# FINISH
 # =========================================================
 
 @app.route("/finish")
 def finish():
 
     if "name" not in session:
+
         return redirect(
             url_for("home")
         )
-
-    con = db()
-
-    questions = con.execute(
-        "SELECT * FROM questions ORDER BY id"
-    ).fetchall()
-
-    con.close()
 
     answers = session.get(
         "answers",
         {}
     )
 
-    # Yalnız cavablandırılmış suallar
-    answered_count = len(answers)
-
-    # Düzgün cavab sayı
     correct = 0
 
-    for i, q in enumerate(questions):
+    answered = 0
+
+    for i, q in enumerate(QUESTIONS):
 
         selected = answers.get(
             str(i)
         )
 
-        if selected == q["answer"]:
-            correct += 1
+        if selected:
 
-    # İştirakçı heç bir suala cavab verməyibsə
-    if answered_count > 0:
+            answered += 1
 
-        percent = round(
-            correct / answered_count * 100
-        )
+            if selected == q["answer"]:
 
-    else:
+                correct += 1
 
-        percent = 0
+    total = len(QUESTIONS)
+
+    percent = round(
+        correct / total * 100
+    ) if total else 0
 
     name = session["name"]
 
-    # Nəticəni yadda saxla
-    con = db()
-
-    con.execute(
-        """
-        INSERT INTO results
-        (name, correct, total, percent, created_at)
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (
-            name,
-            correct,
-            answered_count,
-            percent,
-            datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-        )
+    created_at = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
     )
 
-    con.commit()
-    con.close()
+    # GOOGLE SHEETS-Ə YAZ
+    save_result_to_google_sheet(
+        name=name,
+        correct=correct,
+        total=total,
+        percent=percent,
+        created_at=created_at
+    )
 
     session.clear()
 
@@ -410,8 +508,9 @@ def finish():
         "finish.html",
         name=name,
         correct=correct,
-        total=answered_count,
-        percent=percent
+        total=total,
+        percent=percent,
+        answered=answered
     )
 
 
@@ -475,17 +574,9 @@ def admin_logout():
 @admin_required
 def admin():
 
-    con = db()
+    results = get_results_from_google_sheet()
 
-    results = con.execute(
-        "SELECT * FROM results ORDER BY id DESC"
-    ).fetchall()
-
-    questions = con.execute(
-        "SELECT * FROM questions ORDER BY id"
-    ).fetchall()
-
-    con.close()
+    questions = QUESTIONS
 
     return render_template(
         "admin.html",
@@ -502,24 +593,19 @@ def admin():
 @admin_required
 def admin_export():
 
-    con = db()
-
-    results = con.execute(
-        "SELECT * FROM results ORDER BY id DESC"
-    ).fetchall()
-
-    con.close()
+    results = get_results_from_google_sheet()
 
     workbook = Workbook()
 
     sheet = workbook.active
+
     sheet.title = "Test nəticələri"
 
     headers = [
         "№",
         "Ad və soyad",
         "Düzgün cavab",
-        "Cavablandırılan sual",
+        "Ümumi sual",
         "Səhv cavab",
         "Nəticə",
         "Tarix"
@@ -576,7 +662,10 @@ def admin_export():
         sheet.cell(
             row=row_number,
             column=5,
-            value=r["total"] - r["correct"]
+            value=(
+                r["total"] -
+                r["correct"]
+            )
         )
 
         sheet.cell(
@@ -595,7 +684,7 @@ def admin_export():
         "A": 8,
         "B": 30,
         "C": 18,
-        "D": 24,
+        "D": 18,
         "E": 15,
         "F": 15,
         "G": 25
@@ -609,9 +698,7 @@ def admin_export():
 
     output = BytesIO()
 
-    workbook.save(
-        output
-    )
+    workbook.save(output)
 
     output.seek(0)
 
