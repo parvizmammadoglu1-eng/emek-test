@@ -3,13 +3,13 @@
 {% block content %}
 
 <style>
-
     .test-page {
         max-width: 900px;
         margin: 0 auto;
         padding: 20px 10px 40px;
     }
 
+    /* HEADER */
     .test-header {
         background: linear-gradient(135deg, #173b73, #2563eb);
         color: white;
@@ -55,6 +55,7 @@
         font-weight: 700;
     }
 
+    /* PROGRESS */
     .progress-area {
         margin-top: 18px;
     }
@@ -83,6 +84,7 @@
         transition: width 0.3s ease;
     }
 
+    /* QUESTION CARD */
     .question-card {
         background: white;
         border-radius: 20px;
@@ -110,6 +112,7 @@
         font-weight: 700;
     }
 
+    /* OPTIONS */
     .options {
         display: flex;
         flex-direction: column;
@@ -164,12 +167,14 @@
         color: white;
     }
 
+    /* BUTTONS */
     .bottom {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-top: 30px;
         gap: 15px;
+        flex-wrap: wrap;
     }
 
     .hint {
@@ -177,10 +182,10 @@
         font-size: 13px;
     }
 
-    .bottom-buttons {
+    .button-group {
         display: flex;
-        align-items: center;
         gap: 10px;
+        align-items: center;
     }
 
     .next-button {
@@ -201,13 +206,14 @@
         box-shadow: 0 8px 20px rgba(37,99,235,0.3);
     }
 
+    /* FINISH BUTTON */
     .finish-button {
         border: 1px solid #fecaca;
-        background: #fff1f2;
+        background: #fff5f5;
         color: #dc2626;
-        padding: 14px 18px;
+        padding: 13px 18px;
         border-radius: 11px;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -215,9 +221,79 @@
 
     .finish-button:hover {
         background: #fee2e2;
-        transform: translateY(-2px);
+        border-color: #fca5a5;
+        transform: translateY(-1px);
     }
 
+    /* CONFIRM MODAL */
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .modal.show {
+        display: flex;
+    }
+
+    .modal-box {
+        width: 100%;
+        max-width: 430px;
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .modal-icon {
+        font-size: 42px;
+        margin-bottom: 10px;
+    }
+
+    .modal-box h3 {
+        margin: 0 0 10px;
+        color: #172033;
+        font-size: 22px;
+    }
+
+    .modal-box p {
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 22px;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .modal-cancel,
+    .modal-confirm {
+        flex: 1;
+        padding: 13px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+    }
+
+    .modal-cancel {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .modal-confirm {
+        background: #dc2626;
+        color: white;
+    }
+
+    /* MOBILE */
     @media (max-width: 600px) {
 
         .test-page {
@@ -252,7 +328,7 @@
             align-items: stretch;
         }
 
-        .bottom-buttons {
+        .button-group {
             flex-direction: column;
             width: 100%;
         }
@@ -265,16 +341,17 @@
         .hint {
             text-align: center;
         }
-    }
 
+        .modal-buttons {
+            flex-direction: column;
+        }
+    }
 </style>
 
 
 <div class="test-page">
 
-
-    <!-- TEST BAŞLIĞI -->
-
+    <!-- HEADER -->
     <div class="test-header">
 
         <h1 class="test-title">
@@ -282,9 +359,8 @@
         </h1>
 
         <p class="test-subtitle">
-            Test sistemi
+            Pərviz Hüseynov Rəqəmsal İmtahan Mərkəzi
         </p>
-
 
         <div class="info-row">
 
@@ -298,28 +374,15 @@
 
         </div>
 
-
-        <!-- PROQRESS -->
-
         <div class="progress-area">
 
             <div class="progress-info">
-
-                <span>
-                    Testin gedişi
-                </span>
-
-                <span>
-                    {{ ((n+1)/total*100)|round }}%
-                </span>
-
+                <span>Testin gedişi</span>
+                <span>{{ ((n+1)/total*100)|round }}%</span>
             </div>
 
-
             <div class="progress">
-
                 <div class="progress-fill"></div>
-
             </div>
 
         </div>
@@ -327,37 +390,23 @@
     </div>
 
 
-
-    <!-- SUAL -->
-
+    <!-- QUESTION -->
     <div class="question-card">
 
         <div class="question-number">
             SUAL {{ n + 1 }}
         </div>
 
-
         <h2 class="question-text">
             {{ q.question }}
         </h2>
 
 
-        <form
-            method="post"
-            id="questionForm"
-        >
-
-
-            <!-- CAVAB VARİANTLARI -->
+        <form method="post" id="questionForm">
 
             <div class="options">
 
-                {% for letter,text in [
-                    ('A',q.a),
-                    ('B',q.b),
-                    ('C',q.c),
-                    ('D',q.d)
-                ] %}
+                {% for letter,text in [('A',q.a),('B',q.b),('C',q.c),('D',q.d)] %}
 
                 <label class="option">
 
@@ -365,6 +414,7 @@
                         type="radio"
                         name="answer"
                         value="{{ letter }}"
+                        required
                     >
 
                     <span class="letter">
@@ -382,55 +432,41 @@
             </div>
 
 
-
-            <!-- AŞAĞI HİSSƏ -->
-
             <div class="bottom">
 
-
                 <div class="hint">
-                    Cavab seçmək məcburi deyil
+                    Cavablardan birini seçin
                 </div>
 
+                <div class="button-group">
 
-                <div class="bottom-buttons">
-
-
-                    <!-- YARIMÇIQ BİTİR -->
-
+                    <!-- YARIDA BİTİR -->
                     <button
                         type="button"
                         class="finish-button"
-                        onclick="finishTest()"
+                        onclick="openFinishModal()"
                     >
-                        ⏹ TESTİ BİTİR
+                        TESTİ İNDİ BİTİR
                     </button>
 
 
                     <!-- NÖVBƏTİ -->
-
                     <button
                         type="submit"
                         class="next-button"
                     >
 
                         {% if n + 1 == total %}
-
                             TESTİ BİTİR ✓
-
                         {% else %}
-
                             NÖVBƏTİ SUAL →
-
                         {% endif %}
 
                     </button>
 
-
                 </div>
 
             </div>
-
 
         </form>
 
@@ -439,55 +475,97 @@
 </div>
 
 
+<!-- CONFIRM MODAL -->
+<div class="modal" id="finishModal">
+
+    <div class="modal-box">
+
+        <div class="modal-icon">
+            ⚠️
+        </div>
+
+        <h3>
+            Testi bitirmək istəyirsiniz?
+        </h3>
+
+        <p>
+            Testi indi bitirsəniz, indiyə qədər cavablandırdığınız
+            suallar əsasında nəticəniz hesablanacaq.
+        </p>
+
+        <div class="modal-buttons">
+
+            <button
+                type="button"
+                class="modal-cancel"
+                onclick="closeFinishModal()"
+            >
+                DAVAM ET
+            </button>
+
+            <button
+                type="button"
+                class="modal-confirm"
+                onclick="finishTest()"
+            >
+                BƏLİ, BİTİR
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 <script>
 
-function finishTest() {
+    function openFinishModal() {
+        document.getElementById("finishModal").classList.add("show");
+    }
 
-    /*
-       Əgər iştirakçı bu sualda cavab seçibsə,
-       cavabı əvvəlcə serverə göndəririk.
-    */
+    function closeFinishModal() {
+        document.getElementById("finishModal").classList.remove("show");
+    }
 
-    const selected =
-        document.querySelector(
+    function finishTest() {
+
+        /*
+         * Əvvəl seçilmiş cavabı yadda saxlayırıq.
+         * Sonra /finish səhifəsinə keçirik.
+         */
+
+        const form = document.getElementById("questionForm");
+
+        const selected = document.querySelector(
             'input[name="answer"]:checked'
         );
 
+        if (selected) {
 
-    if (selected) {
+            const input = document.createElement("input");
 
-        const form =
-            document.getElementById("questionForm");
+            input.type = "hidden";
+            input.name = "finish_now";
+            input.value = "1";
 
+            form.appendChild(input);
 
-        /*
-           Cavabı saxlayaraq birbaşa
-           nəticə səhifəsinə gedirik.
-        */
-
-        form.action =
-            "{{ url_for('finish') }}";
-
+        }
 
         form.submit();
-
-
-    } else {
-
-        /*
-           Cavab seçilməyibsə,
-           birbaşa nəticəyə keçirik.
-        */
-
-        window.location.href =
-            "{{ url_for('finish') }}";
-
     }
 
-}
+    window.onclick = function(event) {
+
+        const modal = document.getElementById("finishModal");
+
+        if (event.target === modal) {
+            closeFinishModal();
+        }
+
+    };
 
 </script>
-
 
 {% endblock %}
