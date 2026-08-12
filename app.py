@@ -445,44 +445,53 @@ def question(n):
             "answer"
         )
 
-        # Cavab seçilməyibsə
-        if selected not in [
+        answers = session.get(
+            "answers",
+            {}
+        )
+
+        # =================================================
+        # CAVAB SEÇİLİBSƏ YADDA SAXLA
+        # =================================================
+
+        if selected in [
             "A",
             "B",
             "C",
             "D"
         ]:
 
-            return render_template(
-                "question.html",
+            answers[str(n)] = selected
 
-                q=q,
+        # =================================================
+        # CAVAB SEÇİLMƏYİBSƏ HEÇ NƏ ETMƏ
+        # VƏ NÖVBƏTİ SUALA KEÇ
+        # =================================================
 
-                n=n,
+        else:
 
-                total=total,
-
-                name=session["name"],
-
-                error=
-                    "Zəhmət olmasa cavablardan birini seçin."
+            answers.pop(
+                str(n),
+                None
             )
-
-        answers = session.get(
-            "answers",
-            {}
-        )
-
-        answers[str(n)] = selected
 
         session["answers"] = answers
 
-        # Son sualdırsa nəticəyə keç
+        session.modified = True
+
+        # =================================================
+        # SON SUALDIRSA NƏTİCƏYƏ KEÇ
+        # =================================================
+
         if n + 1 >= total:
 
             return redirect(
                 url_for("finish")
             )
+
+        # =================================================
+        # NÖVBƏTİ SUALA KEÇ
+        # =================================================
 
         return redirect(
             url_for(
