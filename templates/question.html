@@ -76,7 +76,7 @@
 
     .progress-fill {
         height: 100%;
-        width: {{ ((n+1)/total*100)|round }}%;
+        width: {{ ((n + 1) / total * 100) | round }}%;
         background: white;
         border-radius: 20px;
         transition: width 0.3s ease;
@@ -203,6 +203,27 @@
         box-shadow: 0 8px 20px rgba(34,197,94,0.3);
     }
 
+    .finish-anytime {
+        margin-top: 18px;
+        text-align: center;
+    }
+
+    .finish-anytime button {
+        background: transparent;
+        border: 1px solid #d1d5db;
+        color: #6b7280;
+        padding: 10px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .finish-anytime button:hover {
+        border-color: #ef4444;
+        color: #dc2626;
+        background: #fff7f7;
+    }
+
     @media (max-width: 600px) {
 
         .test-page {
@@ -244,6 +265,10 @@
         .hint {
             text-align: center;
         }
+
+        .finish-anytime button {
+            width: 100%;
+        }
     }
 </style>
 
@@ -251,6 +276,7 @@
 <div class="test-page">
 
     <!-- BAŞLIQ -->
+
     <div class="test-header">
 
         <h1 class="test-title">
@@ -277,11 +303,16 @@
 
             <div class="progress-info">
                 <span>Testin gedişi</span>
-                <span>{{ ((n+1)/total*100)|round }}%</span>
+                <span>{{ ((n + 1) / total * 100) | round }}%</span>
             </div>
 
             <div class="progress">
-                <div class="progress-fill"></div>
+
+                <div
+                    class="progress-fill"
+                    style="width: {{ ((n + 1) / total * 100) | round }}%;"
+                ></div>
+
             </div>
 
         </div>
@@ -290,6 +321,7 @@
 
 
     <!-- SUAL -->
+
     <div class="question-card">
 
         <div class="question-number">
@@ -301,11 +333,18 @@
         </h2>
 
 
-        <form method="POST" action="{{ url_for('question', n=n) }}">
+        <!-- CAVABLAR -->
+
+        <form method="post">
 
             <div class="options">
 
-                {% for letter,text in [('A',q.a),('B',q.b),('C',q.c),('D',q.d)] %}
+                {% for letter, text in [
+                    ('A', q.a),
+                    ('B', q.b),
+                    ('C', q.c),
+                    ('D', q.d)
+                ] %}
 
                 <label class="option">
 
@@ -337,30 +376,51 @@
                     Cavablardan birini seçin
                 </div>
 
-
                 {% if n + 1 == total %}
 
-                    <button
-                        type="submit"
-                        class="next-button finish-button"
-                    >
-                        TESTİ BİTİR ✓
-                    </button>
+                <button
+                    type="submit"
+                    name="finish"
+                    value="1"
+                    class="next-button finish-button"
+                >
+                    TESTİ BİTİR ✓
+                </button>
 
                 {% else %}
 
-                    <button
-                        type="submit"
-                        class="next-button"
-                    >
-                        NÖVBƏTİ SUAL →
-                    </button>
+                <button
+                    type="submit"
+                    class="next-button"
+                >
+                    NÖVBƏTİ SUAL →
+                </button>
 
                 {% endif %}
 
             </div>
 
         </form>
+
+
+        <!-- İSTƏNİLƏN ANDA BİTİR -->
+
+        {% if n + 1 < total %}
+
+        <form
+            method="post"
+            action="{{ url_for('finish') }}"
+            class="finish-anytime"
+            onsubmit="return confirm('Testi indi bitirmək və nəticəni görmək istəyirsiniz?');"
+        >
+
+            <button type="submit">
+                Testi indi bitir və nəticəmə bax
+            </button>
+
+        </form>
+
+        {% endif %}
 
     </div>
 
