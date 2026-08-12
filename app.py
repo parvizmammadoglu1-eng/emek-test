@@ -1,10 +1,8 @@
 import os
 import json
 from datetime import datetime
-from functools import wraps
 from io import BytesIO
 
-import requests
 from flask import (
     Flask,
     render_template,
@@ -18,9 +16,12 @@ from flask import (
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 
+import gspread
+from google.oauth2.service_account import Credentials
+
 
 # =========================================================
-# APP
+# FLASK
 # =========================================================
 
 app = Flask(__name__)
@@ -40,173 +41,81 @@ ADMIN_PASSWORD = os.environ.get(
 # GOOGLE SHEETS
 # =========================================================
 
-GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
-GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get(
-    "GOOGLE_SERVICE_ACCOUNT_JSON",
-    ""
-)
+GOOGLE_SHEET_NAME = "Emek Test 2026"
 
 
-def google_sheets_available():
-    return bool(
-        GOOGLE_SHEET_ID and
-        GOOGLE_SERVICE_ACCOUNT_JSON
+def get_google_client():
+
+    private_key = os.environ.get("GOOGLE_PRIVATE_KEY", "")
+
+    if not private_key:
+        raise RuntimeError(
+            "GOOGLE_PRIVATE_KEY Render Environment Variables bölməsində yoxdur."
+        )
+
+    # Render-də \n bəzən mətn kimi gəlir.
+    # Onu real yeni sətirə çeviririk.
+    private_key = private_key.replace("\\n", "\n")
+
+    service_account_info = {
+        "type": "service_account",
+        "project_id": os.environ.get("GOOGLE_PROJECT_ID"),
+        "private_key_id": os.environ.get("GOOGLE_PRIVATE_KEY_ID"),
+        "private_key": private_key,
+        "client_email": os.environ.get("GOOGLE_CLIENT_EMAIL"),
+        "token_uri": "https://oauth2.googleapis.com/token"
+    }
+
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    credentials = Credentials.from_service_account_info(
+        service_account_info,
+        scopes=scopes
     )
 
-
-def get_google_credentials():
-    """
-    Google Service Account məlumatlarını oxuyur.
-    """
-    if not GOOGLE_SERVICE_ACCOUNT_JSON:
-        return None
-
-    try:
-        from google.oauth2.service_account import Credentials
-
-        data = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
-
-        scopes = [
-            "https://www.googleapis.com/auth/spreadsheets"
-        ]
-
-        credentials = Credentials.from_service_account_info(
-            data,
-            scopes=scopes
-        )
-
-        return credentials
-
-    except Exception as e:
-        print("Google credentials error:", e)
-        return None
+    return gspread.authorize(credentials)
 
 
-def save_result_to_google_sheet(
-    name,
-    correct,
-    total,
-    percent,
-    created_at
-):
-    """
-    Nəticəni Google Sheets-ə əlavə edir.
-    """
+def get_sheet():
 
-    if not google_sheets_available():
-        print("Google Sheets environment variables yoxdur.")
-        return False
+    client = get_google_client()
+
+    spreadsheet = client.open(GOOGLE_SHEET_NAME)
 
     try:
+        sheet = spreadsheet.worksheet("Nəticələr")
+    except gspread.WorksheetNotFound:
 
-        import gspread
-
-        credentials = get_google_credentials()
-
-        if credentials is None:
-            return False
-
-        client = gspread.authorize(credentials)
-
-        spreadsheet = client.open_by_key(
-            GOOGLE_SHEET_ID
+        sheet = spreadsheet.add_worksheet(
+            title="Nəticələr",
+            rows=1000,
+            cols=8
         )
 
-        worksheet = spreadsheet.sheet1
+        sheet.append_row([
+            "№",
+            "Ad və soyad",
+            "Düzgün cavab",
+            "Ümumi sual",
+            "Səhv cavab",
+            "Nəticə",
+            "Tarix",
+            "Status"
+        ])
 
-        wrong = total - correct
-
-        worksheet.append_row(
-            [
-                name,
-                correct,
-                total,
-                wrong,
-                percent,
-                created_at
-            ],
-            value_input_option="USER_ENTERED"
-        )
-
-        return True
-
-    except Exception as e:
-
-        print("Google Sheets save error:", e)
-
-        return False
-
-
-def get_results_from_google_sheet():
-    """
-    Google Sheets-dən bütün nəticələri oxuyur.
-    """
-
-    if not google_sheets_available():
-        return []
-
-    try:
-
-        import gspread
-
-        credentials = get_google_credentials()
-
-        if credentials is None:
-            return []
-
-        client = gspread.authorize(credentials)
-
-        spreadsheet = client.open_by_key(
-            GOOGLE_SHEET_ID
-        )
-
-        worksheet = spreadsheet.sheet1
-
-        rows = worksheet.get_all_records()
-
-        results = []
-
-        for index, row in enumerate(rows, 1):
-
-            results.append(
-                {
-                    "id": index,
-                    "name": row.get("Ad və soyad", ""),
-                    "correct": int(
-                        row.get("Düzgün cavab", 0) or 0
-                    ),
-                    "total": int(
-                        row.get("Ümumi sual", 0) or 0
-                    ),
-                    "percent": int(
-                        row.get("Nəticə", 0) or 0
-                    ),
-                    "created_at": row.get(
-                        "Tarix",
-                        ""
-                    )
-                }
-            )
-
-        results.reverse()
-
-        return results
-
-    except Exception as e:
-
-        print("Google Sheets read error:", e)
-
-        return []
+    return sheet
 
 
 # =========================================================
-# QUESTIONS
+# SUALLAR
 # =========================================================
 
 QUESTIONS = [
 
     {
-        "id": 1,
         "question": "Əmək Məcəlləsi kimlərə şamil edilir?",
         "a": "a) əcnəbilərə;",
         "b": "b) hərbi qulluqçulara;",
@@ -216,7 +125,6 @@ QUESTIONS = [
     },
 
     {
-        "id": 2,
         "question": "Əmək qanunvericiliyinə əməl olunmasına dövlət nəzarətini hansı orqan həyata keçirir?",
         "a": "a) rayon (şəhər) məhkəməsi;",
         "b": "b) rayon (şəhər) məşğulluq mərkəzləri;",
@@ -226,7 +134,6 @@ QUESTIONS = [
     },
 
     {
-        "id": 3,
         "question": "Əmək müqaviləsinin tərəfləri kimlər olur?",
         "a": "a) işçi və işəgötürən;",
         "b": "b) işçi və həmkarlar ittifaqı təşkilatı;",
@@ -236,17 +143,15 @@ QUESTIONS = [
     },
 
     {
-        "id": 4,
         "question": "Hansı yaşdan hər bir şəxs işçi kimi əmək müqaviləsinin tərəfi ola bilər?",
         "a": "a) 13 yaşdan;",
         "b": "b) 14 yaşdan;",
         "c": "c) 15 yaşdan;",
         "d": "d) 16 yaşdan",
-        "answer": "D"
+        "answer": "C"
     },
 
     {
-        "id": 5,
         "question": "Əmək münasibətlərini hansı hüquqi fakt yaradır?",
         "a": "a) kollektiv müqavilə;",
         "b": "b) əmək müqaviləsi;",
@@ -256,7 +161,6 @@ QUESTIONS = [
     },
 
     {
-        "id": 6,
         "question": "Ezamiyyətin müddəti neçə gündən artıq ola bilməz?",
         "a": "a) 30 təqvim günündən",
         "b": "b) 40 təqvim günündən",
@@ -266,7 +170,6 @@ QUESTIONS = [
     },
 
     {
-        "id": 7,
         "question": "İşçiyə məzuniyyət vaxtı üçün orta əmək haqqı məzuniyyətin başlanmasına ən azı neçə gün qalmış ödənilir?",
         "a": "a) 3 gün qalmış",
         "b": "b) 4 gün qalmış",
@@ -276,7 +179,6 @@ QUESTIONS = [
     },
 
     {
-        "id": 8,
         "question": "İşçinin on ildən on beş ilədək əmək stajı olduqda əlavə necə gün məzuniyyət verilir?",
         "a": "a) 8 təqvim günü",
         "b": "b) 5 təqvim günü",
@@ -286,7 +188,6 @@ QUESTIONS = [
     },
 
     {
-        "id": 9,
         "question": "İşçinin bir iş günü ilə növbəti iş günü arasındakı gündəlik istirahət vaxtı azı neçə saat olmalıdır?",
         "a": "a) azı 8 saat",
         "b": "b) azı 10 saat",
@@ -296,7 +197,6 @@ QUESTIONS = [
     },
 
     {
-        "id": 10,
         "question": "16 yaşdan 18 yaşadək olan işçilərə qısaldılmış iş vaxtının müddəti həftə ərzində neçə saat təşkil edir?",
         "a": "a) 24 saat",
         "b": "b) 36 saat",
@@ -314,15 +214,14 @@ QUESTIONS = [
 
 def admin_required(function):
 
-    @wraps(function)
     def wrapper(*args, **kwargs):
 
         if not session.get("admin"):
-            return redirect(
-                url_for("admin_login")
-            )
+            return redirect(url_for("admin_login"))
 
         return function(*args, **kwargs)
+
+    wrapper.__name__ = function.__name__
 
     return wrapper
 
@@ -349,6 +248,7 @@ def home():
             )
 
         session["name"] = name
+
         session["answers"] = {}
 
         return redirect(
@@ -374,13 +274,16 @@ def home():
 def question(n):
 
     if "name" not in session:
+
         return redirect(
             url_for("home")
         )
 
     total = len(QUESTIONS)
 
+    # Test bitibsə
     if n >= total:
+
         return redirect(
             url_for("finish")
         )
@@ -393,10 +296,7 @@ def question(n):
             "answer"
         )
 
-        finish_now = request.form.get(
-            "finish_now"
-        )
-
+        # Cavab seçilməyibsə
         if selected not in [
             "A",
             "B",
@@ -422,8 +322,8 @@ def question(n):
 
         session["answers"] = answers
 
-        # İştirakçı "TESTİ BİTİR" düyməsini basıbsa
-        if finish_now:
+        # Son sualdırsa nəticəyə get
+        if n + 1 >= total:
 
             return redirect(
                 url_for("finish")
@@ -446,7 +346,7 @@ def question(n):
 
 
 # =========================================================
-# FINISH
+# TESTİ İSTƏNİLƏN YERDƏ BİTİR
 # =========================================================
 
 @app.route("/finish")
@@ -463,25 +363,23 @@ def finish():
         {}
     )
 
+    total = len(QUESTIONS)
+
     correct = 0
 
-    answered = 0
+    answered = len(answers)
 
-    for i, q in enumerate(QUESTIONS):
+    for index, q in enumerate(QUESTIONS):
 
         selected = answers.get(
-            str(i)
+            str(index)
         )
 
-        if selected:
+        if selected == q["answer"]:
 
-            answered += 1
+            correct += 1
 
-            if selected == q["answer"]:
-
-                correct += 1
-
-    total = len(QUESTIONS)
+    wrong = answered - correct
 
     percent = round(
         correct / total * 100
@@ -490,18 +388,49 @@ def finish():
     name = session["name"]
 
     created_at = datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
+        "%d.%m.%Y %H:%M:%S"
     )
 
+    status = (
+        "Tamamlandı"
+        if answered == total
+        else f"Yarımçıq bitirildi ({answered}/{total})"
+    )
+
+    # =====================================================
     # GOOGLE SHEETS-Ə YAZ
-    save_result_to_google_sheet(
-        name=name,
-        correct=correct,
-        total=total,
-        percent=percent,
-        created_at=created_at
-    )
+    # =====================================================
 
+    try:
+
+        sheet = get_sheet()
+
+        all_values = sheet.get_all_values()
+
+        number = len(all_values)
+
+        sheet.append_row(
+            [
+                number,
+                name,
+                correct,
+                total,
+                wrong,
+                f"{percent}%",
+                created_at,
+                status
+            ],
+            value_input_option="USER_ENTERED"
+        )
+
+    except Exception as e:
+
+        print(
+            "GOOGLE SHEETS ERROR:",
+            str(e)
+        )
+
+    # Sessiyanı təmizlə
     session.clear()
 
     return render_template(
@@ -510,7 +439,9 @@ def finish():
         correct=correct,
         total=total,
         percent=percent,
-        answered=answered
+        answered=answered,
+        wrong=wrong,
+        status=status
     )
 
 
@@ -574,14 +505,25 @@ def admin_logout():
 @admin_required
 def admin():
 
-    results = get_results_from_google_sheet()
+    try:
 
-    questions = QUESTIONS
+        sheet = get_sheet()
+
+        values = sheet.get_all_records()
+
+    except Exception as e:
+
+        print(
+            "ADMIN GOOGLE SHEETS ERROR:",
+            str(e)
+        )
+
+        values = []
 
     return render_template(
         "admin.html",
-        results=results,
-        questions=questions
+        results=values,
+        questions=QUESTIONS
     )
 
 
@@ -593,13 +535,26 @@ def admin():
 @admin_required
 def admin_export():
 
-    results = get_results_from_google_sheet()
+    try:
+
+        sheet = get_sheet()
+
+        results = sheet.get_all_records()
+
+    except Exception as e:
+
+        print(
+            "EXPORT GOOGLE SHEETS ERROR:",
+            str(e)
+        )
+
+        results = []
 
     workbook = Workbook()
 
-    sheet = workbook.active
+    worksheet = workbook.active
 
-    sheet.title = "Test nəticələri"
+    worksheet.title = "Test nəticələri"
 
     headers = [
         "№",
@@ -608,17 +563,18 @@ def admin_export():
         "Ümumi sual",
         "Səhv cavab",
         "Nəticə",
-        "Tarix"
+        "Tarix",
+        "Status"
     ]
 
-    for col, header in enumerate(
+    for column, header in enumerate(
         headers,
         1
     ):
 
-        cell = sheet.cell(
+        cell = worksheet.cell(
             row=1,
-            column=col,
+            column=column,
             value=header
         )
 
@@ -630,54 +586,78 @@ def admin_export():
             horizontal="center"
         )
 
-    for row_number, r in enumerate(
+    for row_number, result in enumerate(
         results,
         2
     ):
 
-        sheet.cell(
+        worksheet.cell(
             row=row_number,
             column=1,
-            value=row_number - 1
+            value=result.get("№", row_number - 1)
         )
 
-        sheet.cell(
+        worksheet.cell(
             row=row_number,
             column=2,
-            value=r["name"]
-        )
-
-        sheet.cell(
-            row=row_number,
-            column=3,
-            value=r["correct"]
-        )
-
-        sheet.cell(
-            row=row_number,
-            column=4,
-            value=r["total"]
-        )
-
-        sheet.cell(
-            row=row_number,
-            column=5,
-            value=(
-                r["total"] -
-                r["correct"]
+            value=result.get(
+                "Ad və soyad",
+                ""
             )
         )
 
-        sheet.cell(
+        worksheet.cell(
             row=row_number,
-            column=6,
-            value=f'{r["percent"]}%'
+            column=3,
+            value=result.get(
+                "Düzgün cavab",
+                0
+            )
         )
 
-        sheet.cell(
+        worksheet.cell(
+            row=row_number,
+            column=4,
+            value=result.get(
+                "Ümumi sual",
+                0
+            )
+        )
+
+        worksheet.cell(
+            row=row_number,
+            column=5,
+            value=result.get(
+                "Səhv cavab",
+                0
+            )
+        )
+
+        worksheet.cell(
+            row=row_number,
+            column=6,
+            value=result.get(
+                "Nəticə",
+                ""
+            )
+        )
+
+        worksheet.cell(
             row=row_number,
             column=7,
-            value=r["created_at"]
+            value=result.get(
+                "Tarix",
+                ""
+            )
+        )
+
+        worksheet.cell(
+            row=row_number,
+            column=8,
+            value=result.get(
+                "Status",
+                ""
+            )
         )
 
     widths = {
@@ -687,12 +667,13 @@ def admin_export():
         "D": 18,
         "E": 15,
         "F": 15,
-        "G": 25
+        "G": 25,
+        "H": 30
     }
 
     for column, width in widths.items():
 
-        sheet.column_dimensions[
+        worksheet.column_dimensions[
             column
         ].width = width
 
