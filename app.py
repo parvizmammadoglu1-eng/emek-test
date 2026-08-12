@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from io import BytesIO
+from functools import wraps
 
 from flask import (
     Flask,
@@ -56,7 +57,7 @@ def get_google_client():
         )
 
     # Render-də \n mətn kimi gəlirsə,
-    # onu real yeni sətrə çeviririk.
+    # real yeni sətrə çeviririk.
     private_key = private_key.replace(
         "\\n",
         "\n"
@@ -346,11 +347,12 @@ QUESTIONS = [
 
 
 # =========================================================
-# ADMIN
+# ADMIN DECORATOR
 # =========================================================
 
 def admin_required(function):
 
+    @wraps(function)
     def wrapper(*args, **kwargs):
 
         if not session.get("admin"):
@@ -363,8 +365,6 @@ def admin_required(function):
             *args,
             **kwargs
         )
-
-    wrapper.__name__ = function.__name__
 
     return wrapper
 
@@ -392,6 +392,9 @@ def home():
                 "home.html",
                 error="Ad və soyad daxil edin."
             )
+
+        # Yeni test başlayanda köhnə məlumatları sil
+        session.clear()
 
         session["name"] = name
 
@@ -429,7 +432,7 @@ def question(n):
         QUESTIONS
     )
 
-    # Sual sayı bitibsə nəticəyə keç
+    # Suallar bitibsə nəticəyə keç
     if n >= total:
 
         return redirect(
@@ -440,41 +443,35 @@ def question(n):
 
     if request.method == "POST":
 
+        # Cavab seçilməsə belə boş qəbul olunur
         selected = request.form.get(
-            "answer"
+            "answer",
+            ""
         )
-
-        # Cavab seçilməyibsə
-        if selected not in [
-            "A",
-            "B",
-            "C",
-            "D"
-        ]:
-
-            return render_template(
-                "question.html",
-
-                q=q,
-
-                n=n,
-
-                total=total,
-
-                name=session["name"],
-
-                error=
-                    "Zəhmət olmasa cavablardan birini seçin."
-            )
 
         answers = session.get(
             "answers",
             {}
         )
 
-        answers[str(n)] = selected
+        # Yalnız düzgün formatdakı cavabı yadda saxla
+        if selected in [
+            "A",
+            "B",
+            "C",
+            "D"
+        ]:
+
+            answers[str(n)] = selected
+
+        else:
+
+            # Cavab seçilməyibsə boş saxla
+            answers[str(n)] = ""
 
         session["answers"] = answers
+
+        session.modified = True
 
         # Son sualdırsa nəticəyə keç
         if n + 1 >= total:
@@ -483,6 +480,7 @@ def question(n):
                 url_for("finish")
             )
 
+        # Növbəti sual
         return redirect(
             url_for(
                 "question",
@@ -499,20 +497,14 @@ def question(n):
 
         total=total,
 
-        name=session["name"]
+        name=session.get(
+            "name"
+        )
     )
 
 
 # =========================================================
 # TESTİ İSTƏNİLƏN YERDƏ BİTİR
-# =========================================================
-#
-# ƏSAS DÜZƏLİŞ BURADADIR:
-#
-# methods=["GET", "POST"]
-#
-# Beləliklə "Testi indi bitir" düyməsi
-# POST göndərəndə Method Not Allowed olmayacaq.
 # =========================================================
 
 @app.route(
@@ -538,12 +530,10 @@ def finish():
 
     correct = 0
 
-    answered = len(
-        answers
-    )
+    answered = 0
 
     # =====================================================
-    # DÜZGÜN CAVABLARI HESABLA
+    # CAVABLARI HESABLA
     # =====================================================
 
     for index, q in enumerate(
@@ -551,22 +541,35 @@ def finish():
     ):
 
         selected = answers.get(
-            str(index)
+            str(index),
+            ""
         )
 
-        if selected == q["answer"]:
+        # Cavab seçilibsə
+        if selected in [
+            "A",
+            "B",
+            "C",
+            "D"
+        ]:
 
-            correct += 1
+            answered += 1
 
-    # Cavablandırılan suallar daxilində səhvlər
-    wrong = answered - correct
+            if selected == q["answer"]:
+
+                correct += 1
+
+    # Cavablandırılmayanlar da səhv hesab olunur
+    wrong = total - correct
 
     # Faiz bütün test üzrə hesablanır
     percent = round(
         correct / total * 100
     ) if total else 0
 
-    name = session["name"]
+    name = session.get(
+        "name"
+    )
 
     created_at = datetime.now().strftime(
         "%d.%m.%Y %H:%M:%S"
@@ -583,7 +586,6 @@ def finish():
             f"({answered}/{total})"
         )
 
-
     # =====================================================
     # GOOGLE SHEETS
     # =====================================================
@@ -594,10 +596,14 @@ def finish():
 
         all_values = sheet.get_all_values()
 
-        # Başlıq sətrini nəzərə al
+        # Başlıq sətrindən sonra sıra nömrəsi
         number = len(
             all_values
         )
+
+        if number < 1:
+
+            number = 1
 
         sheet.append_row(
             [
@@ -624,20 +630,27 @@ def finish():
             str(e)
         )
 
-
     # =====================================================
-    # SESSION TƏMİZLƏ
+    # NƏTİCƏDƏN ƏVVƏL MƏLUMATLARI SAXLA
     # =====================================================
 
+    result_data = {
+        "name": name,
+        "correct": correct,
+        "total": total,
+        "percent": percent,
+        "answered": answered,
+        "wrong": wrong,
+        "status": status
+    }
+
+    # Session təmizlə
     session.clear()
 
-
-    # =====================================================
-    # NƏTİCƏ SƏHİFƏSİ
-    # =====================================================
+    # Nəticəni ayrıca session-da saxla
+    session["last_result"] = result_data
 
     return render_template(
-
         "finish.html",
 
         name=name,
@@ -653,7 +666,6 @@ def finish():
         wrong=wrong,
 
         status=status
-
     )
 
 
@@ -726,7 +738,7 @@ def admin():
 
         sheet = get_sheet()
 
-        values = sheet.get_all_records()
+        results = sheet.get_all_records()
 
     except Exception as e:
 
@@ -735,12 +747,12 @@ def admin():
             str(e)
         )
 
-        values = []
+        results = []
 
     return render_template(
         "admin.html",
 
-        results=values,
+        results=results,
 
         questions=QUESTIONS
     )
@@ -771,13 +783,11 @@ def admin_export():
 
         results = []
 
-
     workbook = Workbook()
 
     worksheet = workbook.active
 
     worksheet.title = "Test nəticələri"
-
 
     # =====================================================
     # BAŞLIQLAR
@@ -803,7 +813,6 @@ def admin_export():
 
     ]
 
-
     for column, header in enumerate(
         headers,
         1
@@ -822,7 +831,6 @@ def admin_export():
         cell.alignment = Alignment(
             horizontal="center"
         )
-
 
     # =====================================================
     # NƏTİCƏLƏR
@@ -905,7 +913,6 @@ def admin_export():
             )
         )
 
-
     # =====================================================
     # SÜTUN ENLİKLƏRİ
     # =====================================================
@@ -930,16 +937,14 @@ def admin_export():
 
     }
 
-
     for column, width in widths.items():
 
         worksheet.column_dimensions[
             column
         ].width = width
 
-
     # =====================================================
-    # EXCEL FAYLI
+    # EXCEL
     # =====================================================
 
     output = BytesIO()
@@ -950,11 +955,9 @@ def admin_export():
 
     output.seek(0)
 
-
     filename = (
         "emek_mecellesi_2026_test_neticeleri.xlsx"
     )
-
 
     return send_file(
 
