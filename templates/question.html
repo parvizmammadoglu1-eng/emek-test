@@ -1,18 +1,25 @@
-@app.route(
-    "/question/<int:n>",
-    methods=["GET", "POST"]
-)
+# =========================================================
+# QUESTION
+# =========================================================
+
+@app.route("/question/<int:n>", methods=["GET", "POST"])
 def question(n):
 
+    # İmtahana başlamayıbsa ana səhifəyə qaytar
     if "name" not in session:
         return redirect(url_for("home"))
 
     total = len(QUESTIONS)
 
+    # Suallar bitibsə nəticəyə keç
     if n >= total:
         return redirect(url_for("finish"))
 
     q = QUESTIONS[n]
+
+    # =====================================================
+    # POST - NÖVBƏTİ SUAL
+    # =====================================================
 
     if request.method == "POST":
 
@@ -22,21 +29,31 @@ def question(n):
 
         # Cavab seçilibsə yadda saxla
         if selected in ["A", "B", "C", "D"]:
+
             answers[str(n)] = selected
 
-        # Cavab seçilməyibsə,
-        # həmin sualı cavabsız saxla
+        # Cavab seçilməyibsə də keçməyə icazə ver
         else:
+
             answers.pop(str(n), None)
 
         session["answers"] = answers
         session.modified = True
 
-        # Son sualdırsa nəticəyə keç
-        if n + 1 >= total:
-            return redirect(url_for("finish"))
+        # =================================================
+        # SON SUAL
+        # =================================================
 
-        # Növbəti suala keç
+        if n + 1 >= total:
+
+            return redirect(
+                url_for("finish")
+            )
+
+        # =================================================
+        # NÖVBƏTİ SUAL
+        # =================================================
+
         return redirect(
             url_for(
                 "question",
@@ -44,10 +61,18 @@ def question(n):
             )
         )
 
+    # =====================================================
+    # SUAL SƏHİFƏSİ
+    # =====================================================
+
     return render_template(
         "question.html",
+
         q=q,
+
         n=n,
+
         total=total,
+
         name=session["name"]
     )
