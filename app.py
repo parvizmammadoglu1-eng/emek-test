@@ -464,8 +464,8 @@ def question(n):
             answers[str(n)] = selected
 
         # =================================================
-        # CAVAB SEÇİLMƏYİBSƏ HEÇ NƏ ETMƏ
-        # VƏ NÖVBƏTİ SUALA KEÇ
+        # CAVAB SEÇİLMƏYİBSƏ
+        # BOŞ SAXLA VƏ NÖVBƏTİ SUALA KEÇ
         # =================================================
 
         else:
@@ -545,25 +545,110 @@ def finish():
     )
 
     # =====================================================
-    # DÜZGÜN CAVABLARI HESABLA
+    # SUALLAR ÜZRƏ ƏTRAFLI NƏTİCƏ
     # =====================================================
 
-    for index, q in enumerate(
-        QUESTIONS
-    ):
+    review = []
+
+    for index, q in enumerate(QUESTIONS):
 
         selected = answers.get(
             str(index)
         )
 
-        if selected == q["answer"]:
+        correct_answer = q["answer"]
+
+        # -------------------------------------------------
+        # CAVAB VERİLMƏYİB
+        # -------------------------------------------------
+
+        if selected is None:
+
+            status_type = "blank"
+
+            status_text = "Cavab seçilməyib"
+
+            selected_text = "—"
+
+        # -------------------------------------------------
+        # DÜZGÜN CAVAB
+        # -------------------------------------------------
+
+        elif selected == correct_answer:
 
             correct += 1
 
-    # Cavablandırılan suallar daxilində səhvlər
-    wrong = answered - correct
+            status_type = "correct"
 
-    # Faiz bütün test üzrə hesablanır
+            status_text = "Düzgün cavab"
+
+            selected_text = q[
+                selected.lower()
+            ]
+
+        # -------------------------------------------------
+        # SƏHV CAVAB
+        # -------------------------------------------------
+
+        else:
+
+            status_type = "wrong"
+
+            status_text = "Səhv cavab"
+
+            selected_text = q[
+                selected.lower()
+            ]
+
+        # Düzgün cavabın tam mətni
+        correct_text = q[
+            correct_answer.lower()
+        ]
+
+        review.append({
+
+            "number": index + 1,
+
+            "question": q["question"],
+
+            "status_type": status_type,
+
+            "status_text": status_text,
+
+            "selected": selected,
+
+            "selected_text": selected_text,
+
+            "correct": correct_answer,
+
+            "correct_text": correct_text
+
+        })
+
+    # =====================================================
+    # SƏHV CAVABLAR
+    # =====================================================
+
+    wrong = sum(
+        1
+        for item in review
+        if item["status_type"] == "wrong"
+    )
+
+    # =====================================================
+    # BOŞ CAVABLAR
+    # =====================================================
+
+    blank = sum(
+        1
+        for item in review
+        if item["status_type"] == "blank"
+    )
+
+    # =====================================================
+    # FAİZ
+    # =====================================================
+
     percent = round(
         correct / total * 100
     ) if total else 0
@@ -572,7 +657,6 @@ def finish():
 
     # =====================================================
     # BAKI VAXTI
-    # Render UTC işlədiyi üçün Asia/Baku istifadə olunur
     # =====================================================
 
     created_at = datetime.now(
@@ -580,6 +664,10 @@ def finish():
     ).strftime(
         "%d.%m.%Y %H:%M:%S"
     )
+
+    # =====================================================
+    # STATUS
+    # =====================================================
 
     if answered == total:
 
@@ -633,14 +721,17 @@ def finish():
         )
 
     # =====================================================
-    # SESSION TƏMİZLƏ
-    # =====================================================
-
-    session.clear()
-
-    # =====================================================
     # NƏTİCƏ SƏHİFƏSİ
     # =====================================================
+
+    # Vacib:
+    # Burada session.clear() ETMİRİK.
+    #
+    # Çünki iştirakçı nəticə səhifəsində
+    # sualların nəticələrini görməlidir.
+    #
+    # Yeni test başlayanda home() onsuz da
+    # answers məlumatını sıfırlayır.
 
     return render_template(
 
@@ -658,7 +749,11 @@ def finish():
 
         wrong=wrong,
 
-        status=status
+        blank=blank,
+
+        status=status,
+
+        review=review
 
     )
 
