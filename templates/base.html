@@ -1,5 +1,533 @@
+<!doctype html>
+<html lang="az">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!doctype html><html lang="az"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Əmək Məcəlləsi</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
-<body><header><div class="logo">ƏMƏK MƏCƏLLƏSİ <span></span></div><div class="tag">TEST SİSTEMİ</div></header>
-<main>{% block content %}{% endblock %}</main></body></html>
+    <title>Əmək Məcəlləsi</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        /* =====================================================
+           HEADER
+           ===================================================== */
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 14px 30px;
+            box-sizing: border-box;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .logo {
+            white-space: nowrap;
+        }
+
+        .tag {
+            white-space: nowrap;
+        }
+
+        /* =====================================================
+           SAAT / TARİX / HAVA
+           ===================================================== */
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-box {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+
+            color: white;
+
+            padding: 8px 12px;
+            border-radius: 10px;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            white-space: nowrap;
+        }
+
+        .info-icon {
+            font-size: 17px;
+        }
+
+        .info-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .info-label {
+            font-size: 10px;
+            opacity: 0.75;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* =====================================================
+           MOBİL
+           ===================================================== */
+
+        @media (max-width: 850px) {
+
+            header {
+                flex-wrap: wrap;
+                padding: 12px 15px;
+            }
+
+            .header-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .header-info {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .info-box {
+                padding: 7px 10px;
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .tag {
+                font-size: 11px;
+            }
+
+            .header-info {
+                gap: 6px;
+            }
+
+            .info-box {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+
+            .info-icon {
+                font-size: 15px;
+            }
+
+            .info-label {
+                font-size: 8px;
+            }
+
+            .info-value {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+
+<header>
+
+    <!-- =====================================================
+         SOL TƏRƏF
+         ===================================================== -->
+
+    <div class="header-left">
+
+        <div class="logo">
+            ƏMƏK MƏCƏLLƏSİ
+            <span></span>
+        </div>
+
+        <div class="tag">
+            TEST SİSTEMİ
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SAĞ TƏRƏF
+         SAAT / TARİX / HAVA
+         ===================================================== -->
+
+    <div class="header-info">
+
+        <!-- SAAT -->
+
+        <div class="info-box">
+
+            <div class="info-icon">
+                🕐
+            </div>
+
+            <div class="info-text">
+
+                <div class="info-label">
+                    Saat
+                </div>
+
+                <div
+                    class="info-value"
+                    id="liveClock"
+                >
+                    --:--:--
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TARİX -->
+
+        <div class="info-box">
+
+            <div class="info-icon">
+                📅
+            </div>
+
+            <div class="info-text">
+
+                <div class="info-label">
+                    Tarix
+                </div>
+
+                <div
+                    class="info-value"
+                    id="liveDate"
+                >
+                    --.--.----
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- HAVA -->
+
+        <div class="info-box">
+
+            <div
+                class="info-icon"
+                id="weatherIcon"
+            >
+                🌤️
+            </div>
+
+            <div class="info-text">
+
+                <div class="info-label">
+                    Bakı
+                </div>
+
+                <div
+                    class="info-value"
+                    id="weatherInfo"
+                >
+                    Yüklənir...
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =========================================================
+     ƏSAS MƏZMUN
+     ========================================================= -->
+
+<main>
+
+    {% block content %}{% endblock %}
+
+</main>
+
+
+<!-- =========================================================
+     SAAT VƏ TARİX
+     ========================================================= -->
+
+<script>
+
+    function updateDateTime() {
+
+        const now = new Date();
+
+        /* Saat */
+
+        const hours = String(
+            now.getHours()
+        ).padStart(2, "0");
+
+        const minutes = String(
+            now.getMinutes()
+        ).padStart(2, "0");
+
+        const seconds = String(
+            now.getSeconds()
+        ).padStart(2, "0");
+
+
+        document.getElementById(
+            "liveClock"
+        ).textContent =
+            hours + ":" +
+            minutes + ":" +
+            seconds;
+
+
+        /* Tarix */
+
+        const day = String(
+            now.getDate()
+        ).padStart(2, "0");
+
+        const month = String(
+            now.getMonth() + 1
+        ).padStart(2, "0");
+
+        const year = now.getFullYear();
+
+
+        document.getElementById(
+            "liveDate"
+        ).textContent =
+            day + "." +
+            month + "." +
+            year;
+    }
+
+
+    /* İlk dəfə dərhal göstər */
+
+    updateDateTime();
+
+
+    /* Hər saniyə yenilə */
+
+    setInterval(
+        updateDateTime,
+        1000
+    );
+
+</script>
+
+
+<!-- =========================================================
+     HAVA DURUMU
+     Bakı üçün Open-Meteo
+     ========================================================= -->
+
+<script>
+
+    async function loadWeather() {
+
+        const weatherInfo =
+            document.getElementById(
+                "weatherInfo"
+            );
+
+        const weatherIcon =
+            document.getElementById(
+                "weatherIcon"
+            );
+
+
+        try {
+
+            /*
+             * Bakı koordinatları
+             *
+             * Latitude: 40.4093
+             * Longitude: 49.8671
+             */
+
+            const url =
+                "https://api.open-meteo.com/v1/forecast" +
+                "?latitude=40.4093" +
+                "&longitude=49.8671" +
+                "&current=temperature_2m,weather_code" +
+                "&timezone=Asia%2FBaku";
+
+
+            const response =
+                await fetch(url);
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Hava məlumatı alınmadı"
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const temperature =
+                Math.round(
+                    data.current.temperature_2m
+                );
+
+
+            const weatherCode =
+                data.current.weather_code;
+
+
+            let icon = "🌤️";
+
+
+            /*
+             * WMO hava kodları
+             */
+
+            if (
+                weatherCode === 0
+            ) {
+
+                icon = "☀️";
+
+            }
+
+            else if (
+                weatherCode === 1 ||
+                weatherCode === 2
+            ) {
+
+                icon = "🌤️";
+
+            }
+
+            else if (
+                weatherCode === 3
+            ) {
+
+                icon = "☁️";
+
+            }
+
+            else if (
+                weatherCode >= 45 &&
+                weatherCode <= 48
+            ) {
+
+                icon = "🌫️";
+
+            }
+
+            else if (
+                weatherCode >= 51 &&
+                weatherCode <= 67
+            ) {
+
+                icon = "🌧️";
+
+            }
+
+            else if (
+                weatherCode >= 71 &&
+                weatherCode <= 77
+            ) {
+
+                icon = "❄️";
+
+            }
+
+            else if (
+                weatherCode >= 80 &&
+                weatherCode <= 82
+            ) {
+
+                icon = "🌦️";
+
+            }
+
+            else if (
+                weatherCode >= 95
+            ) {
+
+                icon = "⛈️";
+
+            }
+
+
+            weatherIcon.textContent =
+                icon;
+
+
+            weatherInfo.textContent =
+                temperature + "°C";
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Weather error:",
+                error
+            );
+
+
+            weatherIcon.textContent =
+                "🌤️";
+
+            weatherInfo.textContent =
+                "Məlumat yoxdur";
+        }
+
+    }
+
+
+    /* Səhifə açılarkən hava məlumatını al */
+
+    loadWeather();
+
+
+    /*
+     * Havanı 10 dəqiqədən bir yenilə
+     */
+
+    setInterval(
+        loadWeather,
+        600000
+    );
+
+</script>
+
+
+</body>
+</html>
