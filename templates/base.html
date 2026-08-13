@@ -1,51 +1,78 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="az">
 
 <head>
 
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Əmək Məcəlləsi</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
     <style>
 
         /* =====================================================
-           HEADER
+           ÜST HEADER
            ===================================================== */
 
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 14px 30px;
+        .top-header {
+            width: 100%;
             box-sizing: border-box;
-        }
 
+            background: #173b73;
 
-        .header-left {
+            color: white;
+
+            padding: 15px 25px;
+
             display: flex;
+
             align-items: center;
-            gap: 25px;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            font-family: Arial, sans-serif;
         }
 
 
-        .logo {
+        /* SOL HİSSƏ */
+
+        .top-header-left {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 25px;
+
+            min-width: 0;
+        }
+
+
+        .top-logo {
+
+            font-size: 20px;
+
+            font-weight: 800;
+
             white-space: nowrap;
         }
 
 
-        .tag {
+        .top-tag {
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            opacity: 0.85;
+
             white-space: nowrap;
         }
 
@@ -54,35 +81,47 @@
            SAAT / TARİX / HAVA
            ===================================================== */
 
-        .header-info {
+        .top-info {
 
             display: flex;
+
             align-items: center;
-            justify-content: flex-end;
 
-            gap: 18px;
+            justify-content: center;
 
-            color: white;
+            gap: 10px;
 
             font-size: 14px;
+
             font-weight: 600;
 
             white-space: nowrap;
+
+            color: #ffffff;
+
+            background: rgba(255,255,255,0.10);
+
+            padding: 9px 14px;
+
+            border-radius: 10px;
         }
 
 
-        .header-item {
+        .top-info-item {
 
-            display: flex;
+            display: inline-flex;
+
             align-items: center;
 
-            gap: 6px;
+            gap: 5px;
+
+            color: white;
         }
 
 
-        .header-icon {
+        .top-separator {
 
-            font-size: 17px;
+            opacity: 0.65;
         }
 
 
@@ -90,65 +129,57 @@
            MOBİL
            ===================================================== */
 
-        @media (max-width: 850px) {
+        @media (max-width: 700px) {
 
-            header {
+            .top-header {
 
-                flex-wrap: wrap;
+                flex-direction: column;
 
-                padding: 12px 15px;
+                padding: 12px 10px;
+
+                gap: 10px;
             }
 
 
-            .header-left {
-
-                width: 100%;
-
-                justify-content: space-between;
-            }
-
-
-            .header-info {
+            .top-header-left {
 
                 width: 100%;
 
                 justify-content: center;
+            }
 
-                gap: 12px;
 
-                font-size: 13px;
+            .top-info {
+
+                width: auto;
+
+                font-size: 12px;
+
+                padding: 8px 10px;
             }
 
         }
 
 
-        @media (max-width: 550px) {
+        @media (max-width: 450px) {
 
-            .logo {
+            .top-logo {
 
-                font-size: 18px;
+                font-size: 17px;
             }
 
 
-            .tag {
+            .top-tag {
 
-                font-size: 11px;
+                font-size: 10px;
             }
 
 
-            .header-info {
-
-                gap: 8px;
+            .top-info {
 
                 font-size: 11px;
 
-                flex-wrap: wrap;
-            }
-
-
-            .header-icon {
-
-                font-size: 14px;
+                gap: 6px;
             }
 
         }
@@ -161,96 +192,84 @@
 <body>
 
 
-<header>
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+
+<header class="top-header">
 
 
-    <!-- =====================================================
-         SOL TƏRƏF
-         ===================================================== -->
+    <!-- SOL TƏRƏF -->
 
-    <div class="header-left">
+    <div class="top-header-left">
 
-
-        <div class="logo">
+        <div class="top-logo">
 
             ƏMƏK MƏCƏLLƏSİ
-
-            <span></span>
 
         </div>
 
 
-        <div class="tag">
+        <div class="top-tag">
 
             TEST SİSTEMİ
 
         </div>
 
-
     </div>
 
 
 
-    <!-- =====================================================
-         SAĞ TƏRƏF
-         ===================================================== -->
+    <!-- SAĞ TƏRƏF -->
 
-    <div class="header-info">
+    <div class="top-info">
 
 
         <!-- SAAT -->
 
-        <div class="header-item">
+        <span class="top-info-item">
 
-            <span class="header-icon">
-                🕐
-            </span>
+            🕐
 
-            <span id="liveClock">
+            <span id="live-clock">
                 00:00:00
             </span>
 
-        </div>
+        </span>
 
 
-        <!-- AYIRICI -->
-
-        <span>|</span>
+        <span class="top-separator">
+            |
+        </span>
 
 
         <!-- TARİX -->
 
-        <div class="header-item">
+        <span class="top-info-item">
 
-            <span class="header-icon">
-                📅
-            </span>
+            📅
 
-            <span id="liveDate">
+            <span id="live-date">
                 00.00.0000
             </span>
 
-        </div>
+        </span>
 
 
-        <!-- AYIRICI -->
-
-        <span>|</span>
+        <span class="top-separator">
+            |
+        </span>
 
 
         <!-- HAVA -->
 
-        <div class="header-item">
+        <span class="top-info-item">
 
-            <span class="header-icon">
-                ☀️
-            </span>
+            ☀️
 
-            <span>
-                Bakı 29°C
-            </span>
+            Bakı 29°C
 
-        </div>
+        </span>
 
 
     </div>
@@ -261,7 +280,7 @@
 
 
 <!-- =========================================================
-     SƏHİFƏ MƏZMUNU
+     SƏHİFƏ
      ========================================================= -->
 
 <main>
@@ -275,90 +294,109 @@
 
 
 <!-- =========================================================
-     CANLI SAAT VƏ TARİX
+     JAVASCRIPT
      ========================================================= -->
 
 <script>
 
-    function updateDateTime() {
+function updateDateTime() {
+
+    /*
+     * Azərbaycan vaxtı UTC+4-dür.
+     * Brauzerin lokal saatından asılı olmaması üçün
+     * UTC vaxtına 4 saat əlavə edirik.
+     */
+
+    const now = new Date();
 
 
-        /*
-         * Azərbaycan vaxtı
-         *
-         * UTC + 4
-         */
+    /* UTC */
 
-        const now = new Date();
+    const utcTime =
+        now.getTime() +
+        (now.getTimezoneOffset() * 60000);
 
 
-        /* =================================================
-           SAAT
-           ================================================= */
+    /* Bakı = UTC + 4 */
 
-        const hours = String(
-            now.getHours()
+    const bakuTime =
+        new Date(
+            utcTime + (4 * 60 * 60 * 1000)
+        );
+
+
+    /* =====================================================
+       SAAT
+       ===================================================== */
+
+    const hours =
+        String(
+            bakuTime.getHours()
         ).padStart(2, "0");
 
 
-        const minutes = String(
-            now.getMinutes()
+    const minutes =
+        String(
+            bakuTime.getMinutes()
         ).padStart(2, "0");
 
 
-        const seconds = String(
-            now.getSeconds()
+    const seconds =
+        String(
+            bakuTime.getSeconds()
         ).padStart(2, "0");
 
 
-        document.getElementById(
-            "liveClock"
-        ).textContent =
-            hours + ":" +
-            minutes + ":" +
-            seconds;
+    document.getElementById(
+        "live-clock"
+    ).textContent =
+        hours + ":" +
+        minutes + ":" +
+        seconds;
 
 
 
-        /* =================================================
-           TARİX
-           ================================================= */
+    /* =====================================================
+       TARİX
+       ===================================================== */
 
-        const day = String(
-            now.getDate()
+    const day =
+        String(
+            bakuTime.getDate()
         ).padStart(2, "0");
 
 
-        const month = String(
-            now.getMonth() + 1
+    const month =
+        String(
+            bakuTime.getMonth() + 1
         ).padStart(2, "0");
 
 
-        const year =
-            now.getFullYear();
+    const year =
+        bakuTime.getFullYear();
 
 
-        document.getElementById(
-            "liveDate"
-        ).textContent =
-            day + "." +
-            month + "." +
-            year;
+    document.getElementById(
+        "live-date"
+    ).textContent =
+        day + "." +
+        month + "." +
+        year;
 
-    }
-
-
-    /* Səhifə açılan kimi göstər */
-
-    updateDateTime();
+}
 
 
-    /* Hər saniyə yenilə */
+/* İlk açılışda göstər */
 
-    setInterval(
-        updateDateTime,
-        1000
-    );
+updateDateTime();
+
+
+/* Hər saniyə yenilə */
+
+setInterval(
+    updateDateTime,
+    1000
+);
 
 </script>
 
