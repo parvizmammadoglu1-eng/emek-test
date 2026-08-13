@@ -260,7 +260,7 @@ QUESTIONS = [
             "d) 25 təqvim günündən",
 
         "answer":
-            "A"
+            "B"
     },
 
     {
@@ -280,7 +280,7 @@ QUESTIONS = [
             "d) 6 gün qalmış",
 
         "answer":
-            "C"
+            "A"
     },
 
     {
@@ -300,7 +300,7 @@ QUESTIONS = [
             "d) 4 təqvim günü",
 
         "answer":
-            "B"
+            "D"
     },
 
     {
