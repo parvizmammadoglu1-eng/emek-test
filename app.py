@@ -56,6 +56,8 @@ def get_google_client():
             "GOOGLE_PRIVATE_KEY Render Environment Variables bölməsində yoxdur."
         )
 
+    # Render-də \n mətn kimi gəlirsə,
+    # onu real yeni sətrə çeviririk.
     private_key = private_key.replace(
         "\\n",
         "\n"
@@ -392,13 +394,9 @@ def home():
                 error="Ad və soyad daxil edin."
             )
 
-        session.clear()
-
         session["name"] = name
 
         session["answers"] = {}
-
-        session["result_saved"] = False
 
         return redirect(
             url_for(
@@ -432,6 +430,7 @@ def question(n):
         QUESTIONS
     )
 
+    # Sual sayı bitibsə nəticəyə keç
     if n >= total:
 
         return redirect(
@@ -443,22 +442,30 @@ def question(n):
     if request.method == "POST":
 
         selected = request.form.get(
-            "answer",
-            ""
-        ).strip().upper()
+            "answer"
+        )
 
         answers = session.get(
             "answers",
             {}
         )
 
-        # -------------------------------------------------
-        # CAVABI YADDA SAXLA
-        # -------------------------------------------------
+        # =================================================
+        # CAVAB SEÇİLİBSƏ YADDA SAXLA
+        # =================================================
 
-        if selected in ["A", "B", "C", "D"]:
+        if selected in [
+            "A",
+            "B",
+            "C",
+            "D"
+        ]:
 
             answers[str(n)] = selected
+
+        # =================================================
+        # CAVAB SEÇİLMƏYİBSƏ BOŞ SAXLA
+        # =================================================
 
         else:
 
@@ -471,9 +478,9 @@ def question(n):
 
         session.modified = True
 
-        # -------------------------------------------------
-        # SON SUAL
-        # -------------------------------------------------
+        # =================================================
+        # SON SUALDIRSA NƏTİCƏYƏ KEÇ
+        # =================================================
 
         if n + 1 >= total:
 
@@ -481,9 +488,9 @@ def question(n):
                 url_for("finish")
             )
 
-        # -------------------------------------------------
-        # NÖVBƏTİ SUAL
-        # -------------------------------------------------
+        # =================================================
+        # NÖVBƏTİ SUALA KEÇ
+        # =================================================
 
         return redirect(
             url_for(
@@ -532,76 +539,77 @@ def finish():
 
     correct = 0
 
-    answered = 0
+    answered = len(
+        answers
+    )
+
+    # =====================================================
+    # SUALLAR ÜZRƏ ƏTRAFLI NƏTİCƏ HAZIRLA
+    # =====================================================
 
     question_results = []
 
-    # =====================================================
-    # BÜTÜN SUALLARI YOXLA
-    # =====================================================
-
     for index, q in enumerate(QUESTIONS):
 
-        # İştirakçının cavabı
         selected = answers.get(
             str(index)
         )
 
-        if selected:
-
-            selected = str(
-                selected
-            ).strip().upper()
-
-        # Düzgün cavab
-        correct_answer = str(
-            q["answer"]
-        ).strip().upper()
+        correct_letter = q["answer"]
 
         # -------------------------------------------------
-        # İŞTİRAKÇININ SEÇDİYİ CAVABIN MƏTNİ
+        # DÜZGÜN CAVABIN TAM MƏTNİ
         # -------------------------------------------------
 
-        selected_text = ""
-
-        if selected in ["A", "B", "C", "D"]:
-
-            selected_text = q.get(
-                selected.lower(),
-                ""
-            )
-
-            answered += 1
+        correct_text = q[
+            correct_letter.lower()
+        ]
 
         # -------------------------------------------------
-        # DÜZGÜN CAVABIN MƏTNİ
+        # İŞTİRAKÇININ SEÇDİYİ CAVABIN TAM MƏTNİ
         # -------------------------------------------------
 
-        correct_text = q.get(
-            correct_answer.lower(),
-            ""
-        )
+        if selected in [
+            "A",
+            "B",
+            "C",
+            "D"
+        ]:
 
-        # -------------------------------------------------
-        # MÜQAYİSƏ
-        # -------------------------------------------------
-
-        if selected == correct_answer:
-
-            result = "correct"
-
-            correct += 1
-
-        elif selected is None or selected == "":
-
-            result = "empty"
+            selected_text = q[
+                selected.lower()
+            ]
 
         else:
 
-            result = "wrong"
+            selected_text = "Cavab verilməyib"
 
         # -------------------------------------------------
-        # NƏTİCƏNİ HAZIRLA
+        # NƏTİCƏNİ MÜƏYYƏN ET
+        # -------------------------------------------------
+
+        if selected == correct_letter:
+
+            is_correct = True
+            is_wrong = False
+            is_empty = False
+
+            correct += 1
+
+        elif selected is None:
+
+            is_correct = False
+            is_wrong = False
+            is_empty = True
+
+        else:
+
+            is_correct = False
+            is_wrong = True
+            is_empty = False
+
+        # -------------------------------------------------
+        # HTML-Ə GÖNDƏRİLƏCƏK MƏLUMATLAR
         # -------------------------------------------------
 
         question_results.append({
@@ -613,32 +621,39 @@ def finish():
                 q["question"],
 
             "selected":
-                selected if selected else "",
+                selected,
 
             "selected_text":
                 selected_text,
 
-            "correct":
-                correct_answer,
+            "correct_answer":
+                correct_letter,
 
             "correct_text":
                 correct_text,
 
-            "result":
-                result
+            "is_correct":
+                is_correct,
+
+            "is_wrong":
+                is_wrong,
+
+            "is_empty":
+                is_empty
+
         })
 
     # =====================================================
     # SƏHV CAVABLAR
     # =====================================================
 
-    wrong = 0
+    wrong = answered - correct
 
-    for item in question_results:
+    # =====================================================
+    # BOŞ CAVABLAR
+    # =====================================================
 
-        if item["result"] == "wrong":
-
-            wrong += 1
+    unanswered = total - answered
 
     # =====================================================
     # FAİZ
@@ -660,6 +675,10 @@ def finish():
         "%d.%m.%Y %H:%M:%S"
     )
 
+    # =====================================================
+    # STATUS
+    # =====================================================
+
     if answered == total:
 
         status = "Tamamlandı"
@@ -673,52 +692,51 @@ def finish():
 
     # =====================================================
     # GOOGLE SHEETS
-    # YALNIZ BİR DƏFƏ YAZ
     # =====================================================
 
-    if not session.get("result_saved", False):
+    try:
 
-        try:
+        sheet = get_sheet()
 
-            sheet = get_sheet()
+        all_values = sheet.get_all_values()
 
-            all_values = sheet.get_all_values()
+        # Başlıq sətrini nəzərə al
+        number = len(
+            all_values
+        )
 
-            number = len(
-                all_values
-            )
+        sheet.append_row(
+            [
+                number,
+                name,
+                correct,
+                total,
+                wrong,
+                f"{percent}%",
+                created_at,
+                status
+            ],
+            value_input_option="USER_ENTERED"
+        )
 
-            sheet.append_row(
-                [
-                    number,
-                    name,
-                    correct,
-                    total,
-                    wrong,
-                    f"{percent}%",
-                    created_at,
-                    status
-                ],
-                value_input_option="USER_ENTERED"
-            )
+        print(
+            "GOOGLE SHEETS: nəticə əlavə edildi."
+        )
 
-            session["result_saved"] = True
+    except Exception as e:
 
-            session.modified = True
-
-            print(
-                "GOOGLE SHEETS: nəticə əlavə edildi."
-            )
-
-        except Exception as e:
-
-            print(
-                "GOOGLE SHEETS ERROR:",
-                str(e)
-            )
+        print(
+            "GOOGLE SHEETS ERROR:",
+            str(e)
+        )
 
     # =====================================================
-    # NƏTİCƏ SƏHİFƏSİ
+    # VACİB:
+    #
+    # SESSION-I BURADA TƏMİZLƏMİRİK.
+    #
+    # Çünki finish.html nəticələri göstərmək üçün
+    # məlumatdan istifadə edir.
     # =====================================================
 
     return render_template(
@@ -736,6 +754,8 @@ def finish():
         answered=answered,
 
         wrong=wrong,
+
+        unanswered=unanswered,
 
         status=status,
 
@@ -1019,7 +1039,7 @@ def admin_export():
         ].width = width
 
     # =====================================================
-    # EXCEL
+    # EXCEL FAYLI
     # =====================================================
 
     output = BytesIO()
