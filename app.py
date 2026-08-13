@@ -439,15 +439,15 @@ def question(n):
     if request.method == "POST":
 
         selected = request.form.get(
-            "answer"
-        )
+            "answer",
+            ""
+        ).strip().upper()
 
         answers = session.get(
             "answers",
             {}
         )
 
-        # Cavab seçilibsə yadda saxla
         if selected in [
             "A",
             "B",
@@ -457,7 +457,6 @@ def question(n):
 
             answers[str(n)] = selected
 
-        # Cavab seçilməyibsə boş saxla
         else:
 
             answers.pop(
@@ -469,14 +468,12 @@ def question(n):
 
         session.modified = True
 
-        # Son sualdırsa nəticəyə keç
         if n + 1 >= total:
 
             return redirect(
                 url_for("finish")
             )
 
-        # Növbəti suala keç
         return redirect(
             url_for(
                 "question",
@@ -523,16 +520,13 @@ def finish():
     )
 
     correct = 0
-
-    answered = len(
-        answers
-    )
-
-    # =====================================================
-    # SUALLAR ÜZRƏ NƏTİCƏLƏRİ HAZIRLA
-    # =====================================================
+    answered = len(answers)
 
     question_results = []
+
+    # =====================================================
+    # HƏR SUALI YOXLA
+    # =====================================================
 
     for index, q in enumerate(QUESTIONS):
 
@@ -540,21 +534,43 @@ def finish():
             str(index)
         )
 
-        correct_answer = q["answer"]
+        # İştirakçının cavabını standartlaşdır
+        if selected:
 
-        # Seçilən cavabın tam mətni
+            selected = str(
+                selected
+            ).strip().upper()
+
+        # Düzgün cavabı standartlaşdır
+        correct_answer = str(
+            q["answer"]
+        ).strip().upper()
+
+        # =================================================
+        # İŞTİRAKÇININ SEÇDİYİ TAM CAVAB
+        # =================================================
+
         selected_text = ""
 
         if selected in ["A", "B", "C", "D"]:
 
-            selected_text = q[
-                selected.lower()
-            ]
+            selected_text = q.get(
+                selected.lower(),
+                ""
+            )
 
-        # Düzgün cavabın tam mətni
-        correct_text = q[
-            correct_answer.lower()
-        ]
+        # =================================================
+        # DÜZGÜN CAVABIN TAM MƏTNİ
+        # =================================================
+
+        correct_text = q.get(
+            correct_answer.lower(),
+            ""
+        )
+
+        # =================================================
+        # DÜZGÜN / SƏHV / BOŞ
+        # =================================================
 
         if selected == correct_answer:
 
@@ -562,43 +578,45 @@ def finish():
 
             correct += 1
 
-        elif selected is None:
-
-            result = "empty"
-
-        else:
+        elif selected:
 
             result = "wrong"
 
+        else:
+
+            result = "empty"
+
+        # =================================================
+        # SUAL NƏTİCƏSİ
+        # =================================================
+
         question_results.append({
 
-            "number":
-                index + 1,
+            "number": index + 1,
 
-            "question":
-                q["question"],
+            "question": q["question"],
 
-            "selected":
-                selected,
+            "selected": selected,
 
-            "selected_text":
-                selected_text,
+            "selected_text": selected_text,
 
-            "correct":
-                correct_answer,
+            "correct": correct_answer,
 
-            "correct_text":
-                correct_text,
+            "correct_text": correct_text,
 
-            "result":
-                result
+            "result": result
+
         })
 
     # =====================================================
-    # SƏHV CAVABLAR
+    # SƏHV SAYI
     # =====================================================
 
-    wrong = answered - correct
+    wrong = sum(
+        1
+        for item in question_results
+        if item["result"] == "wrong"
+    )
 
     # =====================================================
     # FAİZ
@@ -611,7 +629,7 @@ def finish():
     name = session["name"]
 
     # =====================================================
-    # BAKI VAXTI
+    # TARİX
     # =====================================================
 
     created_at = datetime.now(
@@ -619,6 +637,10 @@ def finish():
     ).strftime(
         "%d.%m.%Y %H:%M:%S"
     )
+
+    # =====================================================
+    # STATUS
+    # =====================================================
 
     if answered == total:
 
@@ -641,9 +663,7 @@ def finish():
 
         all_values = sheet.get_all_values()
 
-        number = len(
-            all_values
-        )
+        number = len(all_values)
 
         sheet.append_row(
             [
@@ -671,11 +691,7 @@ def finish():
         )
 
     # =====================================================
-    # VACİB:
-    # SESSION-I BURADA TƏMİZLƏMİRİK
-    #
-    # Çünki finish.html sualların nəticələrini
-    # göstərmək üçün məlumatı istifadə edir.
+    # NƏTİCƏ SƏHİFƏSİ
     # =====================================================
 
     return render_template(
@@ -728,7 +744,6 @@ def admin_login():
 
         return render_template(
             "admin_login.html",
-
             error="Parol yanlışdır."
         )
 
@@ -828,19 +843,12 @@ def admin_export():
     headers = [
 
         "№",
-
         "Ad və soyad",
-
         "Düzgün cavab",
-
         "Ümumi sual",
-
         "Səhv cavab",
-
         "Nəticə",
-
         "Tarix",
-
         "Status"
 
     ]
@@ -952,19 +960,12 @@ def admin_export():
     widths = {
 
         "A": 8,
-
         "B": 30,
-
         "C": 18,
-
         "D": 18,
-
         "E": 15,
-
         "F": 15,
-
         "G": 25,
-
         "H": 30
 
     }
@@ -976,7 +977,7 @@ def admin_export():
         ].width = width
 
     # =====================================================
-    # EXCEL FAYLI
+    # EXCEL
     # =====================================================
 
     output = BytesIO()
