@@ -56,8 +56,6 @@ def get_google_client():
             "GOOGLE_PRIVATE_KEY Render Environment Variables bölməsində yoxdur."
         )
 
-    # Render-də \n mətn kimi gəlirsə,
-    # onu real yeni sətrə çeviririk.
     private_key = private_key.replace(
         "\\n",
         "\n"
@@ -430,7 +428,6 @@ def question(n):
         QUESTIONS
     )
 
-    # Sual sayı bitibsə nəticəyə keç
     if n >= total:
 
         return redirect(
@@ -450,10 +447,7 @@ def question(n):
             {}
         )
 
-        # =================================================
-        # CAVAB SEÇİLİBSƏ YADDA SAXLA
-        # =================================================
-
+        # Cavab seçilibsə yadda saxla
         if selected in [
             "A",
             "B",
@@ -463,11 +457,7 @@ def question(n):
 
             answers[str(n)] = selected
 
-        # =================================================
-        # CAVAB SEÇİLMƏYİBSƏ
-        # BOŞ SAXLA VƏ NÖVBƏTİ SUALA KEÇ
-        # =================================================
-
+        # Cavab seçilməyibsə boş saxla
         else:
 
             answers.pop(
@@ -479,20 +469,14 @@ def question(n):
 
         session.modified = True
 
-        # =================================================
-        # SON SUALDIRSA NƏTİCƏYƏ KEÇ
-        # =================================================
-
+        # Son sualdırsa nəticəyə keç
         if n + 1 >= total:
 
             return redirect(
                 url_for("finish")
             )
 
-        # =================================================
-        # NÖVBƏTİ SUALA KEÇ
-        # =================================================
-
+        # Növbəti suala keç
         return redirect(
             url_for(
                 "question",
@@ -514,7 +498,7 @@ def question(n):
 
 
 # =========================================================
-# TESTİ İSTƏNİLƏN YERDƏ BİTİR
+# FINISH
 # =========================================================
 
 @app.route(
@@ -545,10 +529,10 @@ def finish():
     )
 
     # =====================================================
-    # SUALLAR ÜZRƏ ƏTRAFLI NƏTİCƏ
+    # SUALLAR ÜZRƏ NƏTİCƏLƏRİ HAZIRLA
     # =====================================================
 
-    review = []
+    question_results = []
 
     for index, q in enumerate(QUESTIONS):
 
@@ -558,43 +542,10 @@ def finish():
 
         correct_answer = q["answer"]
 
-        # -------------------------------------------------
-        # CAVAB VERİLMƏYİB
-        # -------------------------------------------------
+        # Seçilən cavabın tam mətni
+        selected_text = ""
 
-        if selected is None:
-
-            status_type = "blank"
-
-            status_text = "Cavab seçilməyib"
-
-            selected_text = "—"
-
-        # -------------------------------------------------
-        # DÜZGÜN CAVAB
-        # -------------------------------------------------
-
-        elif selected == correct_answer:
-
-            correct += 1
-
-            status_type = "correct"
-
-            status_text = "Düzgün cavab"
-
-            selected_text = q[
-                selected.lower()
-            ]
-
-        # -------------------------------------------------
-        # SƏHV CAVAB
-        # -------------------------------------------------
-
-        else:
-
-            status_type = "wrong"
-
-            status_text = "Səhv cavab"
+        if selected in ["A", "B", "C", "D"]:
 
             selected_text = q[
                 selected.lower()
@@ -605,45 +556,49 @@ def finish():
             correct_answer.lower()
         ]
 
-        review.append({
+        if selected == correct_answer:
 
-            "number": index + 1,
+            result = "correct"
 
-            "question": q["question"],
+            correct += 1
 
-            "status_type": status_type,
+        elif selected is None:
 
-            "status_text": status_text,
+            result = "empty"
 
-            "selected": selected,
+        else:
 
-            "selected_text": selected_text,
+            result = "wrong"
 
-            "correct": correct_answer,
+        question_results.append({
 
-            "correct_text": correct_text
+            "number":
+                index + 1,
 
+            "question":
+                q["question"],
+
+            "selected":
+                selected,
+
+            "selected_text":
+                selected_text,
+
+            "correct":
+                correct_answer,
+
+            "correct_text":
+                correct_text,
+
+            "result":
+                result
         })
 
     # =====================================================
     # SƏHV CAVABLAR
     # =====================================================
 
-    wrong = sum(
-        1
-        for item in review
-        if item["status_type"] == "wrong"
-    )
-
-    # =====================================================
-    # BOŞ CAVABLAR
-    # =====================================================
-
-    blank = sum(
-        1
-        for item in review
-        if item["status_type"] == "blank"
-    )
+    wrong = answered - correct
 
     # =====================================================
     # FAİZ
@@ -664,10 +619,6 @@ def finish():
     ).strftime(
         "%d.%m.%Y %H:%M:%S"
     )
-
-    # =====================================================
-    # STATUS
-    # =====================================================
 
     if answered == total:
 
@@ -690,7 +641,6 @@ def finish():
 
         all_values = sheet.get_all_values()
 
-        # Başlıq sətrini nəzərə al
         number = len(
             all_values
         )
@@ -721,17 +671,12 @@ def finish():
         )
 
     # =====================================================
-    # NƏTİCƏ SƏHİFƏSİ
+    # VACİB:
+    # SESSION-I BURADA TƏMİZLƏMİRİK
+    #
+    # Çünki finish.html sualların nəticələrini
+    # göstərmək üçün məlumatı istifadə edir.
     # =====================================================
-
-    # Vacib:
-    # Burada session.clear() ETMİRİK.
-    #
-    # Çünki iştirakçı nəticə səhifəsində
-    # sualların nəticələrini görməlidir.
-    #
-    # Yeni test başlayanda home() onsuz da
-    # answers məlumatını sıfırlayır.
 
     return render_template(
 
@@ -749,11 +694,9 @@ def finish():
 
         wrong=wrong,
 
-        blank=blank,
-
         status=status,
 
-        review=review
+        question_results=question_results
 
     )
 
