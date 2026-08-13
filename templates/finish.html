@@ -3,6 +3,7 @@
 {% block content %}
 
 <style>
+
     .result-page {
         min-height: 75vh;
         display: flex;
@@ -124,9 +125,117 @@
         color: #173b73;
     }
 
+    /* =====================================================
+       SUAL NƏTİCƏLƏRİ
+       ===================================================== */
+
+    .answers-title {
+        margin-top: 40px;
+        margin-bottom: 20px;
+        padding-top: 30px;
+        border-top: 1px solid #e5e7eb;
+        color: #172033;
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .question-result {
+        text-align: left;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .question-result.correct {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+    }
+
+    .question-result.wrong {
+        background: #fff7f7;
+        border-color: #fecaca;
+    }
+
+    .question-result.unanswered {
+        background: #f8fafc;
+        border-color: #e5e7eb;
+    }
+
+    .question-result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .question-result-number {
+        font-weight: 800;
+        color: #173b73;
+        font-size: 15px;
+    }
+
+    .question-status {
+        font-size: 13px;
+        font-weight: 800;
+        padding: 6px 10px;
+        border-radius: 8px;
+    }
+
+    .correct .question-status {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .wrong .question-status {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .unanswered .question-status {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .question-result-text {
+        color: #172033;
+        font-size: 15px;
+        line-height: 1.5;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .answer-row {
+        padding: 10px 12px;
+        border-radius: 9px;
+        margin-top: 7px;
+        font-size: 14px;
+    }
+
+    .your-answer {
+        background: #ffffff;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+    }
+
+    .correct-answer {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        font-weight: 700;
+    }
+
+    .wrong-answer {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
     .finish-info {
         color: #9ca3af;
         font-size: 13px;
+        margin-top: 30px;
         margin-bottom: 25px;
     }
 
@@ -192,131 +301,246 @@
             width: 100%;
             box-sizing: border-box;
         }
+
+        .question-result-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
     }
+
 </style>
+
 
 <div class="result-page">
 
-```
-<div class="result-card">
+    <div class="result-card">
 
-    <div class="success-icon">
-        ✓
-    </div>
-
-    <h1 class="result-title">
-        Test tamamlandı!
-    </h1>
-
-    <p class="result-subtitle">
-        Əmək Məcəlləsi testinin nəticəsi
-    </p>
-
-    <div class="name-box">
-        👤 {{ name }}
-    </div>
-
-
-    <!-- FAİZ -->
-    <div class="score-circle">
-
-        <div class="score-percent">
-            {{ percent }}%
+        <div class="success-icon">
+            ✓
         </div>
 
-        <div class="score-label">
-            Ümumi nəticə
+        <h1 class="result-title">
+            Test tamamlandı!
+        </h1>
+
+        <p class="result-subtitle">
+            Əmək Məcəlləsi testinin nəticəsi
+        </p>
+
+        <div class="name-box">
+            👤 {{ name }}
         </div>
 
-    </div>
 
+        <!-- FAİZ -->
 
-    <!-- STATİSTİKA -->
-    <div class="stats">
+        <div class="score-circle">
 
-        <div class="stat">
-
-            <div class="stat-number">
-                {{ correct }}
+            <div class="score-percent">
+                {{ percent }}%
             </div>
 
-            <div class="stat-label">
-                Düzgün cavab
+            <div class="score-label">
+                Ümumi nəticə
             </div>
 
         </div>
 
 
-        <div class="stat">
+        <!-- STATİSTİKA -->
 
-            <div class="stat-number">
-                {{ total - correct }}
+        <div class="stats">
+
+            <div class="stat">
+
+                <div class="stat-number">
+                    {{ correct }}
+                </div>
+
+                <div class="stat-label">
+                    Düzgün cavab
+                </div>
+
             </div>
 
-            <div class="stat-label">
-                Səhv / boş
+
+            <div class="stat">
+
+                <div class="stat-number">
+                    {{ wrong }}
+                </div>
+
+                <div class="stat-label">
+                    Səhv cavab
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-number">
+                    {{ total }}
+                </div>
+
+                <div class="stat-label">
+                    Ümumi sual
+                </div>
+
             </div>
 
         </div>
 
 
-        <div class="stat">
+        <!-- MESAJ -->
 
-            <div class="stat-number">
-                {{ total }}
-            </div>
+        <div class="result-message">
 
-            <div class="stat-label">
-                Ümumi sual
-            </div>
+            {% if percent >= 90 %}
+
+                🌟 <strong>Əla nəticə!</strong>
+                Əmək Məcəlləsi üzrə bilikləriniz çox yaxşı səviyyədədir.
+
+            {% elif percent >= 70 %}
+
+                👏 <strong>Çox yaxşı!</strong>
+                Nəticəniz yaxşıdır. Bir az da çalışaraq daha yüksək nəticə əldə edə bilərsiniz.
+
+            {% elif percent >= 50 %}
+
+                👍 <strong>Yaxşı nəticə!</strong>
+                Biliklərinizi bir qədər də möhkəmləndirməklə nəticənizi artıra bilərsiniz.
+
+            {% else %}
+
+                📚 <strong>Daha çox məşq edin!</strong>
+                Əmək Məcəlləsi üzrə mövzuları təkrar etməyiniz faydalı olacaq.
+
+            {% endif %}
 
         </div>
 
+
+        <!-- =================================================
+             SUALLAR ÜZRƏ ƏTRAFLI NƏTİCƏ
+             ================================================= -->
+
+        <div class="answers-title">
+            📋 Suallar üzrə nəticələr
+        </div>
+
+
+        {% for item in question_results %}
+
+            {% if item.is_correct %}
+
+                <div class="question-result correct">
+
+                    <div class="question-result-header">
+
+                        <div class="question-result-number">
+                            Sual {{ item.number }}
+                        </div>
+
+                        <div class="question-status">
+                            ✓ DÜZGÜN
+                        </div>
+
+                    </div>
+
+                    <div class="question-result-text">
+                        {{ item.question }}
+                    </div>
+
+                    <div class="answer-row correct-answer">
+                        ✓ Sizin cavabınız:
+                        {{ item.selected }}
+                    </div>
+
+                </div>
+
+            {% elif item.selected == "Cavab verilməyib" %}
+
+                <div class="question-result unanswered">
+
+                    <div class="question-result-header">
+
+                        <div class="question-result-number">
+                            Sual {{ item.number }}
+                        </div>
+
+                        <div class="question-status">
+                            — BOŞ
+                        </div>
+
+                    </div>
+
+                    <div class="question-result-text">
+                        {{ item.question }}
+                    </div>
+
+                    <div class="answer-row your-answer">
+                        Sizin cavabınız:
+                        Cavab verilməyib
+                    </div>
+
+                    <div class="answer-row correct-answer">
+                        ✓ Düzgün cavab:
+                        {{ item.correct_answer }}
+                    </div>
+
+                </div>
+
+            {% else %}
+
+                <div class="question-result wrong">
+
+                    <div class="question-result-header">
+
+                        <div class="question-result-number">
+                            Sual {{ item.number }}
+                        </div>
+
+                        <div class="question-status">
+                            ✕ SƏHV
+                        </div>
+
+                    </div>
+
+                    <div class="question-result-text">
+                        {{ item.question }}
+                    </div>
+
+                    <div class="answer-row wrong-answer">
+                        ✕ Sizin cavabınız:
+                        {{ item.selected }}
+                    </div>
+
+                    <div class="answer-row correct-answer">
+                        ✓ Düzgün cavab:
+                        {{ item.correct_answer }}
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        {% endfor %}
+
+
+        <div class="finish-info">
+            Nəticəniz sistemdə yadda saxlanıldı.
+        </div>
+
+
+        <a
+            href="{{ url_for('home') }}"
+            class="home-button"
+        >
+            YENİ TESTƏ BAŞLA →
+        </a>
+
     </div>
-
-
-    <!-- MESAJ -->
-    <div class="result-message">
-
-        {% if percent >= 90 %}
-
-            🌟 <strong>Əla nəticə!</strong>
-            Əmək Məcəlləsi üzrə bilikləriniz çox yaxşı səviyyədədir.
-
-        {% elif percent >= 70 %}
-
-            👏 <strong>Çox yaxşı!</strong>
-            Nəticəniz yaxşıdır. Bir az da çalışaraq daha yüksək nəticə əldə edə bilərsiniz.
-
-        {% elif percent >= 50 %}
-
-            👍 <strong>Yaxşı nəticə!</strong>
-            Biliklərinizi bir qədər də möhkəmləndirməklə nəticənizi artıra bilərsiniz.
-
-        {% else %}
-
-            📚 <strong>Daha çox məşq edin!</strong>
-            Əmək Məcəlləsi üzrə mövzuları təkrar etməyiniz faydalı olacaq.
-
-        {% endif %}
-
-    </div>
-
-
-    <div class="finish-info">
-        Nəticəniz sistemdə yadda saxlanıldı.
-    </div>
-
-
-    <a
-        href="{{ url_for('home') }}"
-        class="home-button"
-    >
-        YENİ TESTƏ BAŞLA →
-    </a>
-
-</div>
-```
 
 </div>
 
