@@ -119,21 +119,27 @@ def get_sheet():
             cols=11
         )
 
-        sheet.append_row(
-            [
-                "№",
-                "Ad və soyad",
-                "Düzgün cavab",
-                "Ümumi sual",
-                "Səhv cavab",
-                "Nəticə",
-                "Tarix",
-                "Status",
-                "Müddət",
-                "Başlama vaxtı",
-                "Bitmə vaxtı"
-            ]
-        )
+        # =====================================================
+# GOOGLE SHEETSƏ NƏTİCƏNİ HƏMİŞƏ A:I SÜTUNLARINA YAZ
+# =====================================================
+
+next_row = len(sheet.get_all_values()) + 1
+
+sheet.update(
+    f"A{next_row}:I{next_row}",
+    [[
+        №,
+        Ad və soyad,
+        Düzgün cavab,
+        Ümumi sual,
+        Səhv cavab,
+        f"{percent}%",
+        Tarix,
+        Status,
+        duration_text
+    ]],
+    value_input_option="USER_ENTERED"
+)
 
         return sheet
 
