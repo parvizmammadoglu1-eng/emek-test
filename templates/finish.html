@@ -124,7 +124,32 @@
     .result-message strong {
         color: #173b73;
     }
+<div class="exam-time-box">
 
+    <div class="exam-time-title">
+        ⏱️ İmtahan müddəti
+    </div>
+
+    <div class="exam-time-grid">
+
+        <div>
+            <span>Başlama</span>
+            <strong>{{ start_time or "-" }}</strong>
+        </div>
+
+        <div>
+            <span>Bitmə</span>
+            <strong>{{ end_time or "-" }}</strong>
+        </div>
+
+        <div>
+            <span>Müddət</span>
+            <strong>{{ duration or "-" }}</strong>
+        </div>
+
+    </div>
+
+</div>
     /* =====================================================
        SUAL NƏTİCƏLƏRİ
        ===================================================== */
