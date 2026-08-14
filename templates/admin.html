@@ -269,14 +269,14 @@
 
     <!-- Sual Bazasını Yeniləmə / Import Bölməsi -->
     <div class="import-card">
-        <div class="section-title" style="margin-bottom: 8px;">📥 Sual Bazasını Yenilə (JSON Import)</div>
+        <div class="section-title" style="margin-bottom: 8px;">📥 Sual Bazasını Yenilə (Excel / JSON)</div>
         <p style="color: var(--text-sub); font-size: 13px; margin-bottom: 15px;">
-            Sistemdəki sualları yeniləmək üçün kompyuterinizdə hazırladığınız <code>questions.json</code> faylını seçib yükləyin.
+            Sistemdəki sualları yeniləmək üçün kompyuterinizdə hazırladığınız Excel (<code>.xlsx</code>) və ya JSON (<code>.json</code>) faylını seçib yükləyin.
         </p>
         <form action="/admin/import-questions" method="POST" enctype="multipart/form-data" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <input type="file" name="questions_file" accept=".json" required class="file-input">
+            <input type="file" name="questions_file" accept=".xlsx, .xls, .json" required class="file-input">
             <button type="submit" class="btn btn-import">
-                ⬆ Sualları Yenilə
+                ⬆ Sualları Yenilə (Excel / JSON)
             </button>
         </form>
     </div>
