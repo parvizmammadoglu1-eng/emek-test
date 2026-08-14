@@ -273,7 +273,7 @@
         <p style="color: var(--text-sub); font-size: 13px; margin-bottom: 15px;">
             Sistemdəki sualları yeniləmək üçün kompyuterinizdə hazırladığınız <code>questions.json</code> faylını seçib yükləyin.
         </p>
-        <form action="{{ url_for('import_questions') }}" method="POST" enctype="multipart/form-data" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <form action="/admin/import-questions" method="POST" enctype="multipart/form-data" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
             <input type="file" name="questions_file" accept=".json" required class="file-input">
             <button type="submit" class="btn btn-import">
                 ⬆ Sualları Yenilə
