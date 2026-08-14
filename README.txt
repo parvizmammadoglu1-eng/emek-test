@@ -1,5 +1,5 @@
 
-ƏMƏK MƏCƏLLƏSİ 2026 — WEB TEST SİSTEMİ
+ƏMƏK MƏCƏLLƏSİ — WEB TEST SİSTEMİ
 
 LOKAL İŞƏ SALMA:
 1) Python 3 quraşdır.
