@@ -1232,3 +1232,25 @@ if __name__ == "__main__":
         )
 
     )
+    @app.route("/admin/import-questions", methods=["POST"])
+@admin_required  # Əgər admin dekoratorunuz varsa saxlayın, yoxdursa bu sətri silin
+def import_questions():
+    file = request.files.get("questions_file")
+    if not file or not file.filename.endswith(".json"):
+        return redirect(url_for("admin"))
+
+    try:
+        data = json.load(file)
+        if isinstance(data, list):
+            # Qlobal QUESTIONS dəyişənini və ya faylınızı yeniləyin
+            global QUESTIONS
+            QUESTIONS = data
+            
+            # Əgər sualları json faylına yazırsınızsa:
+            with open("questions.json", "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+                
+    except Exception as e:
+        print("Import xətası:", str(e))
+
+    return redirect(url_for("admin"))
