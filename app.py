@@ -248,6 +248,7 @@ def load_questions():
                 return json.load(f)
         except Exception:
             pass
+    # Fayl hələ yoxdursa, default sualları yaradıb yadda saxlayırıq
     save_questions(DEFAULT_QUESTIONS)
     return DEFAULT_QUESTIONS
 
@@ -284,7 +285,7 @@ def admin_required(function):
 
 
 # =========================================================
-# HOME (Giriş kodu ləğv edildi, yalnız Ad tələb olunur)
+# HOME
 # =========================================================
 
 @app.route(
@@ -301,9 +302,10 @@ def home():
         ).strip()
 
         if not name:
+
             return render_template(
                 "home.html",
-                error="Zəhmət olmasa ad və soyad daxil edin."
+                error="Ad və soyad daxil edin."
             )
 
         session.clear()
