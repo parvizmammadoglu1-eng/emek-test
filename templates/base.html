@@ -2,13 +2,20 @@
 <html lang="az">
 
 <head>
+
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
     <title>Əmək Məcəlləsi</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 
     <style>
 
@@ -16,182 +23,206 @@
             box-sizing: border-box;
         }
 
+        html,
         body {
             margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f7fb;
-            color: #172033;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            background: #f5f7fb;
         }
 
         /* =====================================================
-           HEADER
-           ===================================================== */
+           YUXARI MƏLUMAT PANELİ
+        ===================================================== */
 
-        header {
+        .status-bar {
             width: 100%;
-            padding: 12px 18px;
             background: linear-gradient(
                 135deg,
                 #173b73,
                 #2563eb
             );
 
-            box-shadow:
-                0 5px 20px rgba(23, 59, 115, 0.20);
+            color: white;
 
-            position: relative;
-            z-index: 10;
+            padding: 8px 10px;
+
+            box-shadow:
+                0 4px 15px rgba(0,0,0,0.12);
+        }
+
+
+        .status-container {
+
+            width: 100%;
+            max-width: 1100px;
+
+            margin: 0 auto;
+
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            gap: 8px;
+
+            flex-wrap: nowrap;
+
+            overflow: hidden;
         }
 
 
         /* =====================================================
-           YUXARI STATUS PANELİ
-           ===================================================== */
+           HƏR MƏLUMAT
+        ===================================================== */
 
-        .top-status {
-            width: 100%;
-            max-width: 1100px;
-            margin: 0 auto;
+        .status-item {
 
             display: flex;
-            justify-content: center;
+
             align-items: center;
+            justify-content: center;
 
-            gap: 10px;
+            gap: 5px;
 
-            color: white;
-            font-size: 14px;
+            min-width: 0;
+
+            padding: 7px 10px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,0.12);
+
+            border:
+                1px solid rgba(255,255,255,0.18);
+
+            backdrop-filter:
+                blur(8px);
+
+            -webkit-backdrop-filter:
+                blur(8px);
+
+            white-space: nowrap;
+
+            font-size: 13px;
+
             font-weight: 600;
 
-            flex-wrap: wrap;
+            box-shadow:
+                0 3px 10px rgba(0,0,0,0.08);
         }
 
 
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 7px;
+        .status-icon {
 
-            padding: 8px 13px;
+            font-size: 15px;
 
-            background: rgba(255,255,255,0.12);
+            flex-shrink: 0;
+        }
 
-            border: 1px solid rgba(255,255,255,0.15);
 
-            border-radius: 12px;
+        .status-text {
 
-            backdrop-filter: blur(8px);
+            overflow: hidden;
 
-            box-shadow:
-                0 4px 12px rgba(0,0,0,0.08);
+            text-overflow: ellipsis;
 
             white-space: nowrap;
         }
 
 
-        .status-icon {
-            font-size: 17px;
-        }
-
-
-        .status-value {
-            font-weight: 700;
-        }
-
-
-        /* Ayrıcı */
-
-        .status-dot {
-            width: 5px;
-            height: 5px;
-
-            background: rgba(255,255,255,0.55);
-
-            border-radius: 50%;
-        }
-
-
         /* =====================================================
-           SAAT
-           ===================================================== */
-
-        #clock {
-            font-variant-numeric: tabular-nums;
-            letter-spacing: 0.5px;
-        }
-
-
-        /* =====================================================
-           HAVA
-           ===================================================== */
-
-        #weather {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-
-        #weather-temp {
-            font-weight: 800;
-        }
-
-
-        /* =====================================================
-           MAIN
-           ===================================================== */
-
-        main {
-            width: 100%;
-            min-height: calc(100vh - 70px);
-        }
-
-
-        /* =====================================================
-           TELEFON
-           ===================================================== */
+           MOBİL
+        ===================================================== */
 
         @media (max-width: 600px) {
 
-            header {
-                padding: 10px 8px;
+            .status-bar {
+
+                padding:
+                    6px 3px;
             }
 
-            .top-status {
-                gap: 6px;
+
+            .status-container {
+
+                width: 100%;
+
+                gap: 3px;
+
+                flex-wrap: nowrap;
+
+                justify-content: center;
+            }
+
+
+            .status-item {
+
+                flex:
+                    1 1 0;
+
+                min-width: 0;
+
+                padding:
+                    6px 4px;
+
+                gap: 3px;
+
+                border-radius: 8px;
+
+                font-size: 10px;
+
+                overflow: hidden;
+            }
+
+
+            .status-icon {
+
                 font-size: 12px;
             }
 
-            .status-item {
-                padding: 7px 9px;
-                border-radius: 10px;
-                gap: 5px;
-            }
 
-            .status-icon {
-                font-size: 14px;
-            }
+            .status-text {
 
-            .status-dot {
-                display: none;
-            }
+                overflow: hidden;
 
+                text-overflow: ellipsis;
+            }
         }
 
 
-        /* Çox kiçik ekranlar */
+        /* =====================================================
+           ÇOX KİÇİK TELEFONLAR
+        ===================================================== */
 
         @media (max-width: 380px) {
 
-            .top-status {
-                font-size: 11px;
-                gap: 4px;
+            .status-container {
+
+                gap: 2px;
             }
+
 
             .status-item {
-                padding: 6px 7px;
+
+                padding:
+                    5px 2px;
+
+                font-size: 9px;
+
+                gap: 2px;
             }
 
+
+            .status-icon {
+
+                font-size: 11px;
+            }
         }
 
     </style>
@@ -202,375 +233,524 @@
 <body>
 
 
-<header>
+    <!-- =====================================================
+         SAAT / TARİX / HAVA
+    ===================================================== -->
 
-    <div class="top-status">
+    <div class="status-bar">
+
+        <div class="status-container">
 
 
-        <!-- SAAT -->
+            <!-- SAAT -->
 
-        <div class="status-item">
+            <div class="status-item">
 
-            <span class="status-icon">
-                🕐
-            </span>
+                <span class="status-icon">
+                    🕐
+                </span>
 
-            <span id="clock">
-                00:00:00
-            </span>
+                <span
+                    class="status-text"
+                    id="clock"
+                >
+                    00:00:00
+                </span>
+
+            </div>
+
+
+            <!-- TARİX -->
+
+            <div class="status-item">
+
+                <span class="status-icon">
+                    📅
+                </span>
+
+                <span
+                    class="status-text"
+                    id="date"
+                >
+                    00.00.0000
+                </span>
+
+            </div>
+
+
+            <!-- HAVA -->
+
+            <div class="status-item">
+
+                <span class="status-icon">
+                    ☀️
+                </span>
+
+                <span
+                    class="status-text"
+                    id="weather"
+                >
+                    Bakı 29°C
+                </span>
+
+            </div>
+
 
         </div>
-
-
-        <div class="status-dot"></div>
-
-
-        <!-- TARİX -->
-
-        <div class="status-item">
-
-            <span class="status-icon">
-                📅
-            </span>
-
-            <span id="date">
-                00.00.0000
-            </span>
-
-        </div>
-
-
-        <div class="status-dot"></div>
-
-
-        <!-- HAVA -->
-
-        <div class="status-item">
-
-            <span id="weather-icon"
-                  class="status-icon">
-                ☀️
-            </span>
-
-            <span id="weather-city">
-                Bakı
-            </span>
-
-            <span id="weather-temp">
-                --°C
-            </span>
-
-        </div>
-
 
     </div>
 
-</header>
+
+
+    <!-- =====================================================
+         ƏSAS SƏHİFƏ
+    ===================================================== -->
+
+    <main>
+
+        {% block content %}
+
+        {% endblock %}
+
+    </main>
 
 
 
-<main>
+    <!-- =====================================================
+         JAVASCRIPT
+    ===================================================== -->
 
-    {% block content %}
-    {% endblock %}
+    <script>
 
-</main>
+        /* =====================================================
+           SAAT VƏ TARİX
+        ===================================================== */
 
+        function updateDateTime() {
 
-
-<script>
-
-    /* =====================================================
-       SAAT VƏ TARİX
-       ===================================================== */
-
-    function updateDateTime() {
-
-        const now = new Date();
+            const now = new Date();
 
 
-        /* Saat */
-
-        const hours =
-            String(now.getHours()).padStart(2, "0");
-
-        const minutes =
-            String(now.getMinutes()).padStart(2, "0");
-
-        const seconds =
-            String(now.getSeconds()).padStart(2, "0");
+            const hours =
+                String(
+                    now.getHours()
+                ).padStart(2, "0");
 
 
-        document.getElementById("clock").textContent =
-            `${hours}:${minutes}:${seconds}`;
+            const minutes =
+                String(
+                    now.getMinutes()
+                ).padStart(2, "0");
 
 
-        /* Tarix */
-
-        const day =
-            String(now.getDate()).padStart(2, "0");
-
-        const month =
-            String(now.getMonth() + 1).padStart(2, "0");
-
-        const year =
-            now.getFullYear();
+            const seconds =
+                String(
+                    now.getSeconds()
+                ).padStart(2, "0");
 
 
-        document.getElementById("date").textContent =
-            `${day}.${month}.${year}`;
-
-    }
-
-
-    updateDateTime();
-
-    setInterval(
-        updateDateTime,
-        1000
-    );
+            const day =
+                String(
+                    now.getDate()
+                ).padStart(2, "0");
 
 
+            const month =
+                String(
+                    now.getMonth() + 1
+                ).padStart(2, "0");
 
-    /* =====================================================
-       HAVA DURUMU
-       ===================================================== */
 
-    function getWeatherIcon(code) {
+            const year =
+                now.getFullYear();
 
-        if (code === 0)
-            return "☀️";
 
-        if (code === 1 || code === 2)
-            return "🌤️";
+            document.getElementById(
+                "clock"
+            ).textContent =
+                `${hours}:${minutes}:${seconds}`;
 
-        if (code === 3)
-            return "☁️";
 
-        if (
-            code === 45 ||
-            code === 48
-        )
-            return "🌫️";
+            document.getElementById(
+                "date"
+            ).textContent =
+                `${day}.${month}.${year}`;
+        }
 
-        if (
-            code >= 51 &&
-            code <= 67
-        )
-            return "🌧️";
 
-        if (
-            code >= 71 &&
-            code <= 77
-        )
-            return "❄️";
+        updateDateTime();
 
-        if (
-            code >= 80 &&
-            code <= 82
-        )
-            return "🌦️";
 
-        if (
-            code >= 95
-        )
-            return "⛈️";
-
-        return "🌤️";
-    }
+        setInterval(
+            updateDateTime,
+            1000
+        );
 
 
 
-    /* =====================================================
-       HAVA MƏLUMATI
-       ===================================================== */
+        /* =====================================================
+           HAVA İKONU
+        ===================================================== */
 
-    function loadWeather(
-        latitude,
-        longitude,
-        cityName
-    ) {
+        function getWeatherIcon(code) {
 
-        fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&timezone=auto`
-        )
-
-        .then(response => response.json())
-
-        .then(data => {
+            if (code === 0) {
+                return "☀️";
+            }
 
             if (
-                !data.current ||
-                data.current.temperature_2m === undefined
+                code === 1 ||
+                code === 2
             ) {
+                return "🌤️";
+            }
+
+            if (code === 3) {
+                return "☁️";
+            }
+
+            if (
+                code === 45 ||
+                code === 48
+            ) {
+                return "🌫️";
+            }
+
+            if (
+                code >= 51 &&
+                code <= 67
+            ) {
+                return "🌧️";
+            }
+
+            if (
+                code >= 71 &&
+                code <= 77
+            ) {
+                return "❄️";
+            }
+
+            if (
+                code >= 80 &&
+                code <= 82
+            ) {
+                return "🌦️";
+            }
+
+            if (
+                code >= 95 &&
+                code <= 99
+            ) {
+                return "⛈️";
+            }
+
+            return "🌤️";
+        }
+
+
+
+        /* =====================================================
+           BAKI DEFAULT
+        ===================================================== */
+
+        function showDefaultWeather() {
+
+            const weather =
+                document.getElementById(
+                    "weather"
+                );
+
+            weather.textContent =
+                "Bakı";
+        }
+
+
+
+        /* =====================================================
+           HAVA MƏLUMATI
+        ===================================================== */
+
+        async function loadWeather(
+            latitude,
+            longitude,
+            placeName
+        ) {
+
+            try {
+
+                const weatherUrl =
+                    "https://api.open-meteo.com/v1/forecast" +
+                    "?latitude=" +
+                    encodeURIComponent(latitude) +
+                    "&longitude=" +
+                    encodeURIComponent(longitude) +
+                    "&current=temperature_2m,weather_code" +
+                    "&temperature_unit=celsius" +
+                    "&timezone=auto";
+
+
+                const response =
+                    await fetch(
+                        weatherUrl
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Weather API error"
+                    );
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const temperature =
+                    Math.round(
+                        data.current.temperature_2m
+                    );
+
+
+                const weatherCode =
+                    data.current.weather_code;
+
+
+                const icon =
+                    getWeatherIcon(
+                        weatherCode
+                    );
+
+
+                document.getElementById(
+                    "weather"
+                ).textContent =
+                    `${placeName} ${temperature}°C`;
+
+
+                document.querySelector(
+                    ".status-item:last-child .status-icon"
+                ).textContent =
+                    icon;
+
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Hava məlumatı alınmadı:",
+                    error
+                );
+
+                document.getElementById(
+                    "weather"
+                ).textContent =
+                    `${placeName}`;
+            }
+        }
+
+
+
+        /* =====================================================
+           MƏKAN ADINI TAP
+           
+           GPS koordinatından mümkün qədər konkret
+           yaşayış məntəqəsi / rayon / qəsəbə / kənd
+           məlumatını götürürük.
+        ===================================================== */
+
+        async function findLocation(
+            latitude,
+            longitude
+        ) {
+
+            try {
+
+                /*
+                 * Nominatim reverse geocoding
+                 */
+
+                const url =
+                    "https://nominatim.openstreetmap.org/reverse" +
+                    "?format=json" +
+                    "&lat=" +
+                    encodeURIComponent(latitude) +
+                    "&lon=" +
+                    encodeURIComponent(longitude) +
+                    "&zoom=18" +
+                    "&addressdetails=1" +
+                    "&accept-language=az";
+
+
+                const response =
+                    await fetch(
+                        url
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Location API error"
+                    );
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const address =
+                    data.address || {};
+
+
+                /*
+                 * Əvvəl ən konkret yaşayış məntəqəsini
+                 * axtarırıq.
+                 */
+
+                const place =
+                    address.village ||
+                    address.hamlet ||
+                    address.town ||
+                    address.city ||
+                    address.municipality ||
+                    address.suburb ||
+                    address.neighbourhood ||
+                    address.county ||
+                    address.city_district ||
+                    "Məkan";
+
+
+                return place;
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Məkan müəyyən edilmədi:",
+                    error
+                );
+
+                return "Məkan";
+            }
+        }
+
+
+
+        /* =====================================================
+           GPS
+        ===================================================== */
+
+        function getUserLocation() {
+
+            /*
+             * Geolocation dəstəklənmirsə Bakı
+             */
+
+            if (
+                !navigator.geolocation
+            ) {
+
+                loadWeather(
+                    40.4093,
+                    49.8671,
+                    "Bakı"
+                );
+
                 return;
             }
 
 
-            const temperature =
-                Math.round(
-                    data.current.temperature_2m
-                );
+            navigator.geolocation.getCurrentPosition(
+
+                async function(position) {
+
+                    const latitude =
+                        position.coords.latitude;
 
 
-            const weatherCode =
-                data.current.weather_code;
+                    const longitude =
+                        position.coords.longitude;
 
-
-            document.getElementById(
-                "weather-city"
-            ).textContent = cityName;
-
-
-            document.getElementById(
-                "weather-temp"
-            ).textContent =
-                `${temperature}°C`;
-
-
-            document.getElementById(
-                "weather-icon"
-            ).textContent =
-                getWeatherIcon(
-                    weatherCode
-                );
-
-        })
-
-        .catch(() => {
-
-            document.getElementById(
-                "weather-temp"
-            ).textContent =
-                "--°C";
-
-        });
-
-    }
-
-
-
-    /* =====================================================
-       İLKİN OLARAQ BAKI
-       ===================================================== */
-
-    loadWeather(
-        40.4093,
-        49.8671,
-        "Bakı"
-    );
-
-
-
-    /* =====================================================
-       İSTİFADƏÇİNİN KONUMU
-       ===================================================== */
-
-    if (
-        navigator.geolocation
-    ) {
-
-        navigator.geolocation.getCurrentPosition(
-
-            function(position) {
-
-                const latitude =
-                    position.coords.latitude;
-
-                const longitude =
-                    position.coords.longitude;
-
-
-                /*
-                 * Əvvəl hava məlumatını
-                 * dəqiq koordinata görə göstəririk.
-                 */
-
-                loadWeather(
-                    latitude,
-                    longitude,
-                    "Məkan"
-                );
-
-
-                /*
-                 * Ünvanı müəyyən etmək üçün
-                 * reverse geocoding.
-                 */
-
-                fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`
-                )
-
-                .then(response =>
-                    response.json()
-                )
-
-                .then(data => {
-
-                    if (
-                        data.address
-                    ) {
-
-                        const address =
-                            data.address;
-
-
-                        const city =
-                            address.city ||
-                            address.town ||
-                            address.municipality ||
-                            address.village ||
-                            address.county ||
-                            "Məkan";
-
-
-                        loadWeather(
-                            latitude,
-                            longitude,
-                            city
-                        );
-
-                    }
-
-                })
-
-                .catch(() => {
 
                     /*
-                     * Ünvan tapılmasa,
-                     * hava yenə koordinata görə
-                     * göstəriləcək.
+                     * Konkret rayon/kənd/qəsəbə
                      */
 
-                });
+                    const place =
+                        await findLocation(
+                            latitude,
+                            longitude
+                        );
 
-            },
 
-            function(error) {
+                    /*
+                     * Həmin koordinat üçün hava
+                     */
 
-                /*
-                 * Konum icazəsi verilməyibsə
-                 * Bakı qalır.
-                 */
+                    await loadWeather(
+                        latitude,
+                        longitude,
+                        place
+                    );
 
-                console.log(
-                    "Konum icazəsi verilmədi."
-                );
+                },
 
-            },
 
-            {
-                enableHighAccuracy: false,
-                timeout: 10000,
-                maximumAge: 300000
-            }
+                function(error) {
 
+                    console.log(
+                        "Lokasiya icazəsi verilmədi:",
+                        error
+                    );
+
+
+                    /*
+                     * İcazə yoxdursa Bakı
+                     */
+
+                    loadWeather(
+                        40.4093,
+                        49.8671,
+                        "Bakı"
+                    );
+
+                },
+
+
+                {
+                    enableHighAccuracy: true,
+
+                    timeout: 10000,
+
+                    maximumAge: 300000
+                }
+            );
+        }
+
+
+
+        /* =====================================================
+           BAŞLAT
+        ===================================================== */
+
+        getUserLocation();
+
+
+        /*
+         * Havanı hər 10 dəqiqədən bir yenilə.
+         */
+
+        setInterval(
+            getUserLocation,
+            10 * 60 * 1000
         );
 
-    }
-
-</script>
+    </script>
 
 
 </body>
