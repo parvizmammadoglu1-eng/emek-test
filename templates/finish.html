@@ -60,7 +60,38 @@
         font-weight: 700;
         margin-bottom: 30px;
     }
+<div class="exam-time-box">
 
+    <div class="exam-time-title">
+        ⏱️ İmtahan müddəti
+    </div>
+
+    <div class="exam-time-grid">
+
+        <div>
+            <span>Başlama vaxtı</span>
+            <strong>
+                {{ exam_start_display }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Bitmə vaxtı</span>
+            <strong>
+                {{ exam_end_display }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Ümumi müddət</span>
+            <strong>
+                {{ duration_text }}
+            </strong>
+        </div>
+
+    </div>
+
+</div>
     .score-circle {
         width: 180px;
         height: 180px;
