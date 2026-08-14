@@ -393,12 +393,18 @@ def home():
                 error="Ad və soyad daxil edin."
             )
 
+        # =================================================
+        # KÖHNƏ TEST MƏLUMATLARINI SIFIRLA
+        # =================================================
+
+        session.clear()
+
         session["name"] = name
 
         session["answers"] = {}
 
         # =================================================
-        # TAYMER BURADA BAŞLAYIR
+        # TAYMER TESTƏ BAŞLADIĞI ANDA BAŞLAYIR
         # =================================================
 
         start_time = datetime.now(
@@ -563,11 +569,11 @@ def finish():
         ZoneInfo("Asia/Baku")
     ).timestamp()
 
-    if exam_start_timestamp:
+    if exam_start_timestamp is not None:
 
         elapsed_seconds = int(
             now_timestamp -
-            exam_start_timestamp
+            float(exam_start_timestamp)
         )
 
         if elapsed_seconds < 0:
@@ -576,6 +582,10 @@ def finish():
     else:
 
         elapsed_seconds = 0
+
+    # =====================================================
+    # MÜDDƏTİ DƏQİQƏ + SANİYƏ KİMİ HESABLA
+    # =====================================================
 
     duration_minutes = (
         elapsed_seconds // 60
@@ -762,7 +772,7 @@ def finish():
         )
 
     # =====================================================
-    # NƏTİCƏ
+    # NƏTİCƏ SƏHİFƏSİ
     # =====================================================
 
     return render_template(
@@ -915,6 +925,10 @@ def admin_export():
 
     worksheet.title = "Test nəticələri"
 
+    # =====================================================
+    # BAŞLIQLAR
+    # =====================================================
+
     headers = [
 
         "№",
@@ -955,6 +969,10 @@ def admin_export():
         cell.alignment = Alignment(
             horizontal="center"
         )
+
+    # =====================================================
+    # NƏTİCƏLƏR
+    # =====================================================
 
     for row_number, result in enumerate(
         results,
@@ -1042,16 +1060,28 @@ def admin_export():
             )
         )
 
+    # =====================================================
+    # SÜTUN ENLİKLƏRİ
+    # =====================================================
+
     widths = {
 
         "A": 8,
+
         "B": 30,
+
         "C": 18,
+
         "D": 18,
+
         "E": 15,
+
         "F": 15,
+
         "G": 25,
+
         "H": 30,
+
         "I": 18
 
     }
@@ -1061,6 +1091,10 @@ def admin_export():
         worksheet.column_dimensions[
             column
         ].width = width
+
+    # =====================================================
+    # EXCEL
+    # =====================================================
 
     output = BytesIO()
 
