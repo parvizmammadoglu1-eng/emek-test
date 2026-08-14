@@ -55,27 +55,35 @@
     font-weight: 700;
 }
 
-/* TAYMER */
+/* =====================================================
+   TAYMER
+   ===================================================== */
+
+.exam-timer {
+    margin-top: 18px;
+    display: flex;
+    justify-content: center;
+}
 
 .timer-box {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    background: rgba(255,255,255,0.15);
-    padding: 9px 15px;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 14px;
-}
-
-.timer-icon {
-    font-size: 16px;
-}
-
-#exam-timer {
-    min-width: 55px;
+    min-width: 150px;
     text-align: center;
-    font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,0.13);
+    border: 1px solid rgba(255,255,255,0.20);
+    border-radius: 12px;
+    padding: 10px 18px;
+}
+
+.timer-label {
+    font-size: 11px;
+    opacity: 0.80;
+    margin-bottom: 3px;
+}
+
+#examTimer {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 1px;
 }
 
 .progress-area {
@@ -246,30 +254,6 @@
         font-size: 21px;
     }
 
-    .test-subtitle {
-        font-size: 14px;
-    }
-
-    .info-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-
-    .user-name {
-        grid-column: 1 / -1;
-    }
-
-    .question-count,
-    .timer-box {
-        justify-content: center;
-        text-align: center;
-    }
-
-    .timer-box {
-        width: auto;
-    }
-
     .question-card {
         padding: 22px 17px;
         border-radius: 15px;
@@ -291,16 +275,17 @@
 
     .next-button {
         width: 100%;
-        box-sizing: border-box;
     }
 
     .hint {
         text-align: center;
     }
 
-    .finish-anytime button {
+    .timer-box {
+        width: 100%;
         box-sizing: border-box;
     }
+
 }
 
 </style>
@@ -318,7 +303,6 @@
             Pərviz Hüseynov tərəfindən yaradılmışdır
         </p>
 
-
         <div class="info-row">
 
             <div class="user-name">
@@ -329,10 +313,23 @@
                 Sual {{ n + 1 }} / {{ total }}
             </div>
 
+        </div>
+
+
+        <!-- TAYMER -->
+
+        <div class="exam-timer">
+
             <div class="timer-box">
-                <span class="timer-icon">⏱️</span>
-                <span>Müddət:</span>
-                <span id="exam-timer">00:00</span>
+
+                <div class="timer-label">
+                    İmtahan müddəti
+                </div>
+
+                <div id="examTimer">
+                    00:00
+                </div>
+
             </div>
 
         </div>
@@ -421,11 +418,17 @@
                     type="submit"
                     class="next-button"
                 >
+
                     {% if n + 1 == total %}
+
                         TESTİ BİTİR ✓
+
                     {% else %}
+
                         NÖVBƏTİ SUAL →
+
                     {% endif %}
+
                 </button>
 
             </div>
@@ -451,92 +454,51 @@
 </div>
 
 
+<!-- =====================================================
+     TAYMER JAVASCRIPT
+     ===================================================== -->
+
 <script>
-
-/*
-   İMTAHAN TAYMERİ
-
-   Taymer sessionStorage-da saxlanılır.
-   Buna görə suallar arasında keçid edərkən
-   vaxt sıfırlanmır.
-*/
 
 (function () {
 
-    const timerElement = document.getElementById("exam-timer");
+    const timerElement =
+        document.getElementById("examTimer");
 
-    if (!timerElement) {
+    const startTimestamp =
+        {{ exam_start_time if exam_start_time else "null" }};
+
+    if (!timerElement || !startTimestamp) {
         return;
     }
 
-    const STORAGE_KEY = "emek_test_start_time";
-
-    let startTime = sessionStorage.getItem(STORAGE_KEY);
-
-    /*
-       Əgər bu sessiyada ilk dəfə test açılırsa,
-       başlanğıc vaxtını yadda saxla.
-    */
-
-    if (!startTime) {
-
-        startTime = Date.now();
-
-        sessionStorage.setItem(
-            STORAGE_KEY,
-            startTime
-        );
-    }
-
-    startTime = parseInt(startTime, 10);
-
-
     function updateTimer() {
 
-        const now = Date.now();
+        const now =
+            Date.now() / 1000;
 
-        let elapsed = Math.floor(
-            (now - startTime) / 1000
-        );
+        let elapsed =
+            Math.floor(
+                now - startTimestamp
+            );
 
         if (elapsed < 0) {
             elapsed = 0;
         }
 
-        const hours = Math.floor(
-            elapsed / 3600
-        );
+        const minutes =
+            Math.floor(
+                elapsed / 60
+            );
 
-        const minutes = Math.floor(
-            (elapsed % 3600) / 60
-        );
+        const seconds =
+            elapsed % 60;
 
-        const seconds = elapsed % 60;
-
-
-        let display = "";
-
-        if (hours > 0) {
-
-            display =
-                String(hours).padStart(2, "0") +
-                ":" +
-                String(minutes).padStart(2, "0") +
-                ":" +
-                String(seconds).padStart(2, "0");
-
-        } else {
-
-            display =
-                String(minutes).padStart(2, "0") +
-                ":" +
-                String(seconds).padStart(2, "0");
-        }
-
-
-        timerElement.textContent = display;
+        timerElement.textContent =
+            String(minutes).padStart(2, "0")
+            + ":"
+            + String(seconds).padStart(2, "0");
     }
-
 
     updateTimer();
 
