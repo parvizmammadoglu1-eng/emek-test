@@ -144,12 +144,35 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            transition: background 0.2s;
         }
 
         .btn-export { background: var(--success); color: white; }
         .btn-export:hover { background: #059669; }
         .btn-refresh { background: var(--border); color: var(--text-main); }
         .btn-refresh:hover { background: #475569; }
+        .btn-import { background: var(--accent); color: white; }
+        .btn-import:hover { background: #2563eb; }
+
+        /* Import Box Style */
+        .import-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .file-input {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
 
         /* Table */
         .table-card {
@@ -277,6 +300,20 @@
             <div class="stat-label">Bazadakı Suallar</div>
             <div class="stat-value" style="color: #fbbf24;">{{ questions|length }}</div>
         </div>
+    </div>
+
+    <!-- Sual Bazasını Yeniləmə / Import Bölməsi -->
+    <div class="import-card">
+        <div class="section-title" style="margin-bottom: 8px;">📥 Sual Bazasını Yenilə (JSON Import)</div>
+        <p style="color: var(--text-sub); font-size: 13px; margin-bottom: 15px;">
+            Sistemdəki sualları yeniləmək üçün kompyuterinizdə hazırladığınız <code>questions.json</code> faylını seçib yükləyin.
+        </p>
+        <form action="{{ url_for('import_questions') }}" method="POST" enctype="multipart/form-data" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <input type="file" name="questions_file" accept=".json" required class="file-input">
+            <button type="submit" class="btn btn-import">
+                ⬆ Sualları Yenilə
+            </button>
+        </form>
     </div>
 
     <!-- Nəticələr Bölməsi -->
