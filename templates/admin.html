@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="az">
 
@@ -9,13 +10,11 @@
 
     <title>Admin Panel — Əmək Məcəlləsi</title>
 
-
     <style>
 
         * {
             box-sizing: border-box;
         }
-
 
         body {
             margin: 0;
@@ -23,7 +22,6 @@
             background: #f4f6f9;
             color: #1f2937;
         }
-
 
         /* =========================
            HEADER
@@ -37,28 +35,23 @@
             );
 
             color: white;
-
             padding: 30px 20px;
         }
-
 
         .header-content {
             max-width: 1200px;
             margin: auto;
         }
 
-
         .header h1 {
             margin: 0 0 8px;
             font-size: 28px;
         }
 
-
         .header p {
             margin: 0;
             opacity: 0.9;
         }
-
 
         /* =========================
            CONTAINER
@@ -70,287 +63,177 @@
             padding: 0 20px;
         }
 
-
         /* =========================
            STATISTICS
         ========================= */
 
         .stats {
-
             display: grid;
-
-            grid-template-columns:
-                repeat(4, 1fr);
-
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
-
             margin-bottom: 30px;
         }
 
-
         .stat-card {
-
             background: white;
-
             border-radius: 14px;
-
             padding: 22px;
-
-            box-shadow:
-                0 4px 15px
-                rgba(0,0,0,0.06);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
         }
 
-
         .stat-title {
-
             color: #6b7280;
-
             font-size: 14px;
-
             margin-bottom: 10px;
         }
 
-
         .stat-number {
-
             font-size: 30px;
-
             font-weight: bold;
-
             color: #173b73;
         }
-
 
         /* =========================
            PANEL
         ========================= */
 
         .panel {
-
             background: white;
-
             border-radius: 14px;
-
             padding: 25px;
-
-            box-shadow:
-                0 4px 15px
-                rgba(0,0,0,0.06);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
         }
 
-
         .panel-header {
-
             display: flex;
-
-            justify-content:
-                space-between;
-
+            justify-content: space-between;
             align-items: center;
-
             margin-bottom: 20px;
-
             gap: 15px;
-
             flex-wrap: wrap;
         }
 
-
         .panel-header h2 {
-
             margin: 0;
-
             font-size: 21px;
         }
-
 
         /* =========================
            ACTIONS
         ========================= */
 
         .actions {
-
             display: flex;
-
             align-items: center;
-
             gap: 10px;
-
             flex-wrap: wrap;
         }
-
 
         /* =========================
            SEARCH
         ========================= */
 
         .search {
-
             padding: 11px 15px;
-
-            border:
-                1px solid #d1d5db;
-
+            border: 1px solid #d1d5db;
             border-radius: 8px;
-
             width: 250px;
-
             font-size: 14px;
-
             outline: none;
         }
 
-
         .search:focus {
-
             border-color: #2563eb;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(37,99,235,0.10);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
         }
-
 
         /* =========================
            EXCEL BUTTON
         ========================= */
 
         .excel-btn {
-
             display: inline-block;
-
             padding: 11px 18px;
-
             background: #16a34a;
-
             color: white;
-
             text-decoration: none;
-
             border-radius: 8px;
-
             font-size: 14px;
-
             font-weight: bold;
-
             cursor: pointer;
-
             transition: 0.2s;
         }
 
-
         .excel-btn:hover {
-
             background: #15803d;
-
             transform: translateY(-1px);
         }
-
 
         /* =========================
            TABLE
         ========================= */
 
         .table-wrapper {
-
             overflow-x: auto;
         }
 
-
         table {
-
             width: 100%;
-
-            border-collapse:
-                collapse;
+            border-collapse: collapse;
         }
 
-
         th {
-
             background: #f3f4f6;
-
             color: #374151;
-
             text-align: left;
-
             padding: 14px;
-
             font-size: 14px;
-
             white-space: nowrap;
         }
 
-
         td {
-
             padding: 14px;
-
-            border-bottom:
-                1px solid #e5e7eb;
-
+            border-bottom: 1px solid #e5e7eb;
             font-size: 14px;
         }
 
-
         tr:hover {
-
             background: #f9fafb;
         }
 
-
         .result {
-
             font-weight: bold;
-
             color: #16a34a;
         }
-
 
         /* =========================
            LOGOUT
         ========================= */
 
         .logout {
-
             display: inline-block;
-
             margin-top: 25px;
-
             padding: 11px 18px;
-
             background: #dc2626;
-
             color: white;
-
             text-decoration: none;
-
             border-radius: 8px;
-
             font-weight: bold;
         }
 
-
         .logout:hover {
-
             background: #b91c1c;
         }
-
 
         /* =========================
            EMPTY
         ========================= */
 
         .empty {
-
             text-align: center;
-
             padding: 40px;
-
             color: #6b7280;
         }
-
 
         /* =========================
            MOBILE
@@ -359,70 +242,44 @@
         @media (max-width: 800px) {
 
             .stats {
-
-                grid-template-columns:
-                    repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
-
 
             .panel-header {
-
-                flex-direction:
-                    column;
-
-                align-items:
-                    stretch;
+                flex-direction: column;
+                align-items: stretch;
             }
-
 
             .actions {
-
                 width: 100%;
-
-                flex-direction:
-                    column;
-
-                align-items:
-                    stretch;
+                flex-direction: column;
+                align-items: stretch;
             }
-
 
             .search {
-
                 width: 100%;
             }
-
 
             .excel-btn {
-
                 width: 100%;
-
                 text-align: center;
             }
-
         }
-
 
         @media (max-width: 500px) {
 
             .stats {
-
-                grid-template-columns:
-                    1fr;
+                grid-template-columns: 1fr;
             }
-
 
             .header h1 {
-
                 font-size: 22px;
             }
-
         }
 
     </style>
 
 </head>
-
 
 <body>
 
@@ -457,32 +314,44 @@
 
     {% set total_results = results|length %}
 
-
     {% if total_results > 0 %}
 
-    {% set percentages = [] %}
+        {% set percentages = [] %}
 
-    {% for result in results %}
-        {% if result.percent is defined %}
-            {% set _ = percentages.append(result.percent|default(0)|int) %}
-        {% else %}
-            {% set _ = percentages.append(0) %}
-        {% endif %}
-    {% endfor %}
+        {% for result in results %}
 
-    {% set total_percent = percentages|sum %}
+            {% if result.percent is defined and result.percent is not none %}
 
-    {% set average =
-        (total_percent / total_results)|round|int
-    %}
+                {% set _ = percentages.append(
+                    result.percent|default(0)|int
+                ) %}
 
-    {% set highest =
-        percentages|max
-    %}
+            {% else %}
 
-    {% set lowest =
-        percentages|min
-    %}
+                {% set _ = percentages.append(0) %}
+
+            {% endif %}
+
+        {% endfor %}
+
+
+        {% set total_percent = percentages|sum %}
+
+
+        {% set average =
+            (total_percent / total_results)|round|int
+        %}
+
+
+        {% set highest =
+            percentages|max
+        %}
+
+
+        {% set lowest =
+            percentages|min
+        %}
+
 
     {% else %}
 
@@ -494,6 +363,10 @@
 
     {% endif %}
 
+
+    <!-- =========================
+         STATISTICS CARDS
+    ========================= -->
 
     <div class="stats">
 
@@ -574,31 +447,19 @@
                 <!-- SEARCH -->
 
                 <input
-
                     type="text"
-
                     class="search"
-
                     id="search"
-
-                    placeholder=
-                    "Ad və soyad üzrə axtar..."
-
-                    onkeyup=
-                    "searchTable()"
-
+                    placeholder="Ad və soyad üzrə axtar..."
+                    onkeyup="searchTable()"
                 >
 
 
                 <!-- EXCEL -->
 
                 <a
-
-                    href=
-                    "{{ url_for('admin_export') }}"
-
+                    href="{{ url_for('admin_export') }}"
                     class="excel-btn"
-
                 >
 
                     📥 Excel-ə export et
@@ -675,7 +536,7 @@
                         <td>
 
                             <strong>
-                                {{ r["name"] }}
+                                {{ r["name"]|default("—") }}
                             </strong>
 
                         </td>
@@ -683,31 +544,39 @@
 
                         <td>
 
-                            {{ r["correct"] }}
+                            {{ r["correct"]|default(0) }}
                             /
-                            {{ r["total"] }}
+                            {{ r["total"]|default(0) }}
 
                         </td>
 
 
                         <td>
 
-                            {{ r["total"] -
-                               r["correct"] }}
+                            {{ (r["total"]|default(0)|int) -
+                               (r["correct"]|default(0)|int) }}
 
                         </td>
 
 
                         <td class="result">
 
-                            {{ r["percent"] }}%
+                            {% if r.percent is defined and r.percent is not none %}
+
+                                {{ r.percent|default(0)|int }}%
+
+                            {% else %}
+
+                                0%
+
+                            {% endif %}
 
                         </td>
 
 
                         <td>
 
-                            {{ r["created_at"] }}
+                            {{ r["created_at"]|default("—") }}
 
                         </td>
 
@@ -755,12 +624,8 @@
     ========================= -->
 
     <a
-
-        href=
-        "{{ url_for('admin_logout') }}"
-
+        href="{{ url_for('admin_logout') }}"
         class="logout"
-
     >
 
         Çıxış
@@ -777,12 +642,9 @@
 
 <script>
 
-
 function searchTable() {
 
-
     let input =
-
         document
         .getElementById("search")
         .value
@@ -790,19 +652,16 @@ function searchTable() {
 
 
     let table =
-
         document
         .getElementById("resultsTable");
 
 
     let tbody =
-
         table
         .getElementsByTagName("tbody")[0];
 
 
     let rows =
-
         tbody
         .getElementsByTagName("tr");
 
@@ -813,18 +672,14 @@ function searchTable() {
         i++
     ) {
 
-
         let cells =
-
             rows[i]
             .getElementsByTagName("td");
 
 
         if (cells.length > 1) {
 
-
             let name =
-
                 cells[1]
                 .textContent
                 .toLowerCase();
@@ -834,15 +689,13 @@ function searchTable() {
                 name.includes(input)
             ) {
 
-                rows[i].style.display =
-                    "";
+                rows[i].style.display = "";
 
             }
 
             else {
 
-                rows[i].style.display =
-                    "none";
+                rows[i].style.display = "none";
 
             }
 
@@ -852,10 +705,10 @@ function searchTable() {
 
 }
 
-
 </script>
 
 
 </body>
 
 </html>
+```
