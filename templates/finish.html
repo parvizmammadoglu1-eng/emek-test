@@ -1,3 +1,4 @@
+```html
 {% extends "base.html" %}
 
 {% block content %}
@@ -124,32 +125,54 @@
     .result-message strong {
         color: #173b73;
     }
-<div class="exam-time-box">
 
-    <div class="exam-time-title">
-        ⏱️ İmtahan müddəti
-    </div>
 
-    <div class="exam-time-grid">
+    /* =====================================================
+       İMTAHAN VAXTI
+       ===================================================== */
 
-        <div>
-            <span>Başlama</span>
-            <strong>{{ start_time or "-" }}</strong>
-        </div>
+    .exam-time-box {
+        margin: 25px 0 30px;
+        padding: 18px;
+        border-radius: 16px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+    }
 
-        <div>
-            <span>Bitmə</span>
-            <strong>{{ end_time or "-" }}</strong>
-        </div>
+    .exam-time-title {
+        color: #173b73;
+        font-size: 16px;
+        font-weight: 800;
+        margin-bottom: 15px;
+    }
 
-        <div>
-            <span>Müddət</span>
-            <strong>{{ duration or "-" }}</strong>
-        </div>
+    .exam-time-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
 
-    </div>
+    .exam-time-grid div {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 11px;
+        padding: 12px 8px;
+    }
 
-</div>
+    .exam-time-grid span {
+        display: block;
+        color: #6b7280;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+
+    .exam-time-grid strong {
+        display: block;
+        color: #173b73;
+        font-size: 14px;
+    }
+
+
     /* =====================================================
        SUAL NƏTİCƏLƏRİ
        ===================================================== */
@@ -282,6 +305,11 @@
         box-shadow: 0 10px 25px rgba(37, 99, 235, 0.32);
     }
 
+
+    /* =====================================================
+       MOBİL
+       ===================================================== */
+
     @media (max-width: 600px) {
 
         .result-page {
@@ -331,6 +359,11 @@
             align-items: flex-start;
             flex-direction: column;
         }
+
+        .exam-time-grid {
+            grid-template-columns: 1fr;
+        }
+
     }
 
 </style>
@@ -340,9 +373,15 @@
 
     <div class="result-card">
 
+
+        <!-- UĞUR İŞARƏSİ -->
+
         <div class="success-icon">
             ✓
         </div>
+
+
+        <!-- BAŞLIQ -->
 
         <h1 class="result-title">
             Test tamamlandı!
@@ -351,6 +390,9 @@
         <p class="result-subtitle">
             Əmək Məcəlləsi testinin nəticəsi
         </p>
+
+
+        <!-- AD -->
 
         <div class="name-box">
             👤 {{ name }}
@@ -442,6 +484,38 @@
                 Əmək Məcəlləsi üzrə mövzuları təkrar etməyiniz faydalı olacaq.
 
             {% endif %}
+
+        </div>
+
+
+        <!-- =================================================
+             İMTAHAN VAXTI
+             ================================================= -->
+
+        <div class="exam-time-box">
+
+            <div class="exam-time-title">
+                ⏱️ İmtahan məlumatları
+            </div>
+
+            <div class="exam-time-grid">
+
+                <div>
+                    <span>Başlama vaxtı</span>
+                    <strong>{{ start_time }}</strong>
+                </div>
+
+                <div>
+                    <span>Bitmə vaxtı</span>
+                    <strong>{{ end_time }}</strong>
+                </div>
+
+                <div>
+                    <span>Müddət</span>
+                    <strong>{{ duration }}</strong>
+                </div>
+
+            </div>
 
         </div>
 
@@ -553,10 +627,14 @@
         {% endfor %}
 
 
+        <!-- SON MƏLUMAT -->
+
         <div class="finish-info">
             Nəticəniz sistemdə yadda saxlanıldı.
         </div>
 
+
+        <!-- YENİ TEST -->
 
         <a
             href="{{ url_for('home') }}"
@@ -570,3 +648,4 @@
 </div>
 
 {% endblock %}
+```
