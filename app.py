@@ -284,7 +284,7 @@ def admin_required(function):
 
 
 # =========================================================
-# HOME
+# HOME (Giriş kodu ləğv edildi, yalnız Ad tələb olunur)
 # =========================================================
 
 @app.route(
@@ -299,25 +299,11 @@ def home():
             "name",
             ""
         ).strip()
-        
-        code = request.form.get(
-            "code",
-            ""
-        ).strip()
-
-        # İcazə verilən giriş kodları siyahısı
-        allowed_codes = ["12345", "test2026", "imtahan"]
 
         if not name:
             return render_template(
                 "home.html",
-                error="Ad və soyad daxil edin."
-            )
-
-        if code not in allowed_codes:
-            return render_template(
-                "home.html",
-                error="Yanlış giriş kodu!"
+                error="Zəhmət olmasa ad və soyad daxil edin."
             )
 
         session.clear()
