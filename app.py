@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from io import BytesIO
@@ -13,7 +14,7 @@ from flask import (
     send_file
 )
 
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment
 
 import gspread
@@ -956,6 +957,65 @@ def admin():
 
         questions=QUESTIONS
     )
+
+
+# =========================================================
+# IMPORT QUESTIONS (EXCEL / JSON)
+# =========================================================
+
+@app.route(
+    "/admin/import-questions",
+    methods=["POST"]
+)
+@admin_required
+def import_questions():
+
+    file = request.files.get("questions_file")
+
+    if not file:
+        return redirect(url_for("admin"))
+
+    filename = file.filename.lower()
+    new_questions = []
+
+    try:
+        # EXCEL FAYLI (.xlsx / .xls)
+        if filename.endswith(".xlsx") or filename.endswith(".xls"):
+            wb = load_workbook(file)
+            sheet = wb.active
+
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                if not row or not row[0]:
+                    continue
+
+                q_text = str(row[0]).strip() if row[0] else ""
+                opt_a = str(row[1]).strip() if len(row) > 1 and row[1] else ""
+                opt_b = str(row[2]).strip() if len(row) > 2 and row[2] else ""
+                opt_c = str(row[3]).strip() if len(row) > 3 and row[3] else ""
+                opt_d = str(row[4]).strip() if len(row) > 4 and row[4] else ""
+                ans = str(row[5]).strip().upper() if len(row) > 5 and row[5] else "A"
+
+                new_questions.append({
+                    "question": q_text,
+                    "a": opt_a,
+                    "b": opt_b,
+                    "c": opt_c,
+                    "d": opt_d,
+                    "answer": ans
+                })
+
+        # JSON FAYLI (Köhnə dəstək üçün)
+        elif filename.endswith(".json"):
+            new_questions = json.load(file)
+
+        if new_questions:
+            global QUESTIONS
+            QUESTIONS = new_questions
+
+    except Exception as e:
+        print("IMPORT ERROR:", str(e))
+
+    return redirect(url_for("admin"))
 
 
 # =========================================================
