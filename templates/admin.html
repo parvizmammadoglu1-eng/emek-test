@@ -460,21 +460,29 @@
 
     {% if total_results > 0 %}
 
-        {% set total_percent =
-            results|map(attribute='percent')|sum
-        %}
+    {% set percentages = [] %}
 
-        {% set average =
-            (total_percent / total_results)|round|int
-        %}
+    {% for result in results %}
+        {% if result.percent is defined %}
+            {% set _ = percentages.append(result.percent|default(0)|int) %}
+        {% else %}
+            {% set _ = percentages.append(0) %}
+        {% endif %}
+    {% endfor %}
 
-        {% set highest =
-            results|map(attribute='percent')|max
-        %}
+    {% set total_percent = percentages|sum %}
 
-        {% set lowest =
-            results|map(attribute='percent')|min
-        %}
+    {% set average =
+        (total_percent / total_results)|round|int
+    %}
+
+    {% set highest =
+        percentages|max
+    %}
+
+    {% set lowest =
+        percentages|min
+    %}
 
     {% else %}
 
