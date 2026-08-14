@@ -1,177 +1,172 @@
-```html
 <!DOCTYPE html>
 <html lang="az">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Admin Panel — Əmək Məcəlləsi</title>
+    <title>Admin Panel</title>
 
     <style>
-
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            color: #1f2937;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
         }
 
-        /* =========================
-           HEADER
-        ========================= */
-
-        .header {
-            background: linear-gradient(
-                135deg,
-                #173b73,
-                #2563eb
-            );
-
+        .topbar {
+            background: linear-gradient(135deg, #111827, #1e3a8a);
             color: white;
-            padding: 30px 20px;
+            padding: 22px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 18px rgba(0,0,0,.12);
         }
 
-        .header-content {
-            max-width: 1200px;
-            margin: auto;
+        .brand h1 {
+            font-size: 25px;
+            margin-bottom: 5px;
         }
 
-        .header h1 {
-            margin: 0 0 8px;
-            font-size: 28px;
+        .brand p {
+            color: #cbd5e1;
+            font-size: 13px;
         }
 
-        .header p {
-            margin: 0;
-            opacity: 0.9;
+        .logout {
+            text-decoration: none;
+            color: white;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.25);
+            padding: 10px 17px;
+            border-radius: 10px;
+            transition: .2s;
         }
 
-        /* =========================
-           CONTAINER
-        ========================= */
+        .logout:hover {
+            background: rgba(255,255,255,.22);
+        }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 30px auto;
             padding: 0 20px;
         }
 
-        /* =========================
-           STATISTICS
-        ========================= */
+        .welcome {
+            margin-bottom: 25px;
+        }
 
-        .stats {
+        .welcome h2 {
+            font-size: 26px;
+            margin-bottom: 7px;
+        }
+
+        .welcome p {
+            color: #64748b;
+        }
+
+        .cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            gap: 18px;
             margin-bottom: 30px;
         }
 
-        .stat-card {
+        .card {
             background: white;
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 22px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            box-shadow: 0 5px 20px rgba(15,23,42,.07);
+            border: 1px solid #e5e7eb;
         }
 
-        .stat-title {
-            color: #6b7280;
-            font-size: 14px;
+        .card-title {
+            color: #64748b;
+            font-size: 13px;
             margin-bottom: 10px;
         }
 
-        .stat-number {
+        .card-value {
             font-size: 30px;
-            font-weight: bold;
-            color: #173b73;
+            font-weight: 700;
         }
 
-        /* =========================
-           PANEL
-        ========================= */
-
-        .panel {
-            background: white;
-            border-radius: 14px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        .card.blue .card-value {
+            color: #2563eb;
         }
 
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 15px;
-            flex-wrap: wrap;
+        .card.green .card-value {
+            color: #16a34a;
         }
 
-        .panel-header h2 {
-            margin: 0;
-            font-size: 21px;
+        .card.red .card-value {
+            color: #dc2626;
         }
 
-        /* =========================
-           ACTIONS
-        ========================= */
+        .card.orange .card-value {
+            color: #ea580c;
+        }
 
         .actions {
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .actions h3 {
+            font-size: 20px;
+        }
+
+        .buttons {
+            display: flex;
             gap: 10px;
-            flex-wrap: wrap;
         }
 
-        /* =========================
-           SEARCH
-        ========================= */
-
-        .search {
-            padding: 11px 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            width: 250px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .search:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
-        }
-
-        /* =========================
-           EXCEL BUTTON
-        ========================= */
-
-        .excel-btn {
-            display: inline-block;
+        .btn {
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
             padding: 11px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .btn-export {
             background: #16a34a;
             color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
         }
 
-        .excel-btn:hover {
+        .btn-export:hover {
             background: #15803d;
-            transform: translateY(-1px);
         }
 
-        /* =========================
-           TABLE
-        ========================= */
+        .btn-refresh {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .btn-refresh:hover {
+            background: #cbd5e1;
+        }
+
+        .table-box {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 5px 20px rgba(15,23,42,.07);
+        }
 
         .table-wrapper {
             overflow-x: auto;
@@ -180,535 +175,393 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        thead {
+            background: #f8fafc;
         }
 
         th {
-            background: #f3f4f6;
-            color: #374151;
             text-align: left;
-            padding: 14px;
-            font-size: 14px;
-            white-space: nowrap;
+            padding: 15px 14px;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         td {
-            padding: 14px;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 15px 14px;
+            border-bottom: 1px solid #eef2f7;
             font-size: 14px;
         }
 
-        tr:hover {
-            background: #f9fafb;
+        tbody tr:hover {
+            background: #f8fafc;
         }
 
-        .result {
-            font-weight: bold;
-            color: #16a34a;
+        .name {
+            font-weight: 600;
+            color: #1e293b;
         }
 
-        /* =========================
-           LOGOUT
-        ========================= */
+        .percent {
+            font-weight: 700;
+            color: #2563eb;
+        }
 
-        .logout {
+        .status {
             display: inline-block;
-            margin-top: 25px;
-            padding: 11px 18px;
-            background: #dc2626;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
         }
 
-        .logout:hover {
-            background: #b91c1c;
+        .status.completed {
+            background: #dcfce7;
+            color: #166534;
         }
 
-        /* =========================
-           EMPTY
-        ========================= */
+        .status.partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
 
         .empty {
             text-align: center;
-            padding: 40px;
-            color: #6b7280;
+            padding: 55px 20px;
+            color: #64748b;
         }
 
-        /* =========================
-           MOBILE
-        ========================= */
+        .empty-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+        }
 
-        @media (max-width: 800px) {
+        .questions-box {
+            margin-top: 30px;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 5px 20px rgba(15,23,42,.07);
+        }
 
-            .stats {
+        .questions-box h3 {
+            margin-bottom: 18px;
+            font-size: 20px;
+        }
+
+        .question-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #fafafa;
+        }
+
+        .question-number {
+            font-size: 12px;
+            color: #2563eb;
+            font-weight: 700;
+            margin-bottom: 7px;
+        }
+
+        .question-text {
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 12px;
+            padding: 30px 10px;
+        }
+
+        @media (max-width: 900px) {
+            .cards {
                 grid-template-columns: repeat(2, 1fr);
             }
 
-            .panel-header {
-                flex-direction: column;
-                align-items: stretch;
+            .topbar {
+                padding: 18px;
             }
 
-            .actions {
-                width: 100%;
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .search {
-                width: 100%;
-            }
-
-            .excel-btn {
-                width: 100%;
-                text-align: center;
+            .container {
+                padding: 0 14px;
             }
         }
 
-        @media (max-width: 500px) {
-
-            .stats {
+        @media (max-width: 600px) {
+            .cards {
                 grid-template-columns: 1fr;
             }
 
-            .header h1 {
-                font-size: 22px;
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .buttons {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+                text-align: center;
             }
         }
-
     </style>
-
 </head>
 
 <body>
 
-
-<!-- =========================
-     HEADER
-========================= -->
-
-<div class="header">
-
-    <div class="header-content">
-
-        <h1>
-            ƏMƏK MƏCƏLLƏSİ 2026
-        </h1>
-
-        <p>
-            Admin Panel — Test Nəticələri
-        </p>
-
+<header class="topbar">
+    <div class="brand">
+        <h1>⚙️ Admin Panel</h1>
+        <p>Əmək Məcəlləsi — Test Sistemi</p>
     </div>
 
-</div>
+    <a href="{{ url_for('admin_logout') }}" class="logout">
+        Çıxış →
+    </a>
+</header>
 
 
-<div class="container">
+<main class="container">
+
+    <div class="welcome">
+        <h2>Test nəticələri</h2>
+        <p>İştirakçıların test nəticələrini buradan izləyə bilərsiniz.</p>
+    </div>
 
 
-    <!-- =========================
-         STATISTICS
-    ========================= -->
-
+    <!-- STATİSTİKA -->
     {% set total_results = results|length %}
 
+    {% set total_correct = namespace(value=0) %}
+    {% set total_questions = namespace(value=0) %}
+    {% set total_percent = namespace(value=0) %}
+
+    {% for result in results %}
+
+        {% set correct_value = result.get("Düzgün cavab", 0)|int %}
+        {% set question_value = result.get("Ümumi sual", 0)|int %}
+
+        {% set total_correct.value = total_correct.value + correct_value %}
+        {% set total_questions.value = total_questions.value + question_value %}
+
+        {% set percent_text = result.get("Nəticə", "0")|string %}
+        {% set percent_number = percent_text.replace("%", "")|float %}
+
+        {% set total_percent.value = total_percent.value + percent_number %}
+
+    {% endfor %}
+
     {% if total_results > 0 %}
-
-        {% set percentages = [] %}
-
-        {% for result in results %}
-
-            {% if result.percent is defined and result.percent is not none %}
-
-                {% set _ = percentages.append(
-                    result.percent|default(0)|int
-                ) %}
-
-            {% else %}
-
-                {% set _ = percentages.append(0) %}
-
-            {% endif %}
-
-        {% endfor %}
-
-
-        {% set total_percent = percentages|sum %}
-
-
-        {% set average =
-            (total_percent / total_results)|round|int
-        %}
-
-
-        {% set highest =
-            percentages|max
-        %}
-
-
-        {% set lowest =
-            percentages|min
-        %}
-
-
+        {% set average_percent = (total_percent.value / total_results)|round|int %}
     {% else %}
-
-        {% set average = 0 %}
-
-        {% set highest = 0 %}
-
-        {% set lowest = 0 %}
-
+        {% set average_percent = 0 %}
     {% endif %}
 
 
-    <!-- =========================
-         STATISTICS CARDS
-    ========================= -->
+    <div class="cards">
 
-    <div class="stats">
-
-
-        <div class="stat-card">
-
-            <div class="stat-title">
-                İştirakçı sayı
-            </div>
-
-            <div class="stat-number">
-                {{ total_results }}
-            </div>
-
+        <div class="card blue">
+            <div class="card-title">Ümumi iştirakçı</div>
+            <div class="card-value">{{ total_results }}</div>
         </div>
 
-
-        <div class="stat-card">
-
-            <div class="stat-title">
-                Orta nəticə
-            </div>
-
-            <div class="stat-number">
-                {{ average }}%
-            </div>
-
+        <div class="card green">
+            <div class="card-title">Orta nəticə</div>
+            <div class="card-value">{{ average_percent }}%</div>
         </div>
 
-
-        <div class="stat-card">
-
-            <div class="stat-title">
-                Ən yüksək nəticə
-            </div>
-
-            <div class="stat-number">
-                {{ highest }}%
-            </div>
-
+        <div class="card orange">
+            <div class="card-title">Ümumi sual sayı</div>
+            <div class="card-value">{{ questions|length }}</div>
         </div>
 
-
-        <div class="stat-card">
-
-            <div class="stat-title">
-                Ən aşağı nəticə
-            </div>
-
-            <div class="stat-number">
-                {{ lowest }}%
-            </div>
-
+        <div class="card red">
+            <div class="card-title">Nəticələr</div>
+            <div class="card-value">{{ total_results }}</div>
         </div>
-
 
     </div>
 
 
-    <!-- =========================
-         RESULTS PANEL
-    ========================= -->
+    <!-- ACTIONS -->
+    <div class="actions">
 
-    <div class="panel">
+        <h3>Son nəticələr</h3>
 
+        <div class="buttons">
 
-        <div class="panel-header">
+            <button class="btn btn-refresh" onclick="location.reload()">
+                ↻ Yenilə
+            </button>
 
-
-            <h2>
-                📊 Test nəticələri
-            </h2>
-
-
-            <div class="actions">
-
-
-                <!-- SEARCH -->
-
-                <input
-                    type="text"
-                    class="search"
-                    id="search"
-                    placeholder="Ad və soyad üzrə axtar..."
-                    onkeyup="searchTable()"
-                >
-
-
-                <!-- EXCEL -->
-
-                <a
-                    href="{{ url_for('admin_export') }}"
-                    class="excel-btn"
-                >
-
-                    📥 Excel-ə export et
-
-                </a>
-
-
-            </div>
-
+            <a href="{{ url_for('admin_export') }}" class="btn btn-export">
+                ↓ Excel-ə çıxar
+            </a>
 
         </div>
 
+    </div>
 
-        <!-- =========================
-             TABLE
-        ========================= -->
+
+    <!-- NƏTİCƏ CƏDVƏLİ -->
+    <div class="table-box">
 
         <div class="table-wrapper">
 
-
-            <table id="resultsTable">
-
+            <table>
 
                 <thead>
-
                     <tr>
-
-                        <th>
-                            №
-                        </th>
-
-                        <th>
-                            Ad və soyad
-                        </th>
-
-                        <th>
-                            Düzgün
-                        </th>
-
-                        <th>
-                            Səhv
-                        </th>
-
-                        <th>
-                            Nəticə
-                        </th>
-
-                        <th>
-                            Tarix
-                        </th>
-
+                        <th>№</th>
+                        <th>Ad və soyad</th>
+                        <th>Düzgün</th>
+                        <th>Ümumi</th>
+                        <th>Səhv</th>
+                        <th>Nəticə</th>
+                        <th>Tarix</th>
+                        <th>Status</th>
                     </tr>
-
                 </thead>
-
 
                 <tbody>
 
-
                 {% if results %}
 
+                    {% for result in results %}
 
-                    {% for r in results %}
-
+                    {% set status_text = result.get("Status", "")|string %}
 
                     <tr>
 
-
                         <td>
-                            {{ loop.index }}
+                            {{ result.get("№", loop.index) }}
                         </td>
 
+                        <td class="name">
+                            {{ result.get("Ad və soyad", "—") }}
+                        </td>
+
+                        <td>
+                            {{ result.get("Düzgün cavab", "0") }}
+                        </td>
+
+                        <td>
+                            {{ result.get("Ümumi sual", "0") }}
+                        </td>
+
+                        <td>
+                            {{ result.get("Səhv cavab", "0") }}
+                        </td>
+
+                        <td class="percent">
+                            {{ result.get("Nəticə", "0%") }}
+                        </td>
+
+                        <td>
+                            {{ result.get("Tarix", "—") }}
+                        </td>
 
                         <td>
 
-                            <strong>
-                                {{ r["name"]|default("—") }}
-                            </strong>
+                            {% if "Tamamlandı" in status_text %}
 
-                        </td>
-
-
-                        <td>
-
-                            {{ r["correct"]|default(0) }}
-                            /
-                            {{ r["total"]|default(0) }}
-
-                        </td>
-
-
-                        <td>
-
-                            {{ (r["total"]|default(0)|int) -
-                               (r["correct"]|default(0)|int) }}
-
-                        </td>
-
-
-                        <td class="result">
-
-                            {% if r.percent is defined and r.percent is not none %}
-
-                                {{ r.percent|default(0)|int }}%
+                                <span class="status completed">
+                                    ✓ Tamamlandı
+                                </span>
 
                             {% else %}
 
-                                0%
+                                <span class="status partial">
+                                    ⚠ {{ status_text or "Yarımçıq" }}
+                                </span>
 
                             {% endif %}
 
                         </td>
 
-
-                        <td>
-
-                            {{ r["created_at"]|default("—") }}
-
-                        </td>
-
-
                     </tr>
-
 
                     {% endfor %}
 
-
                 {% else %}
 
-
                     <tr>
+                        <td colspan="8">
 
-                        <td
-                            colspan="6"
-                            class="empty"
-                        >
+                            <div class="empty">
 
-                            Hələ nəticə yoxdur.
+                                <div class="empty-icon">
+                                    📊
+                                </div>
+
+                                <h3>Hələ nəticə yoxdur</h3>
+
+                                <p>
+                                    Test iştirakçıları olduqdan sonra nəticələr burada görünəcək.
+                                </p>
+
+                            </div>
 
                         </td>
-
                     </tr>
-
 
                 {% endif %}
 
-
                 </tbody>
-
 
             </table>
 
-
         </div>
-
 
     </div>
 
 
-    <!-- =========================
-         LOGOUT
-    ========================= -->
+    <!-- SUALLAR -->
+    <div class="questions-box">
 
-    <a
-        href="{{ url_for('admin_logout') }}"
-        class="logout"
-    >
+        <h3>📚 Sistemdəki suallar</h3>
 
-        Çıxış
+        {% for question in questions %}
 
-    </a>
+            <div class="question-item">
 
+                <div class="question-number">
+                    SUAL {{ loop.index }}
+                </div>
 
-</div>
+                <div class="question-text">
+                    {{ question.get("question", question.get("text", question)) }}
+                </div>
 
+            </div>
 
-<!-- =========================
-     SEARCH JAVASCRIPT
-========================= -->
+        {% endfor %}
 
-<script>
+    </div>
 
-function searchTable() {
-
-    let input =
-        document
-        .getElementById("search")
-        .value
-        .toLowerCase();
+</main>
 
 
-    let table =
-        document
-        .getElementById("resultsTable");
-
-
-    let tbody =
-        table
-        .getElementsByTagName("tbody")[0];
-
-
-    let rows =
-        tbody
-        .getElementsByTagName("tr");
-
-
-    for (
-        let i = 0;
-        i < rows.length;
-        i++
-    ) {
-
-        let cells =
-            rows[i]
-            .getElementsByTagName("td");
-
-
-        if (cells.length > 1) {
-
-            let name =
-                cells[1]
-                .textContent
-                .toLowerCase();
-
-
-            if (
-                name.includes(input)
-            ) {
-
-                rows[i].style.display = "";
-
-            }
-
-            else {
-
-                rows[i].style.display = "none";
-
-            }
-
-        }
-
-    }
-
-}
-
-</script>
+<footer>
+    Admin Panel • Test Sistemi
+</footer>
 
 
 </body>
-
 </html>
-```
