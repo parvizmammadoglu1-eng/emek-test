@@ -56,8 +56,6 @@ def get_google_client():
             "GOOGLE_PRIVATE_KEY Render Environment Variables bölməsində yoxdur."
         )
 
-    # Render-də \n mətn kimi gəlirsə,
-    # onu real yeni sətrə çeviririk.
     private_key = private_key.replace(
         "\\n",
         "\n"
@@ -118,7 +116,7 @@ def get_sheet():
         sheet = spreadsheet.add_worksheet(
             title="Nəticələr",
             rows=1000,
-            cols=8
+            cols=11
         )
 
         sheet.append_row(
@@ -130,7 +128,10 @@ def get_sheet():
                 "Səhv cavab",
                 "Nəticə",
                 "Tarix",
-                "Status"
+                "Status",
+                "Başlama vaxtı",
+                "Bitmə vaxtı",
+                "Müddət"
             ]
         )
 
@@ -260,7 +261,7 @@ QUESTIONS = [
             "d) 25 təqvim günündən",
 
         "answer":
-            "B"
+            "A"
     },
 
     {
@@ -280,7 +281,7 @@ QUESTIONS = [
             "d) 6 gün qalmış",
 
         "answer":
-            "A"
+            "C"
     },
 
     {
@@ -300,7 +301,7 @@ QUESTIONS = [
             "d) 4 təqvim günü",
 
         "answer":
-            "D"
+            "B"
     },
 
     {
@@ -394,9 +395,31 @@ def home():
                 error="Ad və soyad daxil edin."
             )
 
+        # =====================================================
+        # YENİ TEST BAŞLAYIR
+        # =====================================================
+
+        session.clear()
+
         session["name"] = name
 
         session["answers"] = {}
+
+        # İmtahanın dəqiq başlanma vaxtı
+        start_datetime = datetime.now(
+            ZoneInfo("Asia/Baku")
+        )
+
+        session["exam_start"] = (
+            start_datetime.strftime(
+                "%d.%m.%Y %H:%M:%S"
+            )
+        )
+
+        # Hesablama üçün timestamp
+        session["exam_start_timestamp"] = (
+            start_datetime.timestamp()
+        )
 
         return redirect(
             url_for(
@@ -430,7 +453,6 @@ def question(n):
         QUESTIONS
     )
 
-    # Sual sayı bitibsə nəticəyə keç
     if n >= total:
 
         return redirect(
@@ -451,7 +473,7 @@ def question(n):
         )
 
         # =================================================
-        # CAVAB SEÇİLİBSƏ YADDA SAXLA
+        # CAVABI YADDA SAXLA
         # =================================================
 
         if selected in [
@@ -462,10 +484,6 @@ def question(n):
         ]:
 
             answers[str(n)] = selected
-
-        # =================================================
-        # CAVAB SEÇİLMƏYİBSƏ BOŞ SAXLA
-        # =================================================
 
         else:
 
@@ -479,7 +497,7 @@ def question(n):
         session.modified = True
 
         # =================================================
-        # SON SUALDIRSA NƏTİCƏYƏ KEÇ
+        # SON SUAL
         # =================================================
 
         if n + 1 >= total:
@@ -489,7 +507,7 @@ def question(n):
             )
 
         # =================================================
-        # NÖVBƏTİ SUALA KEÇ
+        # NÖVBƏTİ SUAL
         # =================================================
 
         return redirect(
@@ -508,7 +526,12 @@ def question(n):
 
         total=total,
 
-        name=session["name"]
+        name=session["name"],
+
+        exam_start=session.get(
+            "exam_start",
+            ""
+        )
     )
 
 
@@ -544,29 +567,103 @@ def finish():
     )
 
     # =====================================================
-    # SUALLAR ÜZRƏ ƏTRAFLI NƏTİCƏ HAZIRLA
+    # BAŞLAMA VAXTI
+    # =====================================================
+
+    exam_start = session.get(
+        "exam_start",
+        ""
+    )
+
+    exam_start_timestamp = session.get(
+        "exam_start_timestamp"
+    )
+
+    # =====================================================
+    # BİTMƏ VAXTI
+    # =====================================================
+
+    finish_datetime = datetime.now(
+        ZoneInfo("Asia/Baku")
+    )
+
+    exam_finish = finish_datetime.strftime(
+        "%d.%m.%Y %H:%M:%S"
+    )
+
+    # =====================================================
+    # MÜDDƏT
+    # =====================================================
+
+    duration_text = "Müəyyən edilmədi"
+
+    if exam_start_timestamp:
+
+        try:
+
+            elapsed_seconds = int(
+                finish_datetime.timestamp()
+                - float(exam_start_timestamp)
+            )
+
+            if elapsed_seconds < 0:
+                elapsed_seconds = 0
+
+            hours = elapsed_seconds // 3600
+
+            minutes = (
+                elapsed_seconds % 3600
+            ) // 60
+
+            seconds = (
+                elapsed_seconds % 60
+            )
+
+            if hours > 0:
+
+                duration_text = (
+                    f"{hours} saat "
+                    f"{minutes} dəqiqə "
+                    f"{seconds} saniyə"
+                )
+
+            elif minutes > 0:
+
+                duration_text = (
+                    f"{minutes} dəqiqə "
+                    f"{seconds} saniyə"
+                )
+
+            else:
+
+                duration_text = (
+                    f"{seconds} saniyə"
+                )
+
+        except Exception:
+
+            duration_text = (
+                "Müəyyən edilmədi"
+            )
+
+    # =====================================================
+    # SUALLAR ÜZRƏ NƏTİCƏ
     # =====================================================
 
     question_results = []
 
-    for index, q in enumerate(QUESTIONS):
+    for index, q in enumerate(
+        QUESTIONS
+    ):
 
         selected = answers.get(
             str(index)
         )
 
-        correct_letter = q["answer"]
+        correct_answer = q["answer"]
 
         # -------------------------------------------------
-        # DÜZGÜN CAVABIN TAM MƏTNİ
-        # -------------------------------------------------
-
-        correct_text = q[
-            correct_letter.lower()
-        ]
-
-        # -------------------------------------------------
-        # İŞTİRAKÇININ SEÇDİYİ CAVABIN TAM MƏTNİ
+        # SEÇİLƏN CAVABIN TAM MƏTNİ
         # -------------------------------------------------
 
         if selected in [
@@ -582,35 +679,35 @@ def finish():
 
         else:
 
-            selected_text = "Cavab verilməyib"
+            selected_text = (
+                "Cavab verilməyib"
+            )
 
         # -------------------------------------------------
-        # NƏTİCƏNİ MÜƏYYƏN ET
+        # DÜZGÜN CAVABIN TAM MƏTNİ
         # -------------------------------------------------
 
-        if selected == correct_letter:
+        correct_text = q[
+            correct_answer.lower()
+        ]
 
-            is_correct = True
-            is_wrong = False
-            is_empty = False
+        # -------------------------------------------------
+        # NƏTİCƏ
+        # -------------------------------------------------
+
+        if selected == correct_answer:
+
+            result = "correct"
 
             correct += 1
 
         elif selected is None:
 
-            is_correct = False
-            is_wrong = False
-            is_empty = True
+            result = "empty"
 
         else:
 
-            is_correct = False
-            is_wrong = True
-            is_empty = False
-
-        # -------------------------------------------------
-        # HTML-Ə GÖNDƏRİLƏCƏK MƏLUMATLAR
-        # -------------------------------------------------
+            result = "wrong"
 
         question_results.append({
 
@@ -621,25 +718,24 @@ def finish():
                 q["question"],
 
             "selected":
-                selected,
+                selected if selected else
+                "Cavab verilməyib",
 
             "selected_text":
                 selected_text,
 
-            "correct_answer":
-                correct_letter,
+            "correct":
+                correct_answer,
 
             "correct_text":
                 correct_text,
 
+            "result":
+                result,
+
+            # HTML-də rahat istifadə üçün
             "is_correct":
-                is_correct,
-
-            "is_wrong":
-                is_wrong,
-
-            "is_empty":
-                is_empty
+                result == "correct"
 
         })
 
@@ -650,12 +746,6 @@ def finish():
     wrong = answered - correct
 
     # =====================================================
-    # BOŞ CAVABLAR
-    # =====================================================
-
-    unanswered = total - answered
-
-    # =====================================================
     # FAİZ
     # =====================================================
 
@@ -664,16 +754,6 @@ def finish():
     ) if total else 0
 
     name = session["name"]
-
-    # =====================================================
-    # BAKI VAXTI
-    # =====================================================
-
-    created_at = datetime.now(
-        ZoneInfo("Asia/Baku")
-    ).strftime(
-        "%d.%m.%Y %H:%M:%S"
-    )
 
     # =====================================================
     # STATUS
@@ -700,7 +780,6 @@ def finish():
 
         all_values = sheet.get_all_values()
 
-        # Başlıq sətrini nəzərə al
         number = len(
             all_values
         )
@@ -713,8 +792,11 @@ def finish():
                 total,
                 wrong,
                 f"{percent}%",
-                created_at,
-                status
+                exam_finish,
+                status,
+                exam_start,
+                exam_finish,
+                duration_text
             ],
             value_input_option="USER_ENTERED"
         )
@@ -731,12 +813,7 @@ def finish():
         )
 
     # =====================================================
-    # VACİB:
-    #
-    # SESSION-I BURADA TƏMİZLƏMİRİK.
-    #
-    # Çünki finish.html nəticələri göstərmək üçün
-    # məlumatdan istifadə edir.
+    # NƏTİCƏ SƏHİFƏSİ
     # =====================================================
 
     return render_template(
@@ -755,11 +832,15 @@ def finish():
 
         wrong=wrong,
 
-        unanswered=unanswered,
-
         status=status,
 
-        question_results=question_results
+        question_results=question_results,
+
+        exam_start=exam_start,
+
+        exam_finish=exam_finish,
+
+        duration=duration_text
 
     )
 
@@ -904,7 +985,13 @@ def admin_export():
 
         "Tarix",
 
-        "Status"
+        "Status",
+
+        "Başlama vaxtı",
+
+        "Bitmə vaxtı",
+
+        "Müddət"
 
     ]
 
@@ -936,77 +1023,75 @@ def admin_export():
         2
     ):
 
-        worksheet.cell(
-            row=row_number,
-            column=1,
-            value=result.get(
+        values = [
+
+            result.get(
                 "№",
                 row_number - 1
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=2,
-            value=result.get(
+            result.get(
                 "Ad və soyad",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=3,
-            value=result.get(
+            result.get(
                 "Düzgün cavab",
                 0
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=4,
-            value=result.get(
+            result.get(
                 "Ümumi sual",
                 0
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=5,
-            value=result.get(
+            result.get(
                 "Səhv cavab",
                 0
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=6,
-            value=result.get(
+            result.get(
                 "Nəticə",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=7,
-            value=result.get(
+            result.get(
                 "Tarix",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=8,
-            value=result.get(
+            result.get(
                 "Status",
                 ""
+            ),
+
+            result.get(
+                "Başlama vaxtı",
+                ""
+            ),
+
+            result.get(
+                "Bitmə vaxtı",
+                ""
+            ),
+
+            result.get(
+                "Müddət",
+                ""
             )
-        )
+
+        ]
+
+        for column, value in enumerate(
+            values,
+            1
+        ):
+
+            worksheet.cell(
+                row=row_number,
+                column=column,
+                value=value
+            )
 
     # =====================================================
     # SÜTUN ENLİKLƏRİ
@@ -1028,7 +1113,13 @@ def admin_export():
 
         "G": 25,
 
-        "H": 30
+        "H": 30,
+
+        "I": 25,
+
+        "J": 25,
+
+        "K": 30
 
     }
 
@@ -1039,7 +1130,7 @@ def admin_export():
         ].width = width
 
     # =====================================================
-    # EXCEL FAYLI
+    # EXCEL
     # =====================================================
 
     output = BytesIO()
