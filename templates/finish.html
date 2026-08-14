@@ -9,45 +9,44 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 40px 15px;
+        padding: 35px 15px;
     }
 
     .result-card {
         width: 100%;
-        max-width: 720px;
+        max-width: 760px;
         background: #ffffff;
         border-radius: 28px;
-        padding: 45px 40px;
+        padding: 40px;
         text-align: center;
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.10);
+        box-shadow: 0 15px 50px rgba(0,0,0,0.10);
         border: 1px solid #e5e7eb;
     }
 
     .success-icon {
-        width: 82px;
-        height: 82px;
-        margin: 0 auto 20px;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 18px;
         border-radius: 50%;
         background: #dcfce7;
         color: #16a34a;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 42px;
-        font-weight: 800;
+        font-size: 40px;
+        font-weight: 900;
     }
 
     .result-title {
         margin: 0;
         color: #172033;
-        font-size: 32px;
-        font-weight: 800;
+        font-size: 30px;
+        font-weight: 900;
     }
 
     .result-subtitle {
-        margin: 10px 0 30px;
+        margin: 10px 0 20px;
         color: #6b7280;
-        font-size: 16px;
     }
 
     .name-box {
@@ -56,94 +55,135 @@
         color: #173b73;
         padding: 10px 18px;
         border-radius: 12px;
-        font-weight: 700;
+        font-weight: 800;
+        margin-bottom: 25px;
+    }
+
+    /* =====================================================
+       İMTAHAN VAXTLARI
+    ===================================================== */
+
+    .exam-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
         margin-bottom: 30px;
     }
 
+    .exam-info-box {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 13px;
+        padding: 13px 8px;
+    }
+
+    .exam-info-label {
+        color: #6b7280;
+        font-size: 11px;
+        margin-bottom: 5px;
+    }
+
+    .exam-info-value {
+        color: #173b73;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    /* =====================================================
+       SCORE
+    ===================================================== */
+
     .score-circle {
-        width: 180px;
-        height: 180px;
-        margin: 0 auto 35px;
+        width: 175px;
+        height: 175px;
+        margin: 0 auto 30px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #173b73, #2563eb);
+        background: linear-gradient(
+            135deg,
+            #173b73,
+            #2563eb
+        );
         color: white;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 15px 35px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 15px 35px rgba(37,99,235,0.25);
     }
 
     .score-percent {
-        font-size: 48px;
+        font-size: 46px;
         line-height: 1;
         font-weight: 900;
     }
 
     .score-label {
         margin-top: 8px;
-        font-size: 14px;
-        opacity: 0.85;
+        font-size: 13px;
+        opacity: 0.9;
     }
+
+    /* =====================================================
+       STATİSTİKA
+    ===================================================== */
 
     .stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-        margin-bottom: 30px;
+        gap: 12px;
+        margin-bottom: 25px;
     }
 
     .stat {
         background: #f8fafc;
         border: 1px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 20px 10px;
+        border-radius: 15px;
+        padding: 18px 8px;
     }
 
     .stat-number {
-        font-size: 28px;
-        font-weight: 800;
+        font-size: 27px;
+        font-weight: 900;
         color: #173b73;
-        margin-bottom: 5px;
     }
 
     .stat-label {
-        font-size: 13px;
         color: #6b7280;
-    }
-
-    .result-message {
-        padding: 16px 20px;
-        border-radius: 14px;
-        background: #f8fafc;
-        color: #374151;
-        font-size: 15px;
-        margin-bottom: 30px;
-    }
-
-    .result-message strong {
-        color: #173b73;
+        font-size: 12px;
     }
 
     /* =====================================================
-       SUAL NƏTİCƏLƏRİ
-       ===================================================== */
+       MESAJ
+    ===================================================== */
+
+    .result-message {
+        padding: 15px 18px;
+        border-radius: 13px;
+        background: #f8fafc;
+        color: #374151;
+        margin-bottom: 30px;
+        font-size: 14px;
+    }
+
+    /* =====================================================
+       SUALLAR
+    ===================================================== */
 
     .answers-title {
-        margin-top: 40px;
-        margin-bottom: 20px;
-        padding-top: 30px;
+        margin-top: 30px;
+        padding-top: 25px;
         border-top: 1px solid #e5e7eb;
+        margin-bottom: 20px;
         color: #172033;
-        font-size: 22px;
-        font-weight: 800;
+        font-size: 21px;
+        font-weight: 900;
     }
 
     .question-result {
         text-align: left;
         border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 15px;
+        padding: 18px;
+        margin-bottom: 13px;
         border: 1px solid #e5e7eb;
     }
 
@@ -167,19 +207,19 @@
         justify-content: space-between;
         align-items: center;
         gap: 10px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
 
     .question-result-number {
-        font-weight: 800;
         color: #173b73;
-        font-size: 15px;
+        font-weight: 900;
+        font-size: 14px;
     }
 
     .question-status {
-        font-size: 13px;
-        font-weight: 800;
-        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 900;
+        padding: 5px 9px;
         border-radius: 8px;
     }
 
@@ -200,81 +240,99 @@
 
     .question-result-text {
         color: #172033;
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1.5;
         font-weight: 700;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }
 
     .answer-row {
         padding: 10px 12px;
         border-radius: 9px;
         margin-top: 7px;
-        font-size: 14px;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     .your-answer {
-        background: #ffffff;
-        color: #374151;
+        background: white;
         border: 1px solid #e5e7eb;
+        color: #374151;
     }
 
     .correct-answer {
         background: #dcfce7;
-        color: #166534;
         border: 1px solid #bbf7d0;
+        color: #166534;
         font-weight: 700;
     }
 
     .wrong-answer {
         background: #fee2e2;
-        color: #991b1b;
         border: 1px solid #fecaca;
-    }
-
-    .finish-info {
-        color: #9ca3af;
-        font-size: 13px;
-        margin-top: 30px;
-        margin-bottom: 25px;
+        color: #991b1b;
     }
 
     .home-button {
         display: inline-block;
         text-decoration: none;
-        background: linear-gradient(135deg, #173b73, #2563eb);
+        background: linear-gradient(
+            135deg,
+            #173b73,
+            #2563eb
+        );
         color: white;
-        padding: 15px 30px;
+        padding: 14px 28px;
         border-radius: 12px;
-        font-size: 15px;
-        font-weight: 700;
-        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
-        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 800;
+        margin-top: 10px;
     }
 
-    .home-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.32);
+    .finish-info {
+        color: #9ca3af;
+        font-size: 12px;
+        margin: 25px 0 10px;
     }
+
+    /* =====================================================
+       MOBİL
+    ===================================================== */
 
     @media (max-width: 600px) {
 
         .result-page {
-            padding: 25px 10px;
+            padding: 20px 7px;
         }
 
         .result-card {
-            padding: 35px 20px;
-            border-radius: 22px;
+            padding: 28px 15px;
+            border-radius: 20px;
         }
 
         .result-title {
-            font-size: 26px;
+            font-size: 25px;
+        }
+
+        .exam-info {
+            gap: 5px;
+        }
+
+        .exam-info-box {
+            padding: 10px 4px;
+        }
+
+        .exam-info-label {
+            font-size: 9px;
+        }
+
+        .exam-info-value {
+            font-size: 10px;
         }
 
         .score-circle {
-            width: 155px;
-            height: 155px;
+            width: 150px;
+            height: 150px;
         }
 
         .score-percent {
@@ -282,11 +340,11 @@
         }
 
         .stats {
-            gap: 8px;
+            gap: 7px;
         }
 
         .stat {
-            padding: 15px 5px;
+            padding: 14px 4px;
         }
 
         .stat-number {
@@ -294,17 +352,21 @@
         }
 
         .stat-label {
-            font-size: 11px;
+            font-size: 10px;
         }
 
-        .home-button {
-            width: 100%;
-            box-sizing: border-box;
+        .question-result {
+            padding: 14px;
         }
 
         .question-result-header {
             align-items: flex-start;
             flex-direction: column;
+        }
+
+        .home-button {
+            width: 100%;
+            box-sizing: border-box;
         }
     }
 
@@ -315,24 +377,81 @@
 
     <div class="result-card">
 
+
+        <!-- =================================================
+             İKON
+        ================================================= -->
+
         <div class="success-icon">
             ✓
         </div>
+
 
         <h1 class="result-title">
             Test tamamlandı!
         </h1>
 
+
         <p class="result-subtitle">
             Əmək Məcəlləsi testinin nəticəsi
         </p>
+
 
         <div class="name-box">
             👤 {{ name }}
         </div>
 
 
-        <!-- FAİZ -->
+        <!-- =================================================
+             İMTAHAN VAXTLARI
+        ================================================= -->
+
+        <div class="exam-info">
+
+            <div class="exam-info-box">
+
+                <div class="exam-info-label">
+                    🟢 BAŞLAMA
+                </div>
+
+                <div class="exam-info-value">
+                    {{ exam_start }}
+                </div>
+
+            </div>
+
+
+            <div class="exam-info-box">
+
+                <div class="exam-info-label">
+                    🔴 BİTMƏ
+                </div>
+
+                <div class="exam-info-value">
+                    {{ exam_finish }}
+                </div>
+
+            </div>
+
+
+            <div class="exam-info-box">
+
+                <div class="exam-info-label">
+                    ⏱ MÜDDƏT
+                </div>
+
+                <div class="exam-info-value">
+                    {{ duration }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FAİZ
+        ================================================= -->
 
         <div class="score-circle">
 
@@ -347,7 +466,9 @@
         </div>
 
 
-        <!-- STATİSTİKA -->
+        <!-- =================================================
+             STATİSTİKA
+        ================================================= -->
 
         <div class="stats">
 
@@ -392,7 +513,9 @@
         </div>
 
 
-        <!-- MESAJ -->
+        <!-- =================================================
+             MESAJ
+        ================================================= -->
 
         <div class="result-message">
 
@@ -422,8 +545,8 @@
 
 
         <!-- =================================================
-             SUALLAR ÜZRƏ ƏTRAFLI NƏTİCƏ
-             ================================================= -->
+             SUALLAR
+        ================================================= -->
 
         <div class="answers-title">
             📋 Suallar üzrə nəticələr
@@ -432,7 +555,10 @@
 
         {% for item in question_results %}
 
-            {% if item.is_correct %}
+
+            {% if item.result == "correct" %}
+
+                <!-- DÜZGÜN -->
 
                 <div class="question-result correct">
 
@@ -448,18 +574,43 @@
 
                     </div>
 
+
                     <div class="question-result-text">
                         {{ item.question }}
                     </div>
 
+
                     <div class="answer-row correct-answer">
+
                         ✓ Sizin cavabınız:
-                        {{ item.selected_text }}
+
+                        <strong>
+                            {{ item.selected }}
+                        </strong>
+
+                        — {{ item.selected_text }}
+
+                    </div>
+
+
+                    <div class="answer-row correct-answer">
+
+                        ✓ Düzgün cavab:
+
+                        <strong>
+                            {{ item.correct }}
+                        </strong>
+
+                        — {{ item.correct_text }}
+
                     </div>
 
                 </div>
 
-            {% elif item.selected == "Cavab verilməyib" %}
+
+            {% elif item.result == "empty" %}
+
+                <!-- BOŞ -->
 
                 <div class="question-result unanswered">
 
@@ -475,23 +626,41 @@
 
                     </div>
 
+
                     <div class="question-result-text">
                         {{ item.question }}
                     </div>
 
+
                     <div class="answer-row your-answer">
+
                         Sizin cavabınız:
-                        Cavab verilməyib
+
+                        <strong>
+                            Cavab verilməyib
+                        </strong>
+
                     </div>
 
+
                     <div class="answer-row correct-answer">
+
                         ✓ Düzgün cavab:
-                        {{ item.correct_text }}
+
+                        <strong>
+                            {{ item.correct }}
+                        </strong>
+
+                        — {{ item.correct_text }}
+
                     </div>
 
                 </div>
 
+
             {% else %}
+
+                <!-- SƏHV -->
 
                 <div class="question-result wrong">
 
@@ -507,26 +676,48 @@
 
                     </div>
 
+
                     <div class="question-result-text">
                         {{ item.question }}
                     </div>
 
+
                     <div class="answer-row wrong-answer">
+
                         ✕ Sizin cavabınız:
-                        {{ item.selected_text }}
+
+                        <strong>
+                            {{ item.selected }}
+                        </strong>
+
+                        — {{ item.selected_text }}
+
                     </div>
 
+
                     <div class="answer-row correct-answer">
+
                         ✓ Düzgün cavab:
-                        {{ item.correct_text }}
+
+                        <strong>
+                            {{ item.correct }}
+                        </strong>
+
+                        — {{ item.correct_text }}
+
                     </div>
 
                 </div>
 
             {% endif %}
 
+
         {% endfor %}
 
+
+        <!-- =================================================
+             SON
+        ================================================= -->
 
         <div class="finish-info">
             Nəticəniz sistemdə yadda saxlanıldı.
@@ -539,6 +730,7 @@
         >
             YENİ TESTƏ BAŞLA →
         </a>
+
 
     </div>
 
