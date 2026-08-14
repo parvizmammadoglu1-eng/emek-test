@@ -22,6 +22,7 @@
         text-align: center;
         box-shadow: 0 15px 50px rgba(0, 0, 0, 0.10);
         border: 1px solid #e5e7eb;
+        box-sizing: border-box;
     }
 
     .success-icon {
@@ -60,38 +61,12 @@
         font-weight: 700;
         margin-bottom: 30px;
     }
-<div class="exam-time-box">
 
-    <div class="exam-time-title">
-        ⏱️ İmtahan müddəti
-    </div>
 
-    <div class="exam-time-grid">
+    /* =====================================================
+       FAİZ DAİRƏSİ
+       ===================================================== */
 
-        <div>
-            <span>Başlama vaxtı</span>
-            <strong>
-                {{ exam_start_display }}
-            </strong>
-        </div>
-
-        <div>
-            <span>Bitmə vaxtı</span>
-            <strong>
-                {{ exam_end_display }}
-            </strong>
-        </div>
-
-        <div>
-            <span>Ümumi müddət</span>
-            <strong>
-                {{ duration_text }}
-            </strong>
-        </div>
-
-    </div>
-
-</div>
     .score-circle {
         width: 180px;
         height: 180px;
@@ -104,19 +79,29 @@
         align-items: center;
         justify-content: center;
         box-shadow: 0 15px 35px rgba(37, 99, 235, 0.25);
+        box-sizing: border-box;
     }
 
     .score-percent {
         font-size: 48px;
         line-height: 1;
         font-weight: 900;
+        text-align: center;
+        width: 100%;
     }
 
     .score-label {
         margin-top: 8px;
         font-size: 14px;
         opacity: 0.85;
+        text-align: center;
+        width: 100%;
     }
+
+
+    /* =====================================================
+       STATİSTİKA
+       ===================================================== */
 
     .stats {
         display: grid;
@@ -130,6 +115,7 @@
         border: 1px solid #e5e7eb;
         border-radius: 16px;
         padding: 20px 10px;
+        box-sizing: border-box;
     }
 
     .stat-number {
@@ -143,6 +129,11 @@
         font-size: 13px;
         color: #6b7280;
     }
+
+
+    /* =====================================================
+       MESAJ
+       ===================================================== */
 
     .result-message {
         padding: 16px 20px;
@@ -168,6 +159,7 @@
         border-radius: 16px;
         background: #f8fafc;
         border: 1px solid #e5e7eb;
+        box-sizing: border-box;
     }
 
     .exam-time-title {
@@ -188,6 +180,7 @@
         border: 1px solid #e5e7eb;
         border-radius: 11px;
         padding: 12px 8px;
+        box-sizing: border-box;
     }
 
     .exam-time-grid span {
@@ -201,6 +194,7 @@
         display: block;
         color: #173b73;
         font-size: 14px;
+        word-break: break-word;
     }
 
 
@@ -224,6 +218,7 @@
         padding: 20px;
         margin-bottom: 15px;
         border: 1px solid #e5e7eb;
+        box-sizing: border-box;
     }
 
     .question-result.correct {
@@ -290,6 +285,7 @@
         border-radius: 9px;
         margin-top: 7px;
         font-size: 14px;
+        box-sizing: border-box;
     }
 
     .your-answer {
@@ -311,12 +307,22 @@
         border: 1px solid #fecaca;
     }
 
+
+    /* =====================================================
+       SON MƏLUMAT
+       ===================================================== */
+
     .finish-info {
         color: #9ca3af;
         font-size: 13px;
         margin-top: 30px;
         margin-bottom: 25px;
     }
+
+
+    /* =====================================================
+       YENİ TEST
+       ===================================================== */
 
     .home-button {
         display: inline-block;
@@ -329,6 +335,7 @@
         font-weight: 700;
         box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
         transition: all 0.2s ease;
+        box-sizing: border-box;
     }
 
     .home-button:hover {
@@ -345,32 +352,67 @@
 
         .result-page {
             padding: 25px 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .result-card {
-            padding: 35px 20px;
+            width: 100%;
+            padding: 35px 16px;
             border-radius: 22px;
+            box-sizing: border-box;
         }
 
         .result-title {
             font-size: 26px;
         }
 
+        .result-subtitle {
+            font-size: 14px;
+        }
+
+        .name-box {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+
+        /* FAİZ TELEFONDA TAM MƏRKƏZDƏ */
+
         .score-circle {
             width: 155px;
             height: 155px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .score-percent {
             font-size: 40px;
+            text-align: center;
+            width: 100%;
+            display: block;
         }
+
+        .score-label {
+            text-align: center;
+            width: 100%;
+            display: block;
+        }
+
+
+        /* STATİSTİKA */
 
         .stats {
             gap: 8px;
+            width: 100%;
         }
 
         .stat {
             padding: 15px 5px;
+            min-width: 0;
         }
 
         .stat-number {
@@ -381,18 +423,31 @@
             font-size: 11px;
         }
 
-        .home-button {
-            width: 100%;
-            box-sizing: border-box;
+
+        /* İMTAHAN VAXTI */
+
+        .exam-time-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
         }
+
+        .exam-time-grid div {
+            width: 100%;
+        }
+
+
+        /* SUAL BAŞLIĞI */
 
         .question-result-header {
             align-items: flex-start;
             flex-direction: column;
         }
 
-        .exam-time-grid {
-            grid-template-columns: 1fr;
+
+        /* DÜYMƏ */
+
+        .home-button {
+            width: 100%;
         }
 
     }
@@ -589,7 +644,7 @@
 
                 </div>
 
-            {% elif item.selected == "Cavab verilməyib" %}
+            {% elif item.is_empty %}
 
                 <div class="question-result unanswered">
 
