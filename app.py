@@ -116,7 +116,7 @@ def get_sheet():
         sheet = spreadsheet.add_worksheet(
             title="Nəticələr",
             rows=1000,
-            cols=11
+            cols=9
         )
 
         sheet.append_row(
@@ -129,8 +129,6 @@ def get_sheet():
                 "Nəticə",
                 "Tarix",
                 "Status",
-                "Başlama vaxtı",
-                "Bitmə vaxtı",
                 "Müddət"
             ]
         )
@@ -400,16 +398,18 @@ def home():
         session["answers"] = {}
 
         # =================================================
-        # İMTAHANIN BAŞLAMA VAXTI
+        # TAYMER BURADA BAŞLAYIR
         # =================================================
 
-        start_datetime = datetime.now(
+        start_time = datetime.now(
             ZoneInfo("Asia/Baku")
         )
 
-        session["exam_start"] = (
-            start_datetime.isoformat()
+        session["exam_start_time"] = (
+            start_time.timestamp()
         )
+
+        session.modified = True
 
         return redirect(
             url_for(
@@ -495,7 +495,16 @@ def question(n):
             )
         )
 
+    # =====================================================
+    # TAYMER MƏLUMATI
+    # =====================================================
+
+    exam_start_time = session.get(
+        "exam_start_time"
+    )
+
     return render_template(
+
         "question.html",
 
         q=q,
@@ -504,7 +513,10 @@ def question(n):
 
         total=total,
 
-        name=session["name"]
+        name=session["name"],
+
+        exam_start_time=exam_start_time
+
     )
 
 
@@ -537,6 +549,45 @@ def finish():
 
     answered = len(
         answers
+    )
+
+    # =====================================================
+    # MÜDDƏT
+    # =====================================================
+
+    exam_start_timestamp = session.get(
+        "exam_start_time"
+    )
+
+    now_timestamp = datetime.now(
+        ZoneInfo("Asia/Baku")
+    ).timestamp()
+
+    if exam_start_timestamp:
+
+        elapsed_seconds = int(
+            now_timestamp -
+            exam_start_timestamp
+        )
+
+        if elapsed_seconds < 0:
+            elapsed_seconds = 0
+
+    else:
+
+        elapsed_seconds = 0
+
+    duration_minutes = (
+        elapsed_seconds // 60
+    )
+
+    duration_seconds = (
+        elapsed_seconds % 60
+    )
+
+    duration_text = (
+        f"{duration_minutes} dəq "
+        f"{duration_seconds} san"
     )
 
     # =====================================================
@@ -624,13 +675,13 @@ def finish():
         })
 
     # =====================================================
-    # SƏHV CAVABLAR
+    # SƏHV
     # =====================================================
 
     wrong = answered - correct
 
     # =====================================================
-    # BOŞ CAVABLAR
+    # BOŞ
     # =====================================================
 
     unanswered = total - answered
@@ -646,97 +697,12 @@ def finish():
     name = session["name"]
 
     # =====================================================
-    # BAŞLAMA VAXTI
+    # BAKI VAXTI
     # =====================================================
 
-    start_time = None
-
-    if session.get("exam_start"):
-
-        try:
-
-            start_datetime = datetime.fromisoformat(
-                session["exam_start"]
-            )
-
-            start_time = start_datetime.strftime(
-                "%H:%M:%S"
-            )
-
-        except Exception:
-
-            start_datetime = None
-
-    else:
-
-        start_datetime = None
-
-    # =====================================================
-    # BİTMƏ VAXTI
-    # =====================================================
-
-    end_datetime = datetime.now(
+    created_at = datetime.now(
         ZoneInfo("Asia/Baku")
-    )
-
-    end_time = end_datetime.strftime(
-        "%H:%M:%S"
-    )
-
-    # =====================================================
-    # İMTAHAN MÜDDƏTİ
-    # =====================================================
-
-    duration = "Müəyyən edilmədi"
-
-    if start_datetime:
-
-        elapsed_seconds = int(
-            (
-                end_datetime -
-                start_datetime
-            ).total_seconds()
-        )
-
-        if elapsed_seconds < 0:
-            elapsed_seconds = 0
-
-        hours = elapsed_seconds // 3600
-
-        minutes = (
-            elapsed_seconds % 3600
-        ) // 60
-
-        seconds = (
-            elapsed_seconds % 60
-        )
-
-        if hours > 0:
-
-            duration = (
-                f"{hours} saat "
-                f"{minutes} dəqiqə "
-                f"{seconds} saniyə"
-            )
-
-        elif minutes > 0:
-
-            duration = (
-                f"{minutes} dəqiqə "
-                f"{seconds} saniyə"
-            )
-
-        else:
-
-            duration = (
-                f"{seconds} saniyə"
-            )
-
-    # =====================================================
-    # TARİX
-    # =====================================================
-
-    created_at = end_datetime.strftime(
+    ).strftime(
         "%d.%m.%Y %H:%M:%S"
     )
 
@@ -779,9 +745,7 @@ def finish():
                 f"{percent}%",
                 created_at,
                 status,
-                start_time or "",
-                end_time,
-                duration
+                duration_text
             ],
             value_input_option="USER_ENTERED"
         )
@@ -798,7 +762,7 @@ def finish():
         )
 
     # =====================================================
-    # NƏTİCƏ SƏHİFƏSİ
+    # NƏTİCƏ
     # =====================================================
 
     return render_template(
@@ -821,13 +785,13 @@ def finish():
 
         status=status,
 
-        question_results=question_results,
+        duration_text=duration_text,
 
-        start_time=start_time,
+        duration_minutes=duration_minutes,
 
-        end_time=end_time,
+        duration_seconds=duration_seconds,
 
-        duration=duration
+        question_results=question_results
 
     )
 
@@ -859,7 +823,6 @@ def admin_login():
 
         return render_template(
             "admin_login.html",
-
             error="Parol yanlışdır."
         )
 
@@ -952,10 +915,6 @@ def admin_export():
 
     worksheet.title = "Test nəticələri"
 
-    # =====================================================
-    # BAŞLIQLAR
-    # =====================================================
-
     headers = [
 
         "№",
@@ -973,10 +932,6 @@ def admin_export():
         "Tarix",
 
         "Status",
-
-        "Başlama vaxtı",
-
-        "Bitmə vaxtı",
 
         "Müddət"
 
@@ -1000,10 +955,6 @@ def admin_export():
         cell.alignment = Alignment(
             horizontal="center"
         )
-
-    # =====================================================
-    # NƏTİCƏLƏR
-    # =====================================================
 
     for row_number, result in enumerate(
         results,
@@ -1086,56 +1037,22 @@ def admin_export():
             row=row_number,
             column=9,
             value=result.get(
-                "Başlama vaxtı",
-                ""
-            )
-        )
-
-        worksheet.cell(
-            row=row_number,
-            column=10,
-            value=result.get(
-                "Bitmə vaxtı",
-                ""
-            )
-        )
-
-        worksheet.cell(
-            row=row_number,
-            column=11,
-            value=result.get(
                 "Müddət",
                 ""
             )
         )
 
-    # =====================================================
-    # SÜTUN ENLİKLƏRİ
-    # =====================================================
-
     widths = {
 
         "A": 8,
-
         "B": 30,
-
         "C": 18,
-
         "D": 18,
-
         "E": 15,
-
         "F": 15,
-
         "G": 25,
-
         "H": 30,
-
-        "I": 18,
-
-        "J": 18,
-
-        "K": 25
+        "I": 18
 
     }
 
@@ -1144,10 +1061,6 @@ def admin_export():
         worksheet.column_dimensions[
             column
         ].width = width
-
-    # =====================================================
-    # EXCEL FAYLI
-    # =====================================================
 
     output = BytesIO()
 
