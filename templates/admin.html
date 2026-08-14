@@ -208,21 +208,6 @@
             background: rgba(255, 255, 255, 0.02);
         }
 
-        .progress-bar {
-            height: 6px;
-            width: 100%;
-            background: var(--border);
-            border-radius: 3px;
-            margin-top: 6px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 3px;
-        }
-
         .badge {
             padding: 4px 10px;
             border-radius: 20px;
@@ -270,35 +255,15 @@
 
 <main class="container">
 
-    <!-- Stat Hesablamaları -->
-    {% set total_results = results|length %}
-    {% set total_percent = namespace(value=0) %}
-
-    {% for result in results %}
-        {% set percent_text = result.get("Nəticə", "0")|string %}
-        {% set percent_number = percent_text.replace("%", "")|float %}
-        {% set total_percent.value = total_percent.value + percent_number %}
-    {% endfor %}
-
-    {% if total_results > 0 %}
-        {% set avg_percent = (total_percent.value / total_results)|round|int %}
-    {% else %}
-        {% set avg_percent = 0 %}
-    {% endif %}
-
     <!-- Stat Kartları -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">İştirakçı Sayı</div>
-            <div class="stat-value" style="color: #60a5fa;">{{ total_results }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Orta Göstərici</div>
-            <div class="stat-value" style="color: #34d399;">{{ avg_percent }}%</div>
+            <div class="stat-value" style="color: #60a5fa;">{{ results|length if results else 0 }}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Bazadakı Suallar</div>
-            <div class="stat-value" style="color: #fbbf24;">{{ questions|length }}</div>
+            <div class="stat-value" style="color: #fbbf24;">{{ questions|length if questions else 0 }}</div>
         </div>
     </div>
 
@@ -340,23 +305,41 @@
             <tbody>
                 {% if results %}
                     {% for result in results %}
-                    {% set percent_val = result.get("Nəticə", "0%").replace("%", "") %}
                     <tr>
                         <td>{{ loop.index }}</td>
-                        <td style="font-weight: 600;">{{ result.get("Ad və soyad", "—") }}</td>
-                        <td>
-                            <span style="color: var(--success);">{{ result.get("Düzgün cavab", "0") }}</span> / 
-                            <span style="color: var(--danger);">{{ result.get("Səhv cavab", "0") }}</span>
+                        <td style="font-weight: 600;">
+                            {% if result is mapping %}
+                                {{ result.get("Ad və soyad", "—") }}
+                            {% else %}
+                                {{ result[1] if result|length > 1 else "—" }}
+                            {% endif %}
                         </td>
                         <td>
-                            <div>{{ result.get("Nəticə", "0%") }}</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: {{ percent_val }}%;"></div>
-                            </div>
+                            {% if result is mapping %}
+                                <span style="color: var(--success);">{{ result.get("Düzgün cavab", "0") }}</span> / 
+                                <span style="color: var(--danger);">{{ result.get("Səhv cavab", "0") }}</span>
+                            {% else %}
+                                <span style="color: var(--success);">{{ result[2] if result|length > 2 else "0" }}</span> / 
+                                <span style="color: var(--danger);">{{ result[4] if result|length > 4 else "0" }}</span>
+                            {% endif %}
                         </td>
-                        <td style="color: var(--text-sub);">{{ result.get("Tarix", "—") }}</td>
                         <td>
-                            {% if "Tamamlandı" in result.get("Status", "") %}
+                            {% if result is mapping %}
+                                <div>{{ result.get("Nəticə", "0%") }}</div>
+                            {% else %}
+                                <div>{{ result[5] if result|length > 5 else "0%" }}</div>
+                            {% endif %}
+                        </td>
+                        <td style="color: var(--text-sub);">
+                            {% if result is mapping %}
+                                {{ result.get("Tarix", "—") }}
+                            {% else %}
+                                {{ result[6] if result|length > 6 else "—" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set status_text = result.get("Status", "") if result is mapping else (result[7] if result|length > 7 else "") %}
+                            {% if "Tamamlandı" in status_text %}
                                 <span class="badge badge-success">✓ Tamamlandı</span>
                             {% else %}
                                 <span class="badge badge-warning">⚠ Yarımçıq</span>
@@ -378,10 +361,16 @@
     <!-- Suallar Bölməsi -->
     <div class="section-title">📚 Sistemdəki Aktiv Suallar</div>
     <div class="questions-grid">
-        {% for question in questions %}
+        {% for q in questions %}
         <div class="q-card">
             <div class="q-num">SUAL {{ loop.index }}</div>
-            <div>{{ question.get("question", question.get("text", question)) }}</div>
+            <div>
+                {% if q is mapping %}
+                    {{ q.get("question", q.get("text", "Sual mətni yoxdur")) }}
+                {% else %}
+                    {{ q }}
+                {% endif %}
+            </div>
         </div>
         {% endfor %}
     </div>
@@ -389,7 +378,6 @@
 </main>
 
 <script>
-    // Canlı Axtarış Funksiyası
     function filterTable() {
         let input = document.getElementById("searchInput");
         let filter = input.value.toLowerCase();
