@@ -248,7 +248,6 @@ def load_questions():
                 return json.load(f)
         except Exception:
             pass
-    # Fayl hələ yoxdursa, default sualları yaradıb yadda saxlayırıq
     save_questions(DEFAULT_QUESTIONS)
     return DEFAULT_QUESTIONS
 
@@ -300,12 +299,25 @@ def home():
             "name",
             ""
         ).strip()
+        
+        code = request.form.get(
+            "code",
+            ""
+        ).strip()
+
+        # İcazə verilən giriş kodları siyahısı
+        allowed_codes = ["12345", "test2026", "imtahan"]
 
         if not name:
-
             return render_template(
                 "home.html",
                 error="Ad və soyad daxil edin."
+            )
+
+        if code not in allowed_codes:
+            return render_template(
+                "home.html",
+                error="Yanlış giriş kodu!"
             )
 
         session.clear()
