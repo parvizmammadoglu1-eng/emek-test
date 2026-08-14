@@ -106,45 +106,18 @@ def get_sheet():
     )
 
     try:
-
         sheet = spreadsheet.worksheet(
             "Nəticələr"
         )
-
     except gspread.WorksheetNotFound:
-
         sheet = spreadsheet.add_worksheet(
             title="Nəticələr",
             rows=1000,
             cols=11
         )
 
-        # =====================================================
-# GOOGLE SHEETSƏ NƏTİCƏNİ HƏMİŞƏ A:I SÜTUNLARINA YAZ
-# =====================================================
-
-next_row = len(sheet.get_all_values()) + 1
-
-sheet.update(
-    f"A{next_row}:I{next_row}",
-    [[
-        №,
-        Ad və soyad,
-        Düzgün cavab,
-        Ümumi sual,
-        Səhv cavab,
-        f"{percent}%",
-        Tarix,
-        Status,
-        duration_text
-    ]],
-    value_input_option="USER_ENTERED"
-)
-
-        return sheet
-
     # =====================================================
-    # MÖVCUD SHEET-DƏ SÜTUNLARI YOXLA
+    # MÖVCUD SHEET-DƏ SÜTUNLARI YOXLA VƏ BAŞLIQLARI TƏNZİMLƏ
     # =====================================================
 
     headers = sheet.row_values(1)
@@ -163,32 +136,21 @@ sheet.update(
         "Bitmə vaxtı"
     ]
 
-    changed = False
+    if not headers:
+        sheet.update("1:1", [required_headers])
+    else:
+        changed = False
+        for header in required_headers:
+            if header not in headers:
+                headers.append(header)
+                changed = True
 
-    for header in required_headers:
-
-        if header not in headers:
-
-            headers.append(header)
-            changed = True
-
-    if changed:
-
-        sheet.resize(
-            rows=max(
-                sheet.row_count,
-                1000
-            ),
-            cols=max(
-                sheet.col_count,
-                len(headers)
+        if changed:
+            sheet.resize(
+                rows=max(sheet.row_count, 1000),
+                cols=max(sheet.col_count, len(headers))
             )
-        )
-
-        sheet.update(
-            "1:1",
-            [headers]
-        )
+            sheet.update("1:1", [headers])
 
     return sheet
 
@@ -830,15 +792,11 @@ def finish():
 
         all_values = sheet.get_all_values()
 
-        number = len(
-            all_values
-        )
+        number = len(all_values)  # Sıra nömrəsi (başlıq sətiri nəzərə alınaraq)
 
         # =================================================
-        # SÜTUNLAR
+        # SƏTİRİ ƏLAVƏ ET
         # =================================================
-
-        headers = sheet.row_values(1)
 
         row_data = [
             number,
@@ -853,10 +811,6 @@ def finish():
             start_time_text,
             end_time_text
         ]
-
-        # =================================================
-        # SƏTİRİ ƏLAVƏ ET
-        # =================================================
 
         sheet.append_row(
             row_data,
