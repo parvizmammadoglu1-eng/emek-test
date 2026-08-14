@@ -117,10 +117,6 @@ def get_sheet():
             cols=11
         )
 
-    # =====================================================
-    # MÖVCUD SHEET-DƏ SÜTUNLARI YOXLA VƏ BAŞLIQLARI TƏNZİMLƏ
-    # =====================================================
-
     headers = sheet.row_values(1)
 
     required_headers = [
@@ -157,212 +153,111 @@ def get_sheet():
 
 
 # =========================================================
-# SUALLAR
+# SUALLARIN İDARƏ OLUNMASI (JSON FAYL İLƏ)
 # =========================================================
 
-QUESTIONS = [
+QUESTIONS_FILE = "questions.json"
 
+DEFAULT_QUESTIONS = [
     {
-        "question":
-            "Əmək Məcəlləsi kimlərə şamil edilir?",
-
-        "a":
-            "a) əcnəbilərə;",
-
-        "b":
-            "b) hərbi qulluqçulara;",
-
-        "c":
-            "c) məhkəmə hakimlərinə;",
-
-        "d":
-            "d) AR-nın Milli Məclisinin deputatlarına və bələdiyyələrə seçilmiş şəxslərə;",
-
-        "answer":
-            "A"
+        "question": "Əmək Məcəlləsi kimlərə şamil edilir?",
+        "a": "a) əcnəbilərə;",
+        "b": "b) hərbi qulluqçulara;",
+        "c": "c) məhkəmə hakimlərinə;",
+        "d": "d) AR-nın Milli Məclisinin deputatlarına və bələdiyyələrə seçilmiş şəxslərə;",
+        "answer": "A"
     },
-
     {
-        "question":
-            "Əmək qanunvericiliyinə əməl olunmasına dövlət nəzarətini hansı orqan həyata keçirir?",
-
-        "a":
-            "a) rayon (şəhər) məhkəməsi;",
-
-        "b":
-            "b) rayon (şəhər) məşğulluq mərkəzləri;",
-
-        "c":
-            "c) Azərbaycan Həmkarlar İttifaqları Konfederasiyası;",
-
-        "d":
-            "d) Dövlət Əmək Müfəttişliyi;",
-
-        "answer":
-            "D"
+        "question": "Əmək qanunvericiliyinə əməl olunmasına dövlət nəzarətini hansı orqan həyata keçirir?",
+        "a": "a) rayon (şəhər) məhkəməsi;",
+        "b": "b) rayon (şəhər) məşğulluq mərkəzləri;",
+        "c": "c) Azərbaycan Həmkarlar İttifaqları Konfederasiyası;",
+        "d": "d) Dövlət Əmək Müfəttişliyi;",
+        "answer": "D"
     },
-
     {
-        "question":
-            "Əmək müqaviləsinin tərəfləri kimlər olur?",
-
-        "a":
-            "a) işçi və işəgötürən;",
-
-        "b":
-            "b) işçi və həmkarlar ittifaqı təşkilatı;",
-
-        "c":
-            "c) işçi və əmək kollektivi;",
-
-        "d":
-            "d) işəgötürən və həmkarlar ittifaqı təşkilatı",
-
-        "answer":
-            "A"
+        "question": "Əmək müqaviləsinin tərəfləri kimlər olur?",
+        "a": "a) işçi və işəgötürən;",
+        "b": "b) işçi və həmkarlar ittifaqı təşkilatı;",
+        "c": "c) işçi və əmək kollektivi;",
+        "d": "d) işəgötürən və həmkarlar ittifaqı təşkilatı",
+        "answer": "A"
     },
-
     {
-        "question":
-            "Hansı yaşdan hər bir şəxs işçi kimi əmək müqaviləsinin tərəfi ola bilər?",
-
-        "a":
-            "a) 13 yaşdan;",
-
-        "b":
-            "b) 14 yaşdan;",
-
-        "c":
-            "c) 15 yaşdan;",
-
-        "d":
-            "d) 16 yaşdan",
-
-        "answer":
-            "C"
+        "question": "Hansı yaşdan hər bir şəxs işçi kimi əmək müqaviləsinin tərəfi ola bilər?",
+        "a": "a) 13 yaşdan;",
+        "b": "b) 14 yaşdan;",
+        "c": "c) 15 yaşdan;",
+        "d": "d) 16 yaşdan",
+        "answer": "C"
     },
-
     {
-        "question":
-            "Əmək münasibətlərini hansı hüquqi fakt yaradır?",
-
-        "a":
-            "a) kollektiv müqavilə;",
-
-        "b":
-            "b) əmək müqaviləsi;",
-
-        "c":
-            "c) mülki-hüquqi müqavilə;",
-
-        "d":
-            "d) işəgötürənin əmri (sərəncamı, qərarı)",
-
-        "answer":
-            "B"
+        "question": "Əmək münasibətlərini hansı hüquqi fakt yaradır?",
+        "a": "a) kollektiv müqavilə;",
+        "b": "b) əmək müqaviləsi;",
+        "c": "c) mülki-hüquqi müqavilə;",
+        "d": "d) işəgötürənin əmri (sərəncamı, qərarı)",
+        "answer": "B"
     },
-
     {
-        "question":
-            "Ezamiyyətin müddəti neçə gündən artıq ola bilməz?",
-
-        "a":
-            "a) 30 təqvim günündən",
-
-        "b":
-            "b) 40 təqvim günündən",
-
-        "c":
-            "c) 45 təqvim günündən",
-
-        "d":
-            "d) 25 təqvim günündən",
-
-        "answer":
-            "B"
+        "question": "Ezamiyyətin müddəti neçə gündən artıq ola bilməz?",
+        "a": "a) 30 təqvim günündən",
+        "b": "b) 40 təqvim günündən",
+        "c": "c) 45 təqvim günündən",
+        "d": "d) 25 təqvim günündən",
+        "answer": "B"
     },
-
     {
-        "question":
-            "İşçiyə məzuniyyət vaxtı üçün orta əmək haqqı məzuniyyətin başlanmasına ən azı neçə gün qalmış ödənilir?",
-
-        "a":
-            "a) 3 gün qalmış",
-
-        "b":
-            "b) 4 gün qalmış",
-
-        "c":
-            "c) 5 gün qalmış",
-
-        "d":
-            "d) 6 gün qalmış",
-
-        "answer":
-            "A"
+        "question": "İşçiyə məzuniyyət vaxtı üçün orta əmək haqqı məzuniyyətin başlanmasına ən azı neçə gün qalmış ödənilir?",
+        "a": "a) 3 gün qalmış",
+        "b": "b) 4 gün qalmış",
+        "c": "c) 5 gün qalmış",
+        "d": "d) 6 gün qalmış",
+        "answer": "A"
     },
-
     {
-        "question":
-            "İşçinin on ildən on beş ilədək əmək stajı olduqda əlavə necə gün məzuniyyət verilir?",
-
-        "a":
-            "a) 8 təqvim günü",
-
-        "b":
-            "b) 5 təqvim günü",
-
-        "c":
-            "c) 6 təqvim günü",
-
-        "d":
-            "d) 4 təqvim günü",
-
-        "answer":
-            "D"
+        "question": "İşçinin on ildən on beş ilədək əmək stajı olduqda əlavə necə gün məzuniyyət verilir?",
+        "a": "a) 8 təqvim günü",
+        "b": "b) 5 təqvim günü",
+        "c": "c) 6 təqvim günü",
+        "d": "d) 4 təqvim günü",
+        "answer": "D"
     },
-
     {
-        "question":
-            "İşçinin bir iş günü ilə növbəti iş günü arasındakı gündəlik istirahət vaxtı azı neçə saat olmalıdır?",
-
-        "a":
-            "a) azı 8 saat",
-
-        "b":
-            "b) azı 10 saat",
-
-        "c":
-            "c) azı 12 saat",
-
-        "d":
-            "d) azı 14 saat",
-
-        "answer":
-            "C"
+        "question": "İşçinin bir iş günü ilə növbəti iş günü arasındakı gündəlik istirahət vaxtı azı neçə saat olmalıdır?",
+        "a": "a) azı 8 saat",
+        "b": "b) azı 10 saat",
+        "c": "c) azı 12 saat",
+        "d": "d) azı 14 saat",
+        "answer": "C"
     },
-
     {
-        "question":
-            "16 yaşdan 18 yaşadək olan işçilərə qısaldılmış iş vaxtının müddəti həftə ərzində neçə saat təşkil edir?",
-
-        "a":
-            "a) 24 saat",
-
-        "b":
-            "b) 36 saat",
-
-        "c":
-            "c) 40 saat",
-
-        "d":
-            "d) 32 saat",
-
-        "answer":
-            "B"
+        "question": "16 yaşdan 18 yaşadək olan işçilərə qısaldılmış iş vaxtının müddəti həftə ərzində neçə saat təşkil edir?",
+        "a": "a) 24 saat",
+        "b": "b) 36 saat",
+        "c": "c) 40 saat",
+        "d": "d) 32 saat",
+        "answer": "B"
     }
-
 ]
+
+def load_questions():
+    if os.path.exists(QUESTIONS_FILE):
+        try:
+            with open(QUESTIONS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    # Fayl hələ yoxdursa, default sualları yaradıb yadda saxlayırıq
+    save_questions(DEFAULT_QUESTIONS)
+    return DEFAULT_QUESTIONS
+
+def save_questions(questions_list):
+    try:
+        with open(QUESTIONS_FILE, "w", encoding="utf-8") as f:
+            json.dump(questions_list, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print("SAVE QUESTIONS ERROR:", str(e))
 
 
 # =========================================================
@@ -413,19 +308,11 @@ def home():
                 error="Ad və soyad daxil edin."
             )
 
-        # =================================================
-        # KÖHNƏ TEST MƏLUMATLARINI SIFIRLA
-        # =================================================
-
         session.clear()
 
         session["name"] = name
 
         session["answers"] = {}
-
-        # =================================================
-        # TAYMER TESTƏ BAŞLADIĞI ANDA BAŞLAYIR
-        # =================================================
 
         start_time = datetime.now(
             ZoneInfo("Asia/Baku")
@@ -465,9 +352,8 @@ def question(n):
             url_for("home")
         )
 
-    total = len(
-        QUESTIONS
-    )
+    current_questions = load_questions()
+    total = len(current_questions)
 
     if n >= total:
 
@@ -475,7 +361,7 @@ def question(n):
             url_for("finish")
         )
 
-    q = QUESTIONS[n]
+    q = current_questions[n]
 
     if request.method == "POST":
 
@@ -521,10 +407,6 @@ def question(n):
             )
         )
 
-    # =====================================================
-    # TAYMER MƏLUMATI
-    # =====================================================
-
     exam_start_time = session.get(
         "exam_start_time"
     )
@@ -567,19 +449,14 @@ def finish():
         {}
     )
 
-    total = len(
-        QUESTIONS
-    )
+    current_questions = load_questions()
+    total = len(current_questions)
 
     correct = 0
 
     answered = len(
         answers
     )
-
-    # =====================================================
-    # İMTAHAN VAXTI
-    # =====================================================
 
     exam_start_timestamp = session.get(
         "exam_start_time"
@@ -590,10 +467,6 @@ def finish():
     )
 
     now_timestamp = now_datetime.timestamp()
-
-    # =====================================================
-    # BAŞLAMA VAXTI
-    # =====================================================
 
     if exam_start_timestamp is not None:
 
@@ -627,19 +500,11 @@ def finish():
 
         elapsed_seconds = 0
 
-    # =====================================================
-    # BİTMƏ VAXTI
-    # =====================================================
-
     end_time_text = (
         now_datetime.strftime(
             "%d.%m.%Y %H:%M:%S"
         )
     )
-
-    # =====================================================
-    # MÜDDƏT
-    # =====================================================
 
     duration_minutes = (
         elapsed_seconds // 60
@@ -654,13 +519,9 @@ def finish():
         f"{duration_seconds} san"
     )
 
-    # =====================================================
-    # SUALLAR ÜZRƏ ƏTRAFLI NƏTİCƏ
-    # =====================================================
-
     question_results = []
 
-    for index, q in enumerate(QUESTIONS):
+    for index, q in enumerate(current_questions):
 
         selected = answers.get(
             str(index)
@@ -738,21 +599,9 @@ def finish():
 
         })
 
-    # =====================================================
-    # SƏHV
-    # =====================================================
-
     wrong = answered - correct
 
-    # =====================================================
-    # BOŞ
-    # =====================================================
-
     unanswered = total - answered
-
-    # =====================================================
-    # FAİZ
-    # =====================================================
 
     percent = round(
         correct / total * 100
@@ -760,17 +609,9 @@ def finish():
 
     name = session["name"]
 
-    # =====================================================
-    # BAKI VAXTI
-    # =====================================================
-
     created_at = now_datetime.strftime(
         "%d.%m.%Y %H:%M:%S"
     )
-
-    # =====================================================
-    # STATUS
-    # =====================================================
 
     if answered == total:
 
@@ -783,21 +624,13 @@ def finish():
             f"({answered}/{total})"
         )
 
-    # =====================================================
-    # GOOGLE SHEETS
-    # =====================================================
-
     try:
 
         sheet = get_sheet()
 
         all_values = sheet.get_all_values()
 
-        number = len(all_values)  # Sıra nömrəsi (başlıq sətiri nəzərə alınaraq)
-
-        # =================================================
-        # SƏTİRİ ƏLAVƏ ET
-        # =================================================
+        number = len(all_values)
 
         row_data = [
             number,
@@ -829,10 +662,6 @@ def finish():
             str(e)
         )
 
-    # =====================================================
-    # NƏTİCƏ SƏHİFƏSİ
-    # =====================================================
-
     return render_template(
 
         "finish.html",
@@ -853,17 +682,14 @@ def finish():
 
         status=status,
 
-        # MÜDDƏT
         duration_text=duration_text,
 
         duration_minutes=duration_minutes,
 
         duration_seconds=duration_seconds,
 
-        # BAŞLAMA VAXTI
         start_time_text=start_time_text,
 
-        # BİTMƏ VAXTI
         end_time_text=end_time_text,
 
         question_results=question_results
@@ -955,7 +781,7 @@ def admin():
 
         results=values,
 
-        questions=QUESTIONS
+        questions=load_questions()
     )
 
 
@@ -979,7 +805,6 @@ def import_questions():
     new_questions = []
 
     try:
-        # EXCEL FAYLI (.xlsx / .xls)
         if filename.endswith(".xlsx") or filename.endswith(".xls"):
             wb = load_workbook(file, data_only=True)
             sheet = wb.active
@@ -988,14 +813,12 @@ def import_questions():
                 if not row or row[0] is None:
                     continue
 
-                # Xanadakı mətni heç bir kəsim etmədən tam şəkildə string-ə çeviririk
                 q_text = str(row[0]).strip()
                 opt_a = str(row[1]).strip() if len(row) > 1 and row[1] is not None else ""
                 opt_b = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ""
                 opt_c = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ""
                 opt_d = str(row[4]).strip() if len(row) > 4 and row[4] is not None else ""
                 
-                # Düzgün cavab hərfini təmizləyirik (A, B, C və ya D)
                 ans = str(row[5]).strip().upper() if len(row) > 5 and row[5] is not None else "A"
                 if len(ans) > 1:
                     ans = ans[0]
@@ -1009,13 +832,11 @@ def import_questions():
                     "answer": ans
                 })
 
-        # JSON FAYLI (Köhnə dəstək üçün)
         elif filename.endswith(".json"):
             new_questions = json.load(file)
 
         if new_questions:
-            global QUESTIONS
-            QUESTIONS = new_questions
+            save_questions(new_questions)
 
     except Exception as e:
         print("IMPORT ERROR:", str(e))
@@ -1053,10 +874,6 @@ def admin_export():
     worksheet = workbook.active
 
     worksheet.title = "Test nəticələri"
-
-    # =====================================================
-    # BAŞLIQLAR
-    # =====================================================
 
     headers = [
 
@@ -1102,10 +919,6 @@ def admin_export():
         cell.alignment = Alignment(
             horizontal="center"
         )
-
-    # =====================================================
-    # NƏTİCƏLƏR
-    # =====================================================
 
     for row_number, result in enumerate(
         results,
@@ -1211,10 +1024,6 @@ def admin_export():
             )
         )
 
-    # =====================================================
-    # SÜTUN ENLİKLƏRİ
-    # =====================================================
-
     widths = {
 
         "A": 8,
@@ -1246,10 +1055,6 @@ def admin_export():
         worksheet.column_dimensions[
             column
         ].width = width
-
-    # =====================================================
-    # EXCEL
-    # =====================================================
 
     output = BytesIO()
 
