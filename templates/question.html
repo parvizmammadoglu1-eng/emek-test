@@ -55,6 +55,29 @@
     font-weight: 700;
 }
 
+/* TAYMER */
+
+.timer-box {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,255,255,0.15);
+    padding: 9px 15px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.timer-icon {
+    font-size: 16px;
+}
+
+#exam-timer {
+    min-width: 55px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
 .progress-area {
     margin-top: 18px;
 }
@@ -223,6 +246,30 @@
         font-size: 21px;
     }
 
+    .test-subtitle {
+        font-size: 14px;
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .user-name {
+        grid-column: 1 / -1;
+    }
+
+    .question-count,
+    .timer-box {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .timer-box {
+        width: auto;
+    }
+
     .question-card {
         padding: 22px 17px;
         border-radius: 15px;
@@ -244,10 +291,15 @@
 
     .next-button {
         width: 100%;
+        box-sizing: border-box;
     }
 
     .hint {
         text-align: center;
+    }
+
+    .finish-anytime button {
+        box-sizing: border-box;
     }
 }
 
@@ -266,6 +318,7 @@
             Pərviz Hüseynov tərəfindən yaradılmışdır
         </p>
 
+
         <div class="info-row">
 
             <div class="user-name">
@@ -276,7 +329,14 @@
                 Sual {{ n + 1 }} / {{ total }}
             </div>
 
+            <div class="timer-box">
+                <span class="timer-icon">⏱️</span>
+                <span>Müddət:</span>
+                <span id="exam-timer">00:00</span>
+            </div>
+
         </div>
+
 
         <div class="progress-area">
 
@@ -389,5 +449,104 @@
     </div>
 
 </div>
+
+
+<script>
+
+/*
+   İMTAHAN TAYMERİ
+
+   Taymer sessionStorage-da saxlanılır.
+   Buna görə suallar arasında keçid edərkən
+   vaxt sıfırlanmır.
+*/
+
+(function () {
+
+    const timerElement = document.getElementById("exam-timer");
+
+    if (!timerElement) {
+        return;
+    }
+
+    const STORAGE_KEY = "emek_test_start_time";
+
+    let startTime = sessionStorage.getItem(STORAGE_KEY);
+
+    /*
+       Əgər bu sessiyada ilk dəfə test açılırsa,
+       başlanğıc vaxtını yadda saxla.
+    */
+
+    if (!startTime) {
+
+        startTime = Date.now();
+
+        sessionStorage.setItem(
+            STORAGE_KEY,
+            startTime
+        );
+    }
+
+    startTime = parseInt(startTime, 10);
+
+
+    function updateTimer() {
+
+        const now = Date.now();
+
+        let elapsed = Math.floor(
+            (now - startTime) / 1000
+        );
+
+        if (elapsed < 0) {
+            elapsed = 0;
+        }
+
+        const hours = Math.floor(
+            elapsed / 3600
+        );
+
+        const minutes = Math.floor(
+            (elapsed % 3600) / 60
+        );
+
+        const seconds = elapsed % 60;
+
+
+        let display = "";
+
+        if (hours > 0) {
+
+            display =
+                String(hours).padStart(2, "0") +
+                ":" +
+                String(minutes).padStart(2, "0") +
+                ":" +
+                String(seconds).padStart(2, "0");
+
+        } else {
+
+            display =
+                String(minutes).padStart(2, "0") +
+                ":" +
+                String(seconds).padStart(2, "0");
+        }
+
+
+        timerElement.textContent = display;
+    }
+
+
+    updateTimer();
+
+    setInterval(
+        updateTimer,
+        1000
+    );
+
+})();
+
+</script>
 
 {% endblock %}
