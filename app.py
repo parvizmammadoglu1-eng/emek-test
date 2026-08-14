@@ -981,19 +981,21 @@ def import_questions():
     try:
         # EXCEL FAYLI (.xlsx / .xls)
         if filename.endswith(".xlsx") or filename.endswith(".xls"):
-            wb = load_workbook(file)
+            # data_only=True formul və xana dəyərlərinin dəqiq görünən mətnini oxuyur
+            wb = load_workbook(file, data_only=True)
             sheet = wb.active
 
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                if not row or not row[0]:
+                if not row or row[0] is None:
                     continue
 
-                q_text = str(row[0]).strip() if row[0] else ""
-                opt_a = str(row[1]).strip() if len(row) > 1 and row[1] else ""
-                opt_b = str(row[2]).strip() if len(row) > 2 and row[2] else ""
-                opt_c = str(row[3]).strip() if len(row) > 3 and row[3] else ""
-                opt_d = str(row[4]).strip() if len(row) > 4 and row[4] else ""
-                ans = str(row[5]).strip().upper() if len(row) > 5 and row[5] else "A"
+                # str() + strip() tətbiq olunur ki, rəqəmlər və mətnlər itməsin
+                q_text = str(row[0]).strip() if row[0] is not None else ""
+                opt_a = str(row[1]).strip() if len(row) > 1 and row[1] is not None else ""
+                opt_b = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ""
+                opt_c = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ""
+                opt_d = str(row[4]).strip() if len(row) > 4 and row[4] is not None else ""
+                ans = str(row[5]).strip().upper() if len(row) > 5 and row[5] is not None else "A"
 
                 new_questions.append({
                     "question": q_text,
