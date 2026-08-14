@@ -116,7 +116,7 @@ def get_sheet():
         sheet = spreadsheet.add_worksheet(
             title="Nəticələr",
             rows=1000,
-            cols=9
+            cols=11
         )
 
         sheet.append_row(
@@ -129,8 +129,59 @@ def get_sheet():
                 "Nəticə",
                 "Tarix",
                 "Status",
-                "Müddət"
+                "Müddət",
+                "Başlama vaxtı",
+                "Bitmə vaxtı"
             ]
+        )
+
+        return sheet
+
+    # =====================================================
+    # MÖVCUD SHEET-DƏ SÜTUNLARI YOXLA
+    # =====================================================
+
+    headers = sheet.row_values(1)
+
+    required_headers = [
+        "№",
+        "Ad və soyad",
+        "Düzgün cavab",
+        "Ümumi sual",
+        "Səhv cavab",
+        "Nəticə",
+        "Tarix",
+        "Status",
+        "Müddət",
+        "Başlama vaxtı",
+        "Bitmə vaxtı"
+    ]
+
+    changed = False
+
+    for header in required_headers:
+
+        if header not in headers:
+
+            headers.append(header)
+            changed = True
+
+    if changed:
+
+        sheet.resize(
+            rows=max(
+                sheet.row_count,
+                1000
+            ),
+            cols=max(
+                sheet.col_count,
+                len(headers)
+            )
+        )
+
+        sheet.update(
+            "1:1",
+            [headers]
         )
 
     return sheet
@@ -558,33 +609,67 @@ def finish():
     )
 
     # =====================================================
-    # MÜDDƏT
+    # İMTAHAN VAXTI
     # =====================================================
 
     exam_start_timestamp = session.get(
         "exam_start_time"
     )
 
-    now_timestamp = datetime.now(
+    now_datetime = datetime.now(
         ZoneInfo("Asia/Baku")
-    ).timestamp()
+    )
+
+    now_timestamp = now_datetime.timestamp()
+
+    # =====================================================
+    # BAŞLAMA VAXTI
+    # =====================================================
 
     if exam_start_timestamp is not None:
 
+        exam_start_timestamp = float(
+            exam_start_timestamp
+        )
+
+        exam_start_datetime = datetime.fromtimestamp(
+            exam_start_timestamp,
+            ZoneInfo("Asia/Baku")
+        )
+
+        start_time_text = (
+            exam_start_datetime.strftime(
+                "%d.%m.%Y %H:%M:%S"
+            )
+        )
+
         elapsed_seconds = int(
             now_timestamp -
-            float(exam_start_timestamp)
+            exam_start_timestamp
         )
 
         if elapsed_seconds < 0:
+
             elapsed_seconds = 0
 
     else:
 
+        start_time_text = "-"
+
         elapsed_seconds = 0
 
     # =====================================================
-    # MÜDDƏTİ DƏQİQƏ + SANİYƏ KİMİ HESABLA
+    # BİTMƏ VAXTI
+    # =====================================================
+
+    end_time_text = (
+        now_datetime.strftime(
+            "%d.%m.%Y %H:%M:%S"
+        )
+    )
+
+    # =====================================================
+    # MÜDDƏT
     # =====================================================
 
     duration_minutes = (
@@ -710,9 +795,7 @@ def finish():
     # BAKI VAXTI
     # =====================================================
 
-    created_at = datetime.now(
-        ZoneInfo("Asia/Baku")
-    ).strftime(
+    created_at = now_datetime.strftime(
         "%d.%m.%Y %H:%M:%S"
     )
 
@@ -745,18 +828,32 @@ def finish():
             all_values
         )
 
+        # =================================================
+        # SÜTUNLAR
+        # =================================================
+
+        headers = sheet.row_values(1)
+
+        row_data = [
+            number,
+            name,
+            correct,
+            total,
+            wrong,
+            f"{percent}%",
+            created_at,
+            status,
+            duration_text,
+            start_time_text,
+            end_time_text
+        ]
+
+        # =================================================
+        # SƏTİRİ ƏLAVƏ ET
+        # =================================================
+
         sheet.append_row(
-            [
-                number,
-                name,
-                correct,
-                total,
-                wrong,
-                f"{percent}%",
-                created_at,
-                status,
-                duration_text
-            ],
+            row_data,
             value_input_option="USER_ENTERED"
         )
 
@@ -795,11 +892,18 @@ def finish():
 
         status=status,
 
+        # MÜDDƏT
         duration_text=duration_text,
 
         duration_minutes=duration_minutes,
 
         duration_seconds=duration_seconds,
+
+        # BAŞLAMA VAXTI
+        start_time_text=start_time_text,
+
+        # BİTMƏ VAXTI
+        end_time_text=end_time_text,
 
         question_results=question_results
 
@@ -947,7 +1051,11 @@ def admin_export():
 
         "Status",
 
-        "Müddət"
+        "Müddət",
+
+        "Başlama vaxtı",
+
+        "Bitmə vaxtı"
 
     ]
 
@@ -1060,6 +1168,24 @@ def admin_export():
             )
         )
 
+        worksheet.cell(
+            row=row_number,
+            column=10,
+            value=result.get(
+                "Başlama vaxtı",
+                ""
+            )
+        )
+
+        worksheet.cell(
+            row=row_number,
+            column=11,
+            value=result.get(
+                "Bitmə vaxtı",
+                ""
+            )
+        )
+
     # =====================================================
     # SÜTUN ENLİKLƏRİ
     # =====================================================
@@ -1082,7 +1208,11 @@ def admin_export():
 
         "H": 30,
 
-        "I": 18
+        "I": 18,
+
+        "J": 25,
+
+        "K": 25
 
     }
 
