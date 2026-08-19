@@ -100,6 +100,27 @@ def get_google_client():
 
 
 # =========================================================
+# BÖLMƏLƏR
+# =========================================================
+
+SECTIONS = [
+    "I Bölmə",
+    "II Bölmə",
+    "III Bölmə",
+    "IV Bölmə",
+    "V Bölmə",
+    "VI Bölmə",
+    "VII Bölmə",
+    "VIII Bölmə",
+    "IX Bölmə",
+    "X Bölmə",
+    "XI Bölmə",
+    "XII Bölmə",
+    "XIII Bölmə"
+]
+
+
+# =========================================================
 # NƏTİCƏLƏR SHEET
 # =========================================================
 
@@ -145,7 +166,7 @@ def get_sheet():
     if not headers:
 
         sheet.update(
-            "1:1",
+            "A1:L1",
             [required_headers]
         )
 
@@ -182,27 +203,6 @@ def get_sheet():
             )
 
     return sheet
-
-
-# =========================================================
-# BÖLMƏLƏR
-# =========================================================
-
-SECTIONS = [
-    "I Bölmə",
-    "II Bölmə",
-    "III Bölmə",
-    "IV Bölmə",
-    "V Bölmə",
-    "VI Bölmə",
-    "VII Bölmə",
-    "VIII Bölmə",
-    "IX Bölmə",
-    "X Bölmə",
-    "XI Bölmə",
-    "XII Bölmə",
-    "XIII Bölmə"
-]
 
 
 # =========================================================
@@ -354,7 +354,10 @@ def load_questions(section=None):
     return [
         q
         for q in questions
-        if q.get("section", "").strip() == section
+        if q.get(
+            "section",
+            ""
+        ).strip() == section
     ]
 
 
@@ -412,9 +415,6 @@ def get_codes_sheet():
             )
 
         else:
-
-            # Köhnə Kodlar sheet-ində əvvəlki struktur varsa,
-            # yeni Bölmə sütununu avtomatik əlavə etməyə çalışırıq.
 
             changed = False
 
@@ -495,13 +495,6 @@ def use_access_code(
                 "Hazırda aktiv giriş kodu yoxdur."
             )
 
-        headers = values[0]
-
-        # -------------------------------------------------
-        # YENİ FORMAT
-        # Kod | Bölmə | Status | Ad və soyad | İstifadə vaxtı
-        # -------------------------------------------------
-
         for row_number, row in enumerate(
             values[1:],
             start=2
@@ -510,32 +503,26 @@ def use_access_code(
             if not row:
                 continue
 
-            sheet_code = (
-                str(
-                    row[0]
-                    if len(row) > 0
-                    else ""
-                ).strip()
-            )
+            sheet_code = str(
+                row[0]
+                if len(row) > 0
+                else ""
+            ).strip()
 
             if sheet_code.upper() != code.upper():
                 continue
 
-            sheet_section = (
-                str(
-                    row[1]
-                    if len(row) > 1
-                    else ""
-                ).strip()
-            )
+            sheet_section = str(
+                row[1]
+                if len(row) > 1
+                else ""
+            ).strip()
 
-            status = (
-                str(
-                    row[2]
-                    if len(row) > 2
-                    else ""
-                ).strip().lower()
-            )
+            status = str(
+                row[2]
+                if len(row) > 2
+                else ""
+            ).strip().lower()
 
             # ---------------------------------------------
             # KOD ARTİQ İSTİFADƏ OLUNUB
@@ -548,7 +535,7 @@ def use_access_code(
                 )
 
             # ---------------------------------------------
-            # KODUN BÖLMƏSİNİ YOXLAYIRIQ
+            # BÖLMƏ YOXLAMASI
             # ---------------------------------------------
 
             if sheet_section != selected_section:
@@ -568,21 +555,18 @@ def use_access_code(
                 "%d.%m.%Y %H:%M:%S"
             )
 
-            # Status
             sheet.update_cell(
                 row_number,
                 3,
                 "İstifadə olunub"
             )
 
-            # Ad və soyad
             sheet.update_cell(
                 row_number,
                 4,
                 name
             )
 
-            # İstifadə vaxtı
             sheet.update_cell(
                 row_number,
                 5,
@@ -663,10 +647,6 @@ def home():
             ""
         ).strip()
 
-        # ---------------------------------------------
-        # AD
-        # ---------------------------------------------
-
         if not name:
 
             return render_template(
@@ -677,10 +657,6 @@ def home():
                 selected_section=selected_section,
                 sections=SECTIONS
             )
-
-        # ---------------------------------------------
-        # BÖLMƏ
-        # ---------------------------------------------
 
         if selected_section not in SECTIONS:
 
@@ -693,10 +669,6 @@ def home():
                 sections=SECTIONS
             )
 
-        # ---------------------------------------------
-        # KOD
-        # ---------------------------------------------
-
         if not access_code:
 
             return render_template(
@@ -707,10 +679,6 @@ def home():
                 selected_section=selected_section,
                 sections=SECTIONS
             )
-
-        # ---------------------------------------------
-        # SEÇİLMİŞ BÖLMƏDƏ SUAL VARMI?
-        # ---------------------------------------------
 
         section_questions = load_questions(
             selected_section
@@ -730,10 +698,6 @@ def home():
                 sections=SECTIONS
             )
 
-        # ---------------------------------------------
-        # KODU YOXLAYIRIQ
-        # ---------------------------------------------
-
         code_valid, error_message = use_access_code(
             access_code,
             selected_section,
@@ -750,10 +714,6 @@ def home():
                 selected_section=selected_section,
                 sections=SECTIONS
             )
-
-        # ---------------------------------------------
-        # KOD DÜZGÜNDÜR
-        # ---------------------------------------------
 
         session.clear()
 
@@ -802,19 +762,16 @@ def home():
 def question(n):
 
     if "name" not in session:
-
         return redirect(
             url_for("home")
         )
 
     if "access_code" not in session:
-
         return redirect(
             url_for("home")
         )
 
     if "section" not in session:
-
         return redirect(
             url_for("home")
         )
@@ -896,7 +853,6 @@ def question(n):
 
         session.modified = True
 
-        # Son sualdırsa bitir
         if n + 1 >= total:
 
             return redirect(
@@ -944,24 +900,20 @@ def question(n):
 def finish():
 
     if "name" not in session:
-
         return redirect(
             url_for("home")
         )
 
     if "access_code" not in session:
-
         return redirect(
             url_for("home")
         )
 
     if "section" not in session:
-
         return redirect(
             url_for("home")
         )
 
-    # Nəticə artıq yaradılıbsa yenidən yazma
     if session.get("exam_finished"):
 
         return render_template(
@@ -975,12 +927,30 @@ def finish():
             wrong=session.get("finish_wrong", 0),
             unanswered=session.get("finish_unanswered", 0),
             status=session.get("finish_status", ""),
-            duration_text=session.get("finish_duration_text", ""),
-            duration_minutes=session.get("finish_duration_minutes", 0),
-            duration_seconds=session.get("finish_duration_seconds", 0),
-            start_time_text=session.get("finish_start_time_text", "-"),
-            end_time_text=session.get("finish_end_time_text", "-"),
-            question_results=session.get("finish_question_results", [])
+            duration_text=session.get(
+                "finish_duration_text",
+                ""
+            ),
+            duration_minutes=session.get(
+                "finish_duration_minutes",
+                0
+            ),
+            duration_seconds=session.get(
+                "finish_duration_seconds",
+                0
+            ),
+            start_time_text=session.get(
+                "finish_start_time_text",
+                "-"
+            ),
+            end_time_text=session.get(
+                "finish_end_time_text",
+                "-"
+            ),
+            question_results=session.get(
+                "finish_question_results",
+                []
+            )
         )
 
     answers = session.get(
@@ -1045,7 +1015,6 @@ def finish():
         )
 
         if elapsed_seconds < 0:
-
             elapsed_seconds = 0
 
     else:
@@ -1241,8 +1210,7 @@ def finish():
         )
 
     # =====================================================
-    # NƏTİCƏNİ SESSION-DA SAXLA
-    # BACK / REFRESH ZAMANI TƏKRAR YAZILMASIN
+    # SESSION
     # =====================================================
 
     session["exam_finished"] = True
@@ -1364,6 +1332,10 @@ def admin_logout():
 @admin_required
 def admin():
 
+    # -----------------------------------------------------
+    # NƏTİCƏLƏR
+    # -----------------------------------------------------
+
     try:
 
         sheet = get_sheet()
@@ -1379,16 +1351,144 @@ def admin():
 
         values = []
 
+    # -----------------------------------------------------
+    # SUALLAR
+    # -----------------------------------------------------
+
+    questions = load_all_questions()
+
+    # -----------------------------------------------------
+    # KODLAR
+    # -----------------------------------------------------
+
+    try:
+
+        codes_sheet = get_codes_sheet()
+
+        codes = codes_sheet.get_all_records()
+
+    except Exception as e:
+
+        print(
+            "ADMIN CODES ERROR:",
+            str(e)
+        )
+
+        codes = []
+
+    # -----------------------------------------------------
+    # PANEL
+    # -----------------------------------------------------
+
     return render_template(
 
         "admin.html",
 
         results=values,
 
-        questions=load_all_questions(),
+        questions=questions,
 
-        sections=SECTIONS
+        sections=SECTIONS,
 
+        codes=codes
+
+    )
+
+
+# =========================================================
+# ADMIN - YENİ GİRİŞ KODU ƏLAVƏ ET
+# =========================================================
+
+@app.route(
+    "/admin/add-code",
+    methods=["POST"]
+)
+@admin_required
+def admin_add_code():
+
+    code = request.form.get(
+        "code",
+        ""
+    ).strip()
+
+    section = request.form.get(
+        "section",
+        ""
+    ).strip()
+
+    if not code:
+
+        return redirect(
+            url_for("admin")
+        )
+
+    if section not in SECTIONS:
+
+        return redirect(
+            url_for("admin")
+        )
+
+    try:
+
+        sheet = get_codes_sheet()
+
+        values = sheet.get_all_values()
+
+        # -------------------------------------------------
+        # EYNİ KODU YENİDƏN ƏLAVƏ ETMƏ
+        # -------------------------------------------------
+
+        for row in values[1:]:
+
+            if not row:
+                continue
+
+            existing_code = str(
+                row[0]
+                if len(row) > 0
+                else ""
+            ).strip()
+
+            if existing_code.upper() == code.upper():
+
+                print(
+                    "ADD CODE: Bu kod artıq mövcuddur:",
+                    code
+                )
+
+                return redirect(
+                    url_for("admin")
+                )
+
+        # -------------------------------------------------
+        # YENİ KOD
+        # -------------------------------------------------
+
+        sheet.append_row(
+            [
+                code,
+                section,
+                "Aktiv",
+                "",
+                ""
+            ],
+            value_input_option="USER_ENTERED"
+        )
+
+        print(
+            f"YENİ KOD ƏLAVƏ EDİLDİ: "
+            f"{code} | {section}"
+        )
+
+    except Exception as e:
+
+        print(
+            "ADD CODE ERROR:",
+            str(e)
+        )
+
+    return redirect(
+        url_for("admin")
     )
 
 
@@ -1445,11 +1545,6 @@ def import_questions():
                 if not row:
                     continue
 
-                # -----------------------------------------
-                # 7 SÜTUN:
-                # Bölmə | Sual | A | B | C | D | Cavab
-                # -----------------------------------------
-
                 section_value = (
                     str(row[0]).strip()
                     if len(row) > 0
@@ -1457,16 +1552,17 @@ def import_questions():
                     else ""
                 )
 
-                # 1, 2, 3 formatını I, II, III-ə çevir
                 section = normalize_section(
                     section_value
                 )
 
                 if section not in SECTIONS:
+
                     print(
                         "IMPORT: Yanlış bölmə:",
                         section_value
                     )
+
                     continue
 
                 question_text = (
@@ -1685,15 +1781,16 @@ def import_questions():
             )
 
         # =================================================
-        # GOOGLE SHEETS SUALLAR
+        # SUALLAR SHEET
         # =================================================
 
         questions_sheet = get_questions_sheet()
 
-        # ƏVVƏLKİ SUALLARI TAM SİL
+        # Yalnız SUALLAR sheet-i silinir.
+        # KODLAR sheet-i toxunulmaz qalır.
+
         questions_sheet.clear()
 
-        # BAŞLIQ
         questions_sheet.update(
             "A1:G1",
             [QUESTIONS_HEADERS]
@@ -1757,7 +1854,6 @@ def normalize_section(value):
     if not value:
         return ""
 
-    # Rəqəmlə yazılıbsa
     numeric_sections = {
 
         "1": "I Bölmə",
@@ -1780,7 +1876,6 @@ def normalize_section(value):
 
         return numeric_sections[value]
 
-    # "1 Bölmə", "2-ci bölmə" və s.
     cleaned = (
         value
         .lower()
@@ -1795,7 +1890,6 @@ def normalize_section(value):
 
         return numeric_sections[cleaned]
 
-    # Hazır "I Bölmə" formasındadırsa
     for section in SECTIONS:
 
         if value.lower() == section.lower():
@@ -1839,27 +1933,16 @@ def admin_export():
     headers = [
 
         "№",
-
         "Ad və soyad",
-
         "Bölmə",
-
         "Düzgün cavab",
-
         "Ümumi sual",
-
         "Səhv cavab",
-
         "Nəticə",
-
         "Tarix",
-
         "Status",
-
         "Müddət",
-
         "Başlama vaxtı",
-
         "Bitmə vaxtı"
 
     ]
