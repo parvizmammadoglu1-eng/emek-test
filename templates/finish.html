@@ -61,11 +61,6 @@
         margin-bottom: 30px;
     }
 
-
-    /* =====================================================
-       FAİZ DAİRƏSİ
-       ===================================================== */
-
     .score-circle {
         width: 180px;
         height: 180px;
@@ -97,11 +92,6 @@
         width: 100%;
     }
 
-
-    /* =====================================================
-       STATİSTİKA
-       ===================================================== */
-
     .stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -129,11 +119,6 @@
         color: #6b7280;
     }
 
-
-    /* =====================================================
-       MESAJ
-       ===================================================== */
-
     .result-message {
         padding: 16px 20px;
         border-radius: 14px;
@@ -146,11 +131,6 @@
     .result-message strong {
         color: #173b73;
     }
-
-
-    /* =====================================================
-       İMTAHAN VAXTI
-       ===================================================== */
 
     .exam-time-box {
         margin: 25px 0 30px;
@@ -195,11 +175,6 @@
         font-size: 14px;
         word-break: break-word;
     }
-
-
-    /* =====================================================
-       SUAL NƏTİCƏLƏRİ
-       ===================================================== */
 
     .answers-title {
         margin-top: 40px;
@@ -306,11 +281,6 @@
         border: 1px solid #fecaca;
     }
 
-
-    /* =====================================================
-       SON MƏLUMAT
-       ===================================================== */
-
     .finish-info {
         color: #9ca3af;
         font-size: 13px;
@@ -318,34 +288,55 @@
         margin-bottom: 25px;
     }
 
-
     /* =====================================================
-       YENİ TEST
+       DÜYMƏLƏR
        ===================================================== */
 
-    .home-button {
-        display: inline-block;
+    .finish-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .home-button,
+    .pdf-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         text-decoration: none;
-        background: linear-gradient(135deg, #173b73, #2563eb);
         color: white;
-        padding: 15px 30px;
+        padding: 15px 24px;
         border-radius: 12px;
         font-size: 15px;
         font-weight: 700;
-        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
         transition: all 0.2s ease;
         box-sizing: border-box;
+        min-height: 50px;
+    }
+
+    .home-button {
+        background: linear-gradient(135deg, #173b73, #2563eb);
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+    }
+
+    .pdf-button {
+        background: linear-gradient(135deg, #15803d, #16a34a);
+        box-shadow: 0 6px 18px rgba(22, 163, 74, 0.22);
+    }
+
+    .home-button:hover,
+    .pdf-button:hover {
+        transform: translateY(-2px);
     }
 
     .home-button:hover {
-        transform: translateY(-2px);
         box-shadow: 0 10px 25px rgba(37, 99, 235, 0.32);
     }
 
-
-    /* =====================================================
-       MOBİL
-       ===================================================== */
+    .pdf-button:hover {
+        box-shadow: 0 10px 25px rgba(22, 163, 74, 0.30);
+    }
 
     @media (max-width: 600px) {
 
@@ -375,34 +366,16 @@
             box-sizing: border-box;
         }
 
-
-        /* FAİZ TELEFONDA TAM MƏRKƏZDƏ */
-
         .score-circle {
             width: 155px;
             height: 155px;
             margin-left: auto;
             margin-right: auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .score-percent {
             font-size: 40px;
-            text-align: center;
-            width: 100%;
-            display: block;
         }
-
-        .score-label {
-            text-align: center;
-            width: 100%;
-            display: block;
-        }
-
-
-        /* STATİSTİKA */
 
         .stats {
             gap: 8px;
@@ -422,33 +395,25 @@
             font-size: 11px;
         }
 
-
-        /* İMTAHAN VAXTI */
-
         .exam-time-grid {
             grid-template-columns: 1fr;
             gap: 8px;
         }
-
-        .exam-time-grid div {
-            width: 100%;
-        }
-
-
-        /* SUAL BAŞLIĞI */
 
         .question-result-header {
             align-items: flex-start;
             flex-direction: column;
         }
 
-
-        /* DÜYMƏ */
-
-        .home-button {
+        .finish-buttons {
+            flex-direction: column;
             width: 100%;
         }
 
+        .home-button,
+        .pdf-button {
+            width: 100%;
+        }
     }
 
 </style>
@@ -458,13 +423,11 @@
 
     <div class="result-card">
 
-
         <!-- UĞUR İŞARƏSİ -->
 
         <div class="success-icon">
             ✓
         </div>
-
 
         <!-- BAŞLIQ -->
 
@@ -476,13 +439,11 @@
             Əmək Məcəlləsi testinin nəticəsi
         </p>
 
-
         <!-- AD -->
 
         <div class="name-box">
             👤 {{ name }}
         </div>
-
 
         <!-- FAİZ -->
 
@@ -497,7 +458,6 @@
             </div>
 
         </div>
-
 
         <!-- STATİSTİKA -->
 
@@ -515,7 +475,6 @@
 
             </div>
 
-
             <div class="stat">
 
                 <div class="stat-number">
@@ -527,7 +486,6 @@
                 </div>
 
             </div>
-
 
             <div class="stat">
 
@@ -542,7 +500,6 @@
             </div>
 
         </div>
-
 
         <!-- MESAJ -->
 
@@ -572,10 +529,7 @@
 
         </div>
 
-
-        <!-- =================================================
-             İMTAHAN VAXTI
-             ================================================= -->
+        <!-- İMTAHAN VAXTI -->
 
         <div class="exam-time-box">
 
@@ -604,15 +558,11 @@
 
         </div>
 
-
-        <!-- =================================================
-             SUALLAR ÜZRƏ ƏTRAFLI NƏTİCƏ
-             ================================================= -->
+        <!-- SUALLAR ÜZRƏ NƏTİCƏ -->
 
         <div class="answers-title">
             📋 Suallar üzrə nəticələr
         </div>
-
 
         {% for item in question_results %}
 
@@ -711,26 +661,34 @@
 
         {% endfor %}
 
-
         <!-- SON MƏLUMAT -->
 
         <div class="finish-info">
             Nəticəniz sistemdə yadda saxlanıldı.
         </div>
 
+        <!-- DÜYMƏLƏR -->
 
-        <!-- YENİ TEST -->
+        <div class="finish-buttons">
 
-        <a
-            href="{{ url_for('home') }}"
-            class="home-button"
-        >
-            YENİ TESTƏ BAŞLA →
-        </a>
+            <a
+                href="{{ url_for('download_certificate') }}"
+                class="pdf-button"
+            >
+                📄 NƏTİCƏNİ PDF YÜKLƏ
+            </a>
+
+            <a
+                href="{{ url_for('home') }}"
+                class="home-button"
+            >
+                YENİ TESTƏ BAŞLA →
+            </a>
+
+        </div>
 
     </div>
 
 </div>
 
 {% endblock %}
-```
