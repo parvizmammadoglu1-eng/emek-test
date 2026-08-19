@@ -4,6 +4,13 @@
 
 <style>
 
+* {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 .test-page {
     max-width: 900px;
     margin: 0 auto;
@@ -452,6 +459,86 @@
     </div>
 
 </div>
+
+
+<!-- =====================================================
+     KOPYALAMANI BLOKLA
+     ===================================================== -->
+
+<script>
+
+(function () {
+
+    // Sağ klik
+    document.addEventListener(
+        "contextmenu",
+        function (event) {
+            event.preventDefault();
+        }
+    );
+
+    // Mətn seçməni blokla
+    document.addEventListener(
+        "selectstart",
+        function (event) {
+            event.preventDefault();
+        }
+    );
+
+    // Kopyalama
+    document.addEventListener(
+        "copy",
+        function (event) {
+            event.preventDefault();
+        }
+    );
+
+    // Kəsmə
+    document.addEventListener(
+        "cut",
+        function (event) {
+            event.preventDefault();
+        }
+    );
+
+    // Klaviatura qısayolları
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            // Ctrl / Cmd
+            if (event.ctrlKey || event.metaKey) {
+
+                const key =
+                    event.key.toLowerCase();
+
+                if (
+                    key === "c" ||
+                    key === "x" ||
+                    key === "a" ||
+                    key === "u" ||
+                    key === "s" ||
+                    key === "p"
+                ) {
+
+                    event.preventDefault();
+                    return false;
+                }
+            }
+
+            // F12
+            if (event.key === "F12") {
+
+                event.preventDefault();
+                return false;
+            }
+
+        }
+    );
+
+})();
+
+</script>
 
 
 <!-- =====================================================
