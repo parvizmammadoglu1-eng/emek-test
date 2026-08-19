@@ -121,9 +121,7 @@ SECTIONS = [
     "V Bölmə (İstirahət vaxtı və işçilərin məzuniyyət hüquqları)",
     "VI Bölmə (Əmək normaları və işəmuzd qiymətləri)",
     "VII Bölmə (Əmək və icra intizamının təmin edilməsi qaydaları)",
-    "VIII Bölmə (İşəgötürən və işçinin qarşılıqlı maddi məsuliyyətini müəyyən edən hallar)
-
- ",
+    "VIII Bölmə (İşəgötürən və işçinin qarşılıqlı maddi məsuliyyətini müəyyən edən hallar)",
     "IX Bölmə (Əməyin mühafizəsi normaları, qaydaları və prinsipləri)",
     "X Bölmə (Qadınların əmək hüququ və onun həyata keçirilməsində təminatları)",
     "XI Bölmə (Kollektiv əmək mübahisələri)",
