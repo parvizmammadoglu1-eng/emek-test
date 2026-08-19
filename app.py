@@ -21,6 +21,15 @@ from openpyxl.styles import Font, Alignment
 import gspread
 from google.oauth2.service_account import Credentials
 
+# =========================================================
+# PDF
+# =========================================================
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
 
 # =========================================================
 # FLASK
@@ -172,6 +181,56 @@ def normalize_section(value):
             return section
 
     return value
+
+
+# =========================================================
+# PDF FONT
+# =========================================================
+
+def register_pdf_font():
+
+    possible_fonts = [
+
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+
+        "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+
+        "C:/Windows/Fonts/DejaVuSans.ttf",
+
+        "C:/Windows/Fonts/arial.ttf",
+
+        "/Library/Fonts/Arial.ttf"
+
+    ]
+
+    for font_path in possible_fonts:
+
+        if os.path.exists(font_path):
+
+            try:
+
+                pdfmetrics.registerFont(
+                    TTFont(
+                        "CertificateFont",
+                        font_path
+                    )
+                )
+
+                return "CertificateFont"
+
+            except Exception as e:
+
+                print(
+                    "PDF FONT ERROR:",
+                    str(e)
+                )
+
+    print(
+        "PDF FONT: Azərbaycan hərflərini dəstəkləyən "
+        "font tapılmadı. Helvetica istifadə olunacaq."
+    )
+
+    return "Helvetica"
 
 
 # =========================================================
@@ -1234,6 +1293,307 @@ def finish():
 
 
 # =========================================================
+# PDF SERTİFİKAT
+# =========================================================
+
+@app.route(
+    "/download-certificate"
+)
+def download_certificate():
+
+    if "name" not in session:
+        return redirect(url_for("home"))
+
+    if "section" not in session:
+        return redirect(url_for("home"))
+
+    if not session.get("exam_finished"):
+        return redirect(url_for("finish"))
+
+    name = session.get(
+        "name",
+        ""
+    )
+
+    section = session.get(
+        "section",
+        ""
+    )
+
+    correct = session.get(
+        "finish_correct",
+        0
+    )
+
+    total = session.get(
+        "finish_total",
+        0
+    )
+
+    percent = session.get(
+        "finish_percent",
+        0
+    )
+
+    status = session.get(
+        "finish_status",
+        ""
+    )
+
+    duration_text = session.get(
+        "finish_duration_text",
+        ""
+    )
+
+    end_time_text = session.get(
+        "finish_end_time_text",
+        "-"
+    )
+
+    # -----------------------------------------------------
+    # PDF YARAT
+    # -----------------------------------------------------
+
+    output = BytesIO()
+
+    page_width, page_height = landscape(A4)
+
+    pdf = canvas.Canvas(
+        output,
+        pagesize=landscape(A4)
+    )
+
+    font_name = register_pdf_font()
+
+    # -----------------------------------------------------
+    # SƏHİFƏ
+    # -----------------------------------------------------
+
+    pdf.setTitle(
+        "Əmək Məcəlləsi - Test Sertifikatı"
+    )
+
+    # -----------------------------------------------------
+    # KƏNAR ÇƏRÇİVƏ
+    # -----------------------------------------------------
+
+    pdf.setLineWidth(3)
+
+    pdf.rect(
+        30,
+        30,
+        page_width - 60,
+        page_height - 60
+    )
+
+    pdf.setLineWidth(1)
+
+    pdf.rect(
+        42,
+        42,
+        page_width - 84,
+        page_height - 84
+    )
+
+    # -----------------------------------------------------
+    # BAŞLIQ
+    # -----------------------------------------------------
+
+    pdf.setFont(
+        font_name,
+        26
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 105,
+        "SERTİFİKAT"
+    )
+
+    pdf.setFont(
+        font_name,
+        14
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 135,
+        "ƏMƏK MƏCƏLLƏSİ ÜZRƏ TEST İŞTİRAKÇISI"
+    )
+
+    # -----------------------------------------------------
+    # ƏSAS MƏTN
+    # -----------------------------------------------------
+
+    pdf.setFont(
+        font_name,
+        13
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 190,
+        "Bu sertifikat təsdiq edir ki,"
+    )
+
+    # -----------------------------------------------------
+    # AD VƏ SOYAD
+    # -----------------------------------------------------
+
+    pdf.setFont(
+        font_name,
+        25
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 235,
+        name
+    )
+
+    # Adın alt xətti
+    name_width = pdf.stringWidth(
+        name,
+        font_name,
+        25
+    )
+
+    pdf.line(
+        (page_width - name_width) / 2,
+        page_height - 245,
+        (page_width + name_width) / 2,
+        page_height - 245
+    )
+
+    # -----------------------------------------------------
+    # BÖLMƏ
+    # -----------------------------------------------------
+
+    pdf.setFont(
+        font_name,
+        14
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 285,
+        f"{section} üzrə testdə iştirak etmişdir."
+    )
+
+    # -----------------------------------------------------
+    # NƏTİCƏ
+    # -----------------------------------------------------
+
+    pdf.setFont(
+        font_name,
+        18
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 335,
+        f"Nəticə: {percent}%"
+    )
+
+    pdf.setFont(
+        font_name,
+        13
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 365,
+        f"Düzgün cavab: {correct} / {total}"
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 390,
+        f"Müddət: {duration_text}"
+    )
+
+    # -----------------------------------------------------
+    # STATUS
+    # -----------------------------------------------------
+
+    pdf.setFont(
+        font_name,
+        12
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 425,
+        f"Status: {status}"
+    )
+
+    # -----------------------------------------------------
+    # TARİX
+    # -----------------------------------------------------
+
+    pdf.drawCentredString(
+        page_width / 2,
+        95,
+        f"Testin bitmə tarixi: {end_time_text}"
+    )
+
+    # -----------------------------------------------------
+    # ALT YAZI
+    # -----------------------------------------------------
+
+    pdf.setFont(
+        font_name,
+        9
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        70,
+        "Əmək Məcəlləsi üzrə elektron test sistemi"
+    )
+
+    # -----------------------------------------------------
+    # PDF-İ BİTİR
+    # -----------------------------------------------------
+
+    pdf.showPage()
+
+    pdf.save()
+
+    output.seek(0)
+
+    # Fayl adını təhlükəsizləşdiririk
+    safe_name = "".join(
+        c
+        for c in name
+        if c.isalnum() or c in (
+            " ",
+            "_",
+            "-"
+        )
+    ).strip()
+
+    if not safe_name:
+        safe_name = "istifadeci"
+
+    filename = (
+        f"{safe_name}_sertifikat.pdf"
+    )
+
+    return send_file(
+
+        output,
+
+        as_attachment=True,
+
+        download_name=filename,
+
+        mimetype="application/pdf"
+
+    )
+
+
+# =========================================================
 # ADMIN LOGIN
 # =========================================================
 
@@ -1388,9 +1748,7 @@ def create_code():
 
         values = sheet.get_all_values()
 
-        # -----------------------------------------------
         # EYNİ KODU YOXLAYIRIQ
-        # -----------------------------------------------
 
         for row in values[1:]:
 
@@ -1420,9 +1778,7 @@ def create_code():
                     url_for("admin")
                 )
 
-        # -----------------------------------------------
         # YENİ KODU GOOGLE SHEETS-Ə YAZ
-        # -----------------------------------------------
 
         sheet.append_row(
 
@@ -1457,7 +1813,10 @@ def create_code():
     )
 
 
-# ƏSAS URL
+# =========================================================
+# ADMIN ADD CODE
+# =========================================================
+
 @app.route(
     "/admin/add-code",
     methods=["POST"]
@@ -1468,8 +1827,10 @@ def admin_add_code():
     return create_code()
 
 
-# ALTERNATİV URL
-# Admin HTML hansı URL-dən göndərsə də işləyəcək.
+# =========================================================
+# ADMIN CREATE CODE
+# =========================================================
+
 @app.route(
     "/admin/create-code",
     methods=["POST"]
