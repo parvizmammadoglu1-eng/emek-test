@@ -1,6 +1,7 @@
 import os
 import json
 import re
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from io import BytesIO
@@ -52,60 +53,6 @@ ADMIN_PASSWORD = os.environ.get(
 GOOGLE_SHEET_NAME = "Emek Test 2026"
 
 
-def get_google_client():
-
-    private_key = os.environ.get(
-        "GOOGLE_PRIVATE_KEY",
-        ""
-    )
-
-    if not private_key:
-        raise RuntimeError(
-            "GOOGLE_PRIVATE_KEY Render Environment Variables "
-            "bölməsində yoxdur."
-        )
-
-    private_key = private_key.replace(
-        "\\n",
-        "\n"
-    )
-
-    service_account_info = {
-        "type": "service_account",
-
-        "project_id": os.environ.get(
-            "GOOGLE_PROJECT_ID"
-        ),
-
-        "private_key_id": os.environ.get(
-            "GOOGLE_PRIVATE_KEY_ID"
-        ),
-
-        "private_key": private_key,
-
-        "client_email": os.environ.get(
-            "GOOGLE_CLIENT_EMAIL"
-        ),
-
-        "token_uri":
-            "https://oauth2.googleapis.com/token"
-    }
-
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
-
-    credentials = Credentials.from_service_account_info(
-        service_account_info,
-        scopes=scopes
-    )
-
-    return gspread.authorize(
-        credentials
-    )
-
-
 # =========================================================
 # BÖLMƏLƏR
 # =========================================================
@@ -128,232 +75,303 @@ SECTIONS = [
 
 
 # =========================================================
-# BÖLMƏ NORMALİZASİYASI
+# BÖLMƏLƏRİN ROMAN RƏQƏMLƏRİ
 # =========================================================
 
 ROMAN_NUMBERS = {
-    1: "I",
-    2: "II",
-    3: "III",
-    4: "IV",
-    5: "V",
-    6: "VI",
-    7: "VII",
-    8: "VIII",
-    9: "IX",
-    10: "X",
-    11: "XI",
-    12: "XII",
-    13: "XIII"
+    "I": 1,
+    "II": 2,
+    "III": 3,
+    "IV": 4,
+    "V": 5,
+    "VI": 6,
+    "VII": 7,
+    "VIII": 8,
+    "IX": 9,
+    "X": 10,
+    "XI": 11,
+    "XII": 12,
+    "XIII": 13
 }
 
 
-def clean_section_text(value):
-
-    value = str(
-        value or ""
-    ).strip().lower()
-
-    value = (
-        value
-        .replace("ə", "e")
-        .replace("ı", "i")
-        .replace("ö", "o")
-        .replace("ü", "u")
-        .replace("ş", "s")
-        .replace("ç", "c")
-    )
-
-    value = re.sub(
-        r"[^a-z0-9ivx]+",
-        " ",
-        value
-    )
-
-    return value.strip()
-
+# =========================================================
+# BÖLMƏ NORMALİZASİYASI
+# =========================================================
+#
+# ƏSAS DÜZƏLİŞ BURADADIR.
+#
+# Məsələn:
+#
+# "2"
+# "II"
+# "II Bölmə"
+# "II Bölmə (...)"
+#
+# hamısı:
+#
+# "II Bölmə (Kollektiv müqavilə və sazişin bağlanmasının ümumi qaydaları)"
+#
+# kimi qaytarılır.
+# =========================================================
 
 def normalize_section(value):
 
-    value = str(
-        value or ""
-    ).strip()
+    if value is None:
+        return ""
+
+    value = str(value).strip()
 
     if not value:
         return ""
 
-    cleaned = clean_section_text(
+    # Artıq boşluqları normallaşdır
+    value = re.sub(
+        r"\s+",
+        " ",
         value
-    )
+    ).strip()
+
+    # Kiçik hərflə müqayisə üçün
+    lower_value = value.lower()
 
     # -----------------------------------------------------
-    # ƏVVƏLCƏ TAM BÖLMƏ ADLARINI YOXLAYIRIQ
+    # 1. TAM ADLA DƏQİQ MÜQAYİSƏ
     # -----------------------------------------------------
 
-    for index, section in enumerate(
-        SECTIONS,
-        start=1
-    ):
+    for section in SECTIONS:
 
-        section_clean = clean_section_text(
-            section
-        )
-
-        if cleaned == section_clean:
-
+        if lower_value == section.lower():
             return section
 
     # -----------------------------------------------------
-    # 1, 2, 3 ... 13
+    # 2. SADƏ "1", "2", "3" FORMATLARI
     # -----------------------------------------------------
 
-    numeric_match = re.search(
-        r"(?<!\d)(13|12|11|10|[1-9])(?!\d)",
-        cleaned
+    if re.fullmatch(
+        r"\d+",
+        value
+    ):
+
+        number = int(value)
+
+        if 1 <= number <= len(SECTIONS):
+
+            return SECTIONS[number - 1]
+
+    # -----------------------------------------------------
+    # 3. "1 BÖLMƏ", "2 BÖLMƏ" FORMATLARI
+    # -----------------------------------------------------
+
+    match = re.match(
+        r"^\s*(\d+)\s*b[öo]lm[əe]\b",
+        lower_value
     )
 
-    if numeric_match:
+    if match:
 
         number = int(
-            numeric_match.group(1)
+            match.group(1)
         )
 
-        return f"{ROMAN_NUMBERS[number]} Bölmə"
+        if 1 <= number <= len(SECTIONS):
+
+            return SECTIONS[number - 1]
 
     # -----------------------------------------------------
-    # ROMAN RƏQƏMLƏRİ
+    # 4. ROMAN RƏQƏMİ
     # -----------------------------------------------------
 
-    roman_match = re.search(
-        r"\b(xiii|xii|xi|x|ix|viii|vii|vi|iv|iii|ii|i)\b",
-        cleaned
+    first_word = re.split(
+        r"[\s\-_()]+",
+        value.upper()
+    )[0]
+
+    if first_word in ROMAN_NUMBERS:
+
+        number = ROMAN_NUMBERS[
+            first_word
+        ]
+
+        if 1 <= number <= len(SECTIONS):
+
+            return SECTIONS[number - 1]
+
+    # -----------------------------------------------------
+    # 5. "II BÖLMƏ" KİMİ FORMAT
+    # -----------------------------------------------------
+
+    roman_match = re.match(
+        r"^\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI{0,2}|XII|XIII)"
+        r"\s*b[öo]lm[əe]?",
+        value,
+        re.IGNORECASE
     )
 
     if roman_match:
 
-        roman = roman_match.group(1)
+        roman = roman_match.group(
+            1
+        ).upper()
 
-        roman_to_number = {
-            "i": 1,
-            "ii": 2,
-            "iii": 3,
-            "iv": 4,
-            "v": 5,
-            "vi": 6,
-            "vii": 7,
-            "viii": 8,
-            "ix": 9,
-            "x": 10,
-            "xi": 11,
-            "xii": 12,
-            "xiii": 13
-        }
+        if roman in ROMAN_NUMBERS:
 
-        number = roman_to_number.get(
-            roman
-        )
+            number = ROMAN_NUMBERS[
+                roman
+            ]
 
-        if number:
-
-            return f"{ROMAN_NUMBERS[number]} Bölmə"
+            return SECTIONS[number - 1]
 
     # -----------------------------------------------------
-    # "2-ci bölmə", "II-ci bölmə" və s.
+    # 6. TAM MƏTNİN ƏVVƏLİNDƏN BÖLMƏ NÖMRƏSİNİ TAP
     # -----------------------------------------------------
 
-    ordinal_match = re.search(
-        r"\b(13|12|11|10|[1-9])\s*[-]?\s*(ci|cu|cü|cü|cı)\b",
-        cleaned
+    roman_start = re.match(
+        r"^\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI{0,2}|XII|XIII)\b",
+        value,
+        re.IGNORECASE
     )
 
-    if ordinal_match:
+    if roman_start:
 
-        number = int(
-            ordinal_match.group(1)
-        )
+        roman = roman_start.group(
+            1
+        ).upper()
 
-        return f"{ROMAN_NUMBERS[number]} Bölmə"
+        if roman in ROMAN_NUMBERS:
+
+            return SECTIONS[
+                ROMAN_NUMBERS[roman] - 1
+            ]
 
     # -----------------------------------------------------
-    # "1ci", "2ci" və s.
+    # 7. "II Bölmə (...)" FORMATINI AŞKAR TANIMA
     # -----------------------------------------------------
 
-    compact_match = re.search(
-        r"^(13|12|11|10|[1-9])(ci|cu|cü|cı)$",
-        cleaned.replace(" ", "")
+    cleaned = (
+        lower_value
+        .replace("bölmə", "")
+        .replace("bölm", "")
+        .strip()
     )
 
-    if compact_match:
+    roman_only = cleaned.split(
+        "("
+    )[0].strip()
 
-        number = int(
-            compact_match.group(1)
-        )
+    if roman_only in ROMAN_NUMBERS:
 
-        return f"{ROMAN_NUMBERS[number]} Bölmə"
+        return SECTIONS[
+            ROMAN_NUMBERS[roman_only] - 1
+        ]
+
+    # -----------------------------------------------------
+    # 8. BÖLMƏNİN TAM ADINDAKI AÇAR MƏTNƏ GÖRƏ
+    # -----------------------------------------------------
+
+    for section in SECTIONS:
+
+        section_lower = section.lower()
+
+        section_prefix = section_lower.split(
+            "("
+        )[0].strip()
+
+        if lower_value.startswith(
+            section_prefix
+        ):
+
+            return section
+
+    # -----------------------------------------------------
+    # TAPILMADI
+    # -----------------------------------------------------
 
     return value
 
 
-def get_display_section(normalized):
+# =========================================================
+# BÖLMƏ MÜQAYİSƏSİ
+# =========================================================
 
-    normalized = normalize_section(
-        normalized
+def same_section(value1, value2):
+
+    normalized1 = normalize_section(
+        value1
     )
 
-    for section in SECTIONS:
+    normalized2 = normalize_section(
+        value2
+    )
 
-        if normalize_section(
-            section
-        ) == normalized:
-
-            return section
-
-    return normalized
+    return (
+        normalized1
+        ==
+        normalized2
+    )
 
 
 # =========================================================
-# PDF FONT
+# GOOGLE CLIENT
 # =========================================================
 
-def register_pdf_font():
+def get_google_client():
 
-    possible_fonts = [
+    private_key = os.environ.get(
+        "GOOGLE_PRIVATE_KEY",
+        ""
+    )
 
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    if not private_key:
 
-        "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+        raise RuntimeError(
+            "GOOGLE_PRIVATE_KEY Render Environment Variables "
+            "bölməsində yoxdur."
+        )
 
-        "C:/Windows/Fonts/DejaVuSans.ttf",
+    private_key = private_key.replace(
+        "\\n",
+        "\n"
+    )
 
-        "C:/Windows/Fonts/arial.ttf",
+    service_account_info = {
 
-        "/Library/Fonts/Arial.ttf"
+        "type": "service_account",
+
+        "project_id": os.environ.get(
+            "GOOGLE_PROJECT_ID"
+        ),
+
+        "private_key_id": os.environ.get(
+            "GOOGLE_PRIVATE_KEY_ID"
+        ),
+
+        "private_key": private_key,
+
+        "client_email": os.environ.get(
+            "GOOGLE_CLIENT_EMAIL"
+        ),
+
+        "token_uri":
+            "https://oauth2.googleapis.com/token"
+    }
+
+    scopes = [
+
+        "https://www.googleapis.com/auth/spreadsheets",
+
+        "https://www.googleapis.com/auth/drive"
 
     ]
 
-    for font_path in possible_fonts:
+    credentials = Credentials.from_service_account_info(
+        service_account_info,
+        scopes=scopes
+    )
 
-        if os.path.exists(font_path):
-
-            try:
-
-                pdfmetrics.registerFont(
-                    TTFont(
-                        "CertificateFont",
-                        font_path
-                    )
-                )
-
-                return "CertificateFont"
-
-            except Exception as e:
-
-                print(
-                    "PDF FONT ERROR:",
-                    str(e)
-                )
-
-    return "Helvetica"
+    return gspread.authorize(
+        credentials
+    )
 
 
 # =========================================================
@@ -383,6 +401,7 @@ def get_sheet():
         )
 
     required_headers = [
+
         "№",
         "Ad və soyad",
         "Bölmə",
@@ -395,6 +414,7 @@ def get_sheet():
         "Müddət",
         "Başlama vaxtı",
         "Bitmə vaxtı"
+
     ]
 
     headers = sheet.row_values(1)
@@ -448,6 +468,7 @@ def get_sheet():
 QUESTIONS_SHEET_NAME = "Suallar"
 
 QUESTIONS_HEADERS = [
+
     "Bölmə",
     "question",
     "a",
@@ -455,6 +476,7 @@ QUESTIONS_HEADERS = [
     "c",
     "d",
     "answer"
+
 ]
 
 
@@ -475,9 +497,13 @@ def get_questions_sheet():
     except gspread.WorksheetNotFound:
 
         sheet = spreadsheet.add_worksheet(
+
             title=QUESTIONS_SHEET_NAME,
+
             rows=5000,
+
             cols=7
+
         )
 
         sheet.update(
@@ -517,64 +543,54 @@ def load_all_questions():
 
         questions = []
 
-        for row in values[1:]:
+        for row_number, row in enumerate(
+            values[1:],
+            start=2
+        ):
 
             if not row:
                 continue
 
-            # Ən azı 7 sütun olmalıdır
+            # Ən azı 7 sütun lazımdır
             if len(row) < 7:
-                row = list(row) + [""] * (
-                    7 - len(row)
-                )
+                continue
 
             raw_section = str(
-                row[0] or ""
+                row[0]
             ).strip()
+
+            # =================================================
+            # ƏSAS DÜZƏLİŞ:
+            # SHEET-DƏKİ BÖLMƏNİ MÜTLƏQ NORMALİZƏ EDİRİK
+            # =================================================
 
             section = normalize_section(
                 raw_section
             )
 
-            # -------------------------------------------------
-            # BÖLMƏNİ NORMALİZASİYA EDİRİK
-            # -------------------------------------------------
+            if section not in SECTIONS:
 
-            if not section:
+                print(
+                    f"SUAL {row_number}: "
+                    f"Naməlum bölmə -> "
+                    f"{raw_section}"
+                )
+
                 continue
-
-            # Əgər bölmə tanınmırsa, keçirik
-            if not any(
-                normalize_section(s) == section
-                for s in SECTIONS
-            ):
-                continue
-
-            section = get_display_section(
-                section
-            )
 
             question_text = str(
-                row[1] or ""
+                row[1]
             ).strip()
 
             if not question_text:
                 continue
 
             answer = str(
-                row[6] or ""
+                row[6]
             ).strip().upper()
 
-            # Məsələn "A)" gəlirsə A götür
             if len(answer) > 1:
-
-                answer_match = re.search(
-                    r"[ABCD]",
-                    answer
-                )
-
-                if answer_match:
-                    answer = answer_match.group(0)
+                answer = answer[0]
 
             if answer not in [
                 "A",
@@ -582,58 +598,64 @@ def load_all_questions():
                 "C",
                 "D"
             ]:
+
+                print(
+                    f"SUAL {row_number}: "
+                    f"Yanlış cavab -> {answer}"
+                )
+
                 continue
 
             questions.append({
 
-                "section": section,
+                "section":
+                    section,
 
-                "question": question_text,
+                "question":
+                    question_text,
 
-                "a": str(
-                    row[2] or ""
-                ).strip(),
+                "a":
+                    str(row[2]).strip(),
 
-                "b": str(
-                    row[3] or ""
-                ).strip(),
+                "b":
+                    str(row[3]).strip(),
 
-                "c": str(
-                    row[4] or ""
-                ).strip(),
+                "c":
+                    str(row[4]).strip(),
 
-                "d": str(
-                    row[5] or ""
-                ).strip(),
+                "d":
+                    str(row[5]).strip(),
 
-                "answer": answer
+                "answer":
+                    answer
 
             })
 
         print(
-            "LOAD QUESTIONS:",
-            len(questions),
-            "sual tapıldı."
+            "SUALLAR YÜKLƏNDİ:",
+            len(questions)
         )
 
-        # Bölmələr üzrə məlumat
+        # Bölmələr üzrə neçə sual olduğunu göstər
         section_counts = {}
 
         for q in questions:
 
-            section_name = q["section"]
+            sec = q["section"]
 
-            section_counts[
-                section_name
-            ] = section_counts.get(
-                section_name,
-                0
-            ) + 1
+            section_counts[sec] = (
+                section_counts.get(
+                    sec,
+                    0
+                ) + 1
+            )
 
-        print(
-            "BÖLMƏLƏR:",
-            section_counts
-        )
+        for section in SECTIONS:
+
+            print(
+                f"{section}: "
+                f"{section_counts.get(section, 0)}"
+            )
 
         return questions
 
@@ -653,51 +675,44 @@ def load_all_questions():
 
 def load_questions(section=None):
 
-    questions = load_all_questions()
+    all_questions = load_all_questions()
 
     if section is None:
 
-        return questions
+        return all_questions
 
-    requested_section = normalize_section(
+    normalized_requested = normalize_section(
         section
     )
 
-    if not requested_section:
+    if normalized_requested not in SECTIONS:
 
         return []
 
-    filtered = []
+    result = [
 
-    for q in questions:
+        q
+        for q in all_questions
 
-        question_section = normalize_section(
+        if normalize_section(
             q.get(
                 "section",
                 ""
             )
         )
+        ==
+        normalized_requested
 
-        if question_section == requested_section:
-
-            filtered.append(q)
-
-    print(
-        "REQUESTED SECTION:",
-        section
-    )
+    ]
 
     print(
-        "NORMALIZED SECTION:",
-        requested_section
+        "BÖLMƏ:",
+        normalized_requested,
+        "| SUAL SAYI:",
+        len(result)
     )
 
-    print(
-        "FOUND QUESTIONS:",
-        len(filtered)
-    )
-
-    return filtered
+    return result
 
 
 # =========================================================
@@ -707,11 +722,13 @@ def load_questions(section=None):
 CODES_SHEET_NAME = "Kodlar"
 
 CODES_HEADERS = [
+
     "Kod",
     "Bölmə",
     "Status",
     "Ad və soyad",
     "İstifadə vaxtı"
+
 ]
 
 
@@ -732,9 +749,13 @@ def get_codes_sheet():
     except gspread.WorksheetNotFound:
 
         sheet = spreadsheet.add_worksheet(
+
             title=CODES_SHEET_NAME,
+
             rows=2000,
+
             cols=5
+
         )
 
         sheet.update(
@@ -770,9 +791,9 @@ def use_access_code(
         code or ""
     ).strip()
 
-    selected_section = str(
-        selected_section or ""
-    ).strip()
+    selected_section = normalize_section(
+        selected_section
+    )
 
     name = str(
         name or ""
@@ -784,14 +805,7 @@ def use_access_code(
             "Giriş kodunu daxil edin."
         )
 
-    selected_normalized = normalize_section(
-        selected_section
-    )
-
-    if not any(
-        normalize_section(s) == selected_normalized
-        for s in SECTIONS
-    ):
+    if selected_section not in SECTIONS:
 
         return False, (
             "Zəhmət olmasa bölmə seçin."
@@ -823,14 +837,19 @@ def use_access_code(
                 else ""
             ).strip()
 
-            if sheet_code.upper() != code.upper():
+            if (
+                sheet_code.upper()
+                !=
+                code.upper()
+            ):
+
                 continue
 
-            sheet_section = str(
+            sheet_section = normalize_section(
                 row[1]
                 if len(row) > 1
                 else ""
-            ).strip()
+            )
 
             status = str(
                 row[2]
@@ -844,9 +863,10 @@ def use_access_code(
                     "Bu giriş kodu artıq istifadə olunub."
                 )
 
-            if normalize_section(
-                sheet_section
-            ) != selected_normalized:
+            if not same_section(
+                sheet_section,
+                selected_section
+            ):
 
                 return False, (
                     "Bu giriş kodu seçdiyiniz bölmə üçün "
@@ -940,10 +960,12 @@ def home():
             ""
         ).strip()
 
-        selected_section = request.form.get(
-            "section",
-            ""
-        ).strip()
+        selected_section = normalize_section(
+            request.form.get(
+                "section",
+                ""
+            ).strip()
+        )
 
         if not name:
 
@@ -956,18 +978,7 @@ def home():
                 sections=SECTIONS
             )
 
-        selected_normalized = normalize_section(
-            selected_section
-        )
-
-        selected_section = get_display_section(
-            selected_normalized
-        )
-
-        if not any(
-            normalize_section(s) == selected_normalized
-            for s in SECTIONS
-        ):
+        if selected_section not in SECTIONS:
 
             return render_template(
                 "home.html",
@@ -989,10 +1000,6 @@ def home():
                 sections=SECTIONS
             )
 
-        # -------------------------------------------------
-        # ƏVVƏL SUALLARI YOXLAYIRIQ
-        # -------------------------------------------------
-
         section_questions = load_questions(
             selected_section
         )
@@ -1010,10 +1017,6 @@ def home():
                 selected_section=selected_section,
                 sections=SECTIONS
             )
-
-        # -------------------------------------------------
-        # SONRA KODU YOXLAYIRIQ
-        # -------------------------------------------------
 
         code_valid, error_message = use_access_code(
             access_code,
@@ -1035,9 +1038,13 @@ def home():
         session.clear()
 
         session["name"] = name
+
         session["access_code"] = access_code
+
         session["section"] = selected_section
+
         session["answers"] = {}
+
         session["exam_finished"] = False
 
         start_time = datetime.now(
@@ -1075,19 +1082,35 @@ def home():
 def question(n):
 
     if "name" not in session:
-        return redirect(url_for("home"))
+
+        return redirect(
+            url_for("home")
+        )
 
     if "access_code" not in session:
-        return redirect(url_for("home"))
+
+        return redirect(
+            url_for("home")
+        )
 
     if "section" not in session:
-        return redirect(url_for("home"))
 
-    if session.get("exam_finished"):
-        return redirect(url_for("finish"))
+        return redirect(
+            url_for("home")
+        )
 
-    selected_section = session.get(
-        "section"
+    if session.get(
+        "exam_finished"
+    ):
+
+        return redirect(
+            url_for("finish")
+        )
+
+    selected_section = normalize_section(
+        session.get(
+            "section"
+        )
     )
 
     current_questions = load_questions(
@@ -1196,27 +1219,59 @@ def question(n):
 def finish():
 
     if "name" not in session:
-        return redirect(url_for("home"))
+
+        return redirect(
+            url_for("home")
+        )
 
     if "access_code" not in session:
-        return redirect(url_for("home"))
+
+        return redirect(
+            url_for("home")
+        )
 
     if "section" not in session:
-        return redirect(url_for("home"))
 
-    if session.get("exam_finished"):
+        return redirect(
+            url_for("home")
+        )
+
+    if session.get(
+        "exam_finished"
+    ):
 
         return render_template(
             "finish.html",
             name=session.get("name"),
             section=session.get("section"),
-            correct=session.get("finish_correct", 0),
-            total=session.get("finish_total", 0),
-            percent=session.get("finish_percent", 0),
-            answered=session.get("finish_answered", 0),
-            wrong=session.get("finish_wrong", 0),
-            unanswered=session.get("finish_unanswered", 0),
-            status=session.get("finish_status", ""),
+            correct=session.get(
+                "finish_correct",
+                0
+            ),
+            total=session.get(
+                "finish_total",
+                0
+            ),
+            percent=session.get(
+                "finish_percent",
+                0
+            ),
+            answered=session.get(
+                "finish_answered",
+                0
+            ),
+            wrong=session.get(
+                "finish_wrong",
+                0
+            ),
+            unanswered=session.get(
+                "finish_unanswered",
+                0
+            ),
+            status=session.get(
+                "finish_status",
+                ""
+            ),
             duration_text=session.get(
                 "finish_duration_text",
                 ""
@@ -1248,8 +1303,10 @@ def finish():
         {}
     )
 
-    selected_section = session.get(
-        "section"
+    selected_section = normalize_section(
+        session.get(
+            "section"
+        )
     )
 
     current_questions = load_questions(
@@ -1300,16 +1357,19 @@ def finish():
         )
 
         elapsed_seconds = int(
-            now_timestamp -
+            now_timestamp
+            -
             exam_start_timestamp
         )
 
         if elapsed_seconds < 0:
+
             elapsed_seconds = 0
 
     else:
 
         start_time_text = "-"
+
         elapsed_seconds = 0
 
     end_time_text = (
@@ -1386,23 +1446,32 @@ def finish():
 
         question_results.append({
 
-            "number": index + 1,
+            "number":
+                index + 1,
 
-            "question": q["question"],
+            "question":
+                q["question"],
 
-            "selected": selected,
+            "selected":
+                selected,
 
-            "selected_text": selected_text,
+            "selected_text":
+                selected_text,
 
-            "correct_answer": correct_letter,
+            "correct_answer":
+                correct_letter,
 
-            "correct_text": correct_text,
+            "correct_text":
+                correct_text,
 
-            "is_correct": is_correct,
+            "is_correct":
+                is_correct,
 
-            "is_wrong": is_wrong,
+            "is_wrong":
+                is_wrong,
 
-            "is_empty": is_empty
+            "is_empty":
+                is_empty
 
         })
 
@@ -1410,9 +1479,13 @@ def finish():
 
     unanswered = total - answered
 
-    percent = round(
-        correct / total * 100
-    ) if total else 0
+    percent = (
+        round(
+            correct / total * 100
+        )
+        if total
+        else 0
+    )
 
     name = session["name"]
 
@@ -1463,6 +1536,11 @@ def finish():
             value_input_option="USER_ENTERED"
         )
 
+        print(
+            "GOOGLE SHEETS: "
+            "nəticə əlavə edildi."
+        )
+
     except Exception as e:
 
         print(
@@ -1473,18 +1551,40 @@ def finish():
     session["exam_finished"] = True
 
     session["finish_correct"] = correct
+
     session["finish_total"] = total
+
     session["finish_percent"] = percent
+
     session["finish_answered"] = answered
+
     session["finish_wrong"] = wrong
+
     session["finish_unanswered"] = unanswered
+
     session["finish_status"] = status
+
     session["finish_duration_text"] = duration_text
-    session["finish_duration_minutes"] = duration_minutes
-    session["finish_duration_seconds"] = duration_seconds
-    session["finish_start_time_text"] = start_time_text
-    session["finish_end_time_text"] = end_time_text
-    session["finish_question_results"] = question_results
+
+    session["finish_duration_minutes"] = (
+        duration_minutes
+    )
+
+    session["finish_duration_seconds"] = (
+        duration_seconds
+    )
+
+    session["finish_start_time_text"] = (
+        start_time_text
+    )
+
+    session["finish_end_time_text"] = (
+        end_time_text
+    )
+
+    session["finish_question_results"] = (
+        question_results
+    )
 
     session.modified = True
 
@@ -1509,6 +1609,53 @@ def finish():
 
 
 # =========================================================
+# PDF FONT
+# =========================================================
+
+def register_pdf_font():
+
+    possible_fonts = [
+
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+
+        "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+
+        "C:/Windows/Fonts/DejaVuSans.ttf",
+
+        "C:/Windows/Fonts/arial.ttf",
+
+        "/Library/Fonts/Arial.ttf"
+
+    ]
+
+    for font_path in possible_fonts:
+
+        if os.path.exists(
+            font_path
+        ):
+
+            try:
+
+                pdfmetrics.registerFont(
+                    TTFont(
+                        "CertificateFont",
+                        font_path
+                    )
+                )
+
+                return "CertificateFont"
+
+            except Exception as e:
+
+                print(
+                    "PDF FONT ERROR:",
+                    str(e)
+                )
+
+    return "Helvetica"
+
+
+# =========================================================
 # PDF SERTİFİKAT
 # =========================================================
 
@@ -1518,13 +1665,24 @@ def finish():
 def download_certificate():
 
     if "name" not in session:
-        return redirect(url_for("home"))
+
+        return redirect(
+            url_for("home")
+        )
 
     if "section" not in session:
-        return redirect(url_for("home"))
 
-    if not session.get("exam_finished"):
-        return redirect(url_for("finish"))
+        return redirect(
+            url_for("home")
+        )
+
+    if not session.get(
+        "exam_finished"
+    ):
+
+        return redirect(
+            url_for("finish")
+        )
 
     name = session.get(
         "name",
@@ -1568,7 +1726,9 @@ def download_certificate():
 
     output = BytesIO()
 
-    page_width, page_height = landscape(A4)
+    page_width, page_height = landscape(
+        A4
+    )
 
     pdf = canvas.Canvas(
         output,
@@ -1732,7 +1892,8 @@ def download_certificate():
     safe_name = "".join(
         c
         for c in name
-        if c.isalnum() or c in (
+        if c.isalnum()
+        or c in (
             " ",
             "_",
             "-"
@@ -1740,6 +1901,7 @@ def download_certificate():
     ).strip()
 
     if not safe_name:
+
         safe_name = "istifadeci"
 
     filename = (
@@ -1881,10 +2043,12 @@ def create_code():
         ""
     ).strip()
 
-    section = request.form.get(
-        "section",
-        ""
-    ).strip()
+    section = normalize_section(
+        request.form.get(
+            "section",
+            ""
+        ).strip()
+    )
 
     if not code:
 
@@ -1892,22 +2056,11 @@ def create_code():
             url_for("admin")
         )
 
-    normalized = normalize_section(
-        section
-    )
-
-    if not any(
-        normalize_section(s) == normalized
-        for s in SECTIONS
-    ):
+    if section not in SECTIONS:
 
         return redirect(
             url_for("admin")
         )
-
-    section = get_display_section(
-        normalized
-    )
 
     try:
 
@@ -2052,25 +2205,24 @@ def import_questions():
                     else ""
                 )
 
+                # =================================================
+                # ƏSAS DÜZƏLİŞ:
+                # EXCEL-DƏKİ İSTƏNİLƏN FORMAT NORMALİZƏ OLUNUR
+                # =================================================
+
                 section = normalize_section(
                     raw_section
                 )
 
-                if not any(
-                    normalize_section(s) == section
-                    for s in SECTIONS
-                ):
+                if section not in SECTIONS:
 
                     print(
-                        "IMPORT: Tanınmayan bölmə:",
+                        "IMPORT: "
+                        "Yanlış bölmə:",
                         raw_section
                     )
 
                     continue
-
-                section = get_display_section(
-                    section
-                )
 
                 question_text = (
                     str(row[1]).strip()
@@ -2080,6 +2232,7 @@ def import_questions():
                 )
 
                 if not question_text:
+
                     continue
 
                 option_a = (
@@ -2117,14 +2270,9 @@ def import_questions():
                     else ""
                 )
 
-                answer_match = re.search(
-                    r"[ABCD]",
-                    answer
-                )
+                if len(answer) > 1:
 
-                if answer_match:
-
-                    answer = answer_match.group(0)
+                    answer = answer[0]
 
                 if answer not in [
                     "A",
@@ -2137,19 +2285,26 @@ def import_questions():
 
                 new_questions.append({
 
-                    "section": section,
+                    "section":
+                        section,
 
-                    "question": question_text,
+                    "question":
+                        question_text,
 
-                    "a": option_a,
+                    "a":
+                        option_a,
 
-                    "b": option_b,
+                    "b":
+                        option_b,
 
-                    "c": option_c,
+                    "c":
+                        option_c,
 
-                    "d": option_d,
+                    "d":
+                        option_d,
 
-                    "answer": answer
+                    "answer":
+                        answer
 
                 })
 
@@ -2157,7 +2312,9 @@ def import_questions():
         # JSON
         # =================================================
 
-        elif filename.endswith(".json"):
+        elif filename.endswith(
+            ".json"
+        ):
 
             loaded_questions = json.load(
                 file
@@ -2174,6 +2331,7 @@ def import_questions():
                         q,
                         dict
                     ):
+
                         continue
 
                     section = normalize_section(
@@ -2183,15 +2341,9 @@ def import_questions():
                         )
                     )
 
-                    if not any(
-                        normalize_section(s) == section
-                        for s in SECTIONS
-                    ):
-                        continue
+                    if section not in SECTIONS:
 
-                    section = get_display_section(
-                        section
-                    )
+                        continue
 
                     question_text = str(
                         q.get(
@@ -2201,6 +2353,7 @@ def import_questions():
                     ).strip()
 
                     if not question_text:
+
                         continue
 
                     answer = str(
@@ -2210,14 +2363,9 @@ def import_questions():
                         )
                     ).strip().upper()
 
-                    answer_match = re.search(
-                        r"[ABCD]",
-                        answer
-                    )
+                    if len(answer) > 1:
 
-                    if answer_match:
-
-                        answer = answer_match.group(0)
+                        answer = answer[0]
 
                     if answer not in [
                         "A",
@@ -2230,39 +2378,46 @@ def import_questions():
 
                     new_questions.append({
 
-                        "section": section,
+                        "section":
+                            section,
 
-                        "question": question_text,
+                        "question":
+                            question_text,
 
-                        "a": str(
-                            q.get(
-                                "a",
-                                ""
-                            )
-                        ).strip(),
+                        "a":
+                            str(
+                                q.get(
+                                    "a",
+                                    ""
+                                )
+                            ).strip(),
 
-                        "b": str(
-                            q.get(
-                                "b",
-                                ""
-                            )
-                        ).strip(),
+                        "b":
+                            str(
+                                q.get(
+                                    "b",
+                                    ""
+                                )
+                            ).strip(),
 
-                        "c": str(
-                            q.get(
-                                "c",
-                                ""
-                            )
-                        ).strip(),
+                        "c":
+                            str(
+                                q.get(
+                                    "c",
+                                    ""
+                                )
+                            ).strip(),
 
-                        "d": str(
-                            q.get(
-                                "d",
-                                ""
-                            )
-                        ).strip(),
+                        "d":
+                            str(
+                                q.get(
+                                    "d",
+                                    ""
+                                )
+                            ).strip(),
 
-                        "answer": answer
+                        "answer":
+                            answer
 
                     })
 
@@ -2284,7 +2439,8 @@ def import_questions():
         if not new_questions:
 
             print(
-                "IMPORT: Yeni sual tapılmadı."
+                "IMPORT: "
+                "Yeni sual tapılmadı."
             )
 
             return redirect(
@@ -2292,13 +2448,7 @@ def import_questions():
             )
 
         # =================================================
-        # GOOGLE SHEETS-İ TAM YENİLƏ
-        #
-        # Yəni:
-        # Köhnə suallar silinir
-        # Yeni fayldakı suallar yazılır
-        #
-        # Yeni import etməyənə qədər bunlar qalır.
+        # SUALLAR SHEET-İNİ TAM YENİLƏ
         # =================================================
 
         questions_sheet = get_questions_sheet()
@@ -2317,17 +2467,11 @@ def import_questions():
             rows.append([
 
                 q["section"],
-
                 q["question"],
-
                 q["a"],
-
                 q["b"],
-
                 q["c"],
-
                 q["d"],
-
                 q["answer"]
 
             ])
@@ -2338,40 +2482,31 @@ def import_questions():
         )
 
         print(
-            "================================================"
+            "IMPORT UĞURLU:",
+            len(new_questions),
+            "sual saxlanıldı."
         )
 
-        print(
-            "IMPORT UĞURLU"
-        )
-
-        print(
-            "Sual sayı:",
-            len(new_questions)
-        )
-
-        # Bölmə saylarını göstər
-        imported_counts = {}
+        # Bölmə statistikası
+        counts = {}
 
         for q in new_questions:
 
-            section_name = q["section"]
+            sec = q["section"]
 
-            imported_counts[
-                section_name
-            ] = imported_counts.get(
-                section_name,
-                0
-            ) + 1
+            counts[sec] = (
+                counts.get(
+                    sec,
+                    0
+                ) + 1
+            )
 
-        print(
-            "Bölmələr:",
-            imported_counts
-        )
+        for section in SECTIONS:
 
-        print(
-            "================================================"
-        )
+            print(
+                f"IMPORT -> {section}: "
+                f"{counts.get(section, 0)}"
+            )
 
     except Exception as e:
 
@@ -2569,7 +2704,7 @@ def admin_export():
 
         "A": 8,
         "B": 30,
-        "C": 18,
+        "C": 55,
         "D": 18,
         "E": 18,
         "F": 15,
@@ -2612,6 +2747,18 @@ def admin_export():
         )
 
     )
+
+
+# =========================================================
+# HEALTH CHECK
+# =========================================================
+
+@app.route(
+    "/health"
+)
+def health():
+
+    return "OK", 200
 
 
 # =========================================================
