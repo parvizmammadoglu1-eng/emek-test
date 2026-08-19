@@ -116,17 +116,19 @@ def get_google_client():
 SECTIONS = [
     "I Bölmə (Əsas müddəalar)",
     "II Bölmə (Kollektiv müqavilə və sazişin bağlanmasının ümumi qaydaları)",
-    "III Bölmə ",
-    "IV Bölmə",
-    "V Bölmə",
-    "VI Bölmə",
-    "VII Bölmə",
-    "VIII Bölmə",
-    "IX Bölmə",
-    "X Bölmə",
-    "XI Bölmə",
-    "XII Bölmə",
-    "XIII Bölmə"
+    "III Bölmə (Əmək müqaviləsinin bağlanması əsasları və qaydası) ",
+    "IV Bölmə (İş vaxtının növləri və tənzimlənməsi qaydaları)",
+    "V Bölmə (İstirahət vaxtı və işçilərin məzuniyyət hüquqları)",
+    "VI Bölmə (Əmək normaları və işəmuzd qiymətləri)",
+    "VII Bölmə (Əmək və icra intizamının təmin edilməsi qaydaları)",
+    "VIII Bölmə (İşəgötürən və işçinin qarşılıqlı maddi məsuliyyətini müəyyən edən hallar)
+
+ ",
+    "IX Bölmə (Əməyin mühafizəsi normaları, qaydaları və prinsipləri)",
+    "X Bölmə (Qadınların əmək hüququ və onun həyata keçirilməsində təminatları)",
+    "XI Bölmə (Kollektiv əmək mübahisələri)",
+    "XII Bölmə (İşçilərin sığorta olunmasının tənzimlənməsi)",
+    "XIII Bölmə (Əmək məcəlləsinin tələblərinə əməl olunmasına nəzarət. Əmək qanunvericiliyinin pozulmasına görə məsuliyyət)"
 ]
 
 
