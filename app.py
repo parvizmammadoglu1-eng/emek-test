@@ -98,6 +98,10 @@ def get_google_client():
     )
 
 
+# =========================================================
+# NƏTİCƏLƏR SHEET
+# =========================================================
+
 def get_sheet():
 
     client = get_google_client()
@@ -107,10 +111,13 @@ def get_sheet():
     )
 
     try:
+
         sheet = spreadsheet.worksheet(
             "Nəticələr"
         )
+
     except gspread.WorksheetNotFound:
+
         sheet = spreadsheet.add_worksheet(
             title="Nəticələr",
             rows=1000,
@@ -134,130 +141,170 @@ def get_sheet():
     ]
 
     if not headers:
-        sheet.update("1:1", [required_headers])
+
+        sheet.update(
+            "1:1",
+            [required_headers]
+        )
+
     else:
+
         changed = False
+
         for header in required_headers:
+
             if header not in headers:
-                headers.append(header)
+
+                headers.append(
+                    header
+                )
+
                 changed = True
 
         if changed:
+
             sheet.resize(
-                rows=max(sheet.row_count, 1000),
-                cols=max(sheet.col_count, len(headers))
+                rows=max(
+                    sheet.row_count,
+                    1000
+                ),
+                cols=max(
+                    sheet.col_count,
+                    len(headers)
+                )
             )
-            sheet.update("1:1", [headers])
+
+            sheet.update(
+                "1:1",
+                [headers]
+            )
 
     return sheet
 
 
 # =========================================================
-# SUALLARIN İDARƏ OLUNMASI (JSON FAYL İLƏ)
+# SUALLAR SHEET
 # =========================================================
 
-QUESTIONS_FILE = "questions.json"
+QUESTIONS_SHEET_NAME = "Suallar"
 
-DEFAULT_QUESTIONS = [
-    {
-        "question": "Əmək Məcəlləsi kimlərə şamil edilir?",
-        "a": "a) əcnəbilərə;",
-        "b": "b) hərbi qulluqçulara;",
-        "c": "c) məhkəmə hakimlərinə;",
-        "d": "d) AR-nın Milli Məclisinin deputatlarına və bələdiyyələrə seçilmiş şəxslərə;",
-        "answer": "A"
-    },
-    {
-        "question": "Əmək qanunvericiliyinə əməl olunmasına dövlət nəzarətini hansı orqan həyata keçirir?",
-        "a": "a) rayon (şəhər) məhkəməsi;",
-        "b": "b) rayon (şəhər) məşğulluq mərkəzləri;",
-        "c": "c) Azərbaycan Həmkarlar İttifaqları Konfederasiyası;",
-        "d": "d) Dövlət Əmək Müfəttişliyi;",
-        "answer": "D"
-    },
-    {
-        "question": "Əmək müqaviləsinin tərəfləri kimlər olur?",
-        "a": "a) işçi və işəgötürən;",
-        "b": "b) işçi və həmkarlar ittifaqı təşkilatı;",
-        "c": "c) işçi və əmək kollektivi;",
-        "d": "d) işəgötürən və həmkarlar ittifaqı təşkilatı",
-        "answer": "A"
-    },
-    {
-        "question": "Hansı yaşdan hər bir şəxs işçi kimi əmək müqaviləsinin tərəfi ola bilər?",
-        "a": "a) 13 yaşdan;",
-        "b": "b) 14 yaşdan;",
-        "c": "c) 15 yaşdan;",
-        "d": "d) 16 yaşdan",
-        "answer": "C"
-    },
-    {
-        "question": "Əmək münasibətlərini hansı hüquqi fakt yaradır?",
-        "a": "a) kollektiv müqavilə;",
-        "b": "b) əmək müqaviləsi;",
-        "c": "c) mülki-hüquqi müqavilə;",
-        "d": "d) işəgötürənin əmri (sərəncamı, qərarı)",
-        "answer": "B"
-    },
-    {
-        "question": "Ezamiyyətin müddəti neçə gündən artıq ola bilməz?",
-        "a": "a) 30 təqvim günündən",
-        "b": "b) 40 təqvim günündən",
-        "c": "c) 45 təqvim günündən",
-        "d": "d) 25 təqvim günündən",
-        "answer": "B"
-    },
-    {
-        "question": "İşçiyə məzuniyyət vaxtı üçün orta əmək haqqı məzuniyyətin başlanmasına ən azı neçə gün qalmış ödənilir?",
-        "a": "a) 3 gün qalmış",
-        "b": "b) 4 gün qalmış",
-        "c": "c) 5 gün qalmış",
-        "d": "d) 6 gün qalmış",
-        "answer": "A"
-    },
-    {
-        "question": "İşçinin on ildən on beş ilədək əmək stajı olduqda əlavə necə gün məzuniyyət verilir?",
-        "a": "a) 8 təqvim günü",
-        "b": "b) 5 təqvim günü",
-        "c": "c) 6 təqvim günü",
-        "d": "d) 4 təqvim günü",
-        "answer": "D"
-    },
-    {
-        "question": "İşçinin bir iş günü ilə növbəti iş günü arasındakı gündəlik istirahət vaxtı azı neçə saat olmalıdır?",
-        "a": "a) azı 8 saat",
-        "b": "b) azı 10 saat",
-        "c": "c) azı 12 saat",
-        "d": "d) azı 14 saat",
-        "answer": "C"
-    },
-    {
-        "question": "16 yaşdan 18 yaşadək olan işçilərə qısaldılmış iş vaxtının müddəti həftə ərzində neçə saat təşkil edir?",
-        "a": "a) 24 saat",
-        "b": "b) 36 saat",
-        "c": "c) 40 saat",
-        "d": "d) 32 saat",
-        "answer": "B"
-    }
+QUESTIONS_HEADERS = [
+    "question",
+    "a",
+    "b",
+    "c",
+    "d",
+    "answer"
 ]
 
-def load_questions():
-    if os.path.exists(QUESTIONS_FILE):
-        try:
-            with open(QUESTIONS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    # Fayl hələ yoxdursa, default sualları yaradıb yadda saxlayırıq
-    save_questions(DEFAULT_QUESTIONS)
-    return DEFAULT_QUESTIONS
 
-def save_questions(questions_list):
+def get_questions_sheet():
+
+    client = get_google_client()
+
+    spreadsheet = client.open(
+        GOOGLE_SHEET_NAME
+    )
+
     try:
-        with open(QUESTIONS_FILE, "w", encoding="utf-8") as f:
-            json.dump(questions_list, f, ensure_ascii=False, indent=2)
+
+        sheet = spreadsheet.worksheet(
+            QUESTIONS_SHEET_NAME
+        )
+
+    except gspread.WorksheetNotFound:
+
+        sheet = spreadsheet.add_worksheet(
+            title=QUESTIONS_SHEET_NAME,
+            rows=1000,
+            cols=6
+        )
+
+        sheet.update(
+            "A1:F1",
+            [QUESTIONS_HEADERS]
+        )
+
+    return sheet
+
+
+# =========================================================
+# SUALLARI GOOGLE SHEETS-DƏN OXU
+# =========================================================
+
+def load_questions():
+
+    try:
+
+        sheet = get_questions_sheet()
+
+        values = sheet.get_all_values()
+
+        if len(values) <= 1:
+
+            return []
+
+        questions = []
+
+        for row in values[1:]:
+
+            if not row:
+                continue
+
+            if len(row) < 6:
+                continue
+
+            question_text = str(
+                row[0]
+            ).strip()
+
+            if not question_text:
+                continue
+
+            answer = str(
+                row[5]
+            ).strip().upper()
+
+            if answer not in [
+                "A",
+                "B",
+                "C",
+                "D"
+            ]:
+                continue
+
+            questions.append({
+
+                "question":
+                    question_text,
+
+                "a":
+                    str(row[1]).strip(),
+
+                "b":
+                    str(row[2]).strip(),
+
+                "c":
+                    str(row[3]).strip(),
+
+                "d":
+                    str(row[4]).strip(),
+
+                "answer":
+                    answer
+
+            })
+
+        return questions
+
     except Exception as e:
-        print("SAVE QUESTIONS ERROR:", str(e))
+
+        print(
+            "LOAD QUESTIONS ERROR:",
+            str(e)
+        )
+
+        return []
 
 
 # =========================================================
@@ -353,7 +400,17 @@ def question(n):
         )
 
     current_questions = load_questions()
-    total = len(current_questions)
+
+    total = len(
+        current_questions
+    )
+
+    if total == 0:
+
+        return render_template(
+            "home.html",
+            error="Hazırda sistemdə sual yoxdur."
+        )
 
     if n >= total:
 
@@ -450,7 +507,16 @@ def finish():
     )
 
     current_questions = load_questions()
-    total = len(current_questions)
+
+    total = len(
+        current_questions
+    )
+
+    if total == 0:
+
+        return redirect(
+            url_for("home")
+        )
 
     correct = 0
 
@@ -521,7 +587,9 @@ def finish():
 
     question_results = []
 
-    for index, q in enumerate(current_questions):
+    for index, q in enumerate(
+        current_questions
+    ):
 
         selected = answers.get(
             str(index)
@@ -546,7 +614,9 @@ def finish():
 
         else:
 
-            selected_text = "Cavab verilməyib"
+            selected_text = (
+                "Cavab verilməyib"
+            )
 
         if selected == correct_letter:
 
@@ -630,20 +700,34 @@ def finish():
 
         all_values = sheet.get_all_values()
 
-        number = len(all_values)
+        number = len(
+            all_values
+        )
 
         row_data = [
+
             number,
+
             name,
+
             correct,
+
             total,
+
             wrong,
+
             f"{percent}%",
+
             created_at,
+
             status,
+
             duration_text,
+
             start_time_text,
+
             end_time_text
+
         ]
 
         sheet.append_row(
@@ -777,16 +861,18 @@ def admin():
         values = []
 
     return render_template(
+
         "admin.html",
 
         results=values,
 
         questions=load_questions()
+
     )
 
 
 # =========================================================
-# IMPORT QUESTIONS (EXCEL / JSON)
+# IMPORT QUESTIONS
 # =========================================================
 
 @app.route(
@@ -796,52 +882,320 @@ def admin():
 @admin_required
 def import_questions():
 
-    file = request.files.get("questions_file")
+    file = request.files.get(
+        "questions_file"
+    )
 
     if not file:
-        return redirect(url_for("admin"))
 
-    filename = file.filename.lower()
+        return redirect(
+            url_for("admin")
+        )
+
+    filename = (
+        file.filename or ""
+    ).lower()
+
     new_questions = []
 
     try:
-        if filename.endswith(".xlsx") or filename.endswith(".xls"):
-            wb = load_workbook(file, data_only=True)
-            sheet = wb.active
 
-            for row in sheet.iter_rows(min_row=2, values_only=True):
-                if not row or row[0] is None:
+        # =====================================================
+        # EXCEL
+        # =====================================================
+
+        if (
+            filename.endswith(".xlsx")
+            or filename.endswith(".xls")
+        ):
+
+            workbook = load_workbook(
+                file,
+                data_only=True
+            )
+
+            sheet = workbook.active
+
+            for row in sheet.iter_rows(
+                min_row=2,
+                values_only=True
+            ):
+
+                if not row:
                     continue
 
-                q_text = str(row[0]).strip()
-                opt_a = str(row[1]).strip() if len(row) > 1 and row[1] is not None else ""
-                opt_b = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ""
-                opt_c = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ""
-                opt_d = str(row[4]).strip() if len(row) > 4 and row[4] is not None else ""
-                
-                ans = str(row[5]).strip().upper() if len(row) > 5 and row[5] is not None else "A"
-                if len(ans) > 1:
-                    ans = ans[0]
+                if row[0] is None:
+                    continue
+
+                question_text = str(
+                    row[0]
+                ).strip()
+
+                if not question_text:
+                    continue
+
+                option_a = (
+                    str(row[1]).strip()
+                    if len(row) > 1
+                    and row[1] is not None
+                    else ""
+                )
+
+                option_b = (
+                    str(row[2]).strip()
+                    if len(row) > 2
+                    and row[2] is not None
+                    else ""
+                )
+
+                option_c = (
+                    str(row[3]).strip()
+                    if len(row) > 3
+                    and row[3] is not None
+                    else ""
+                )
+
+                option_d = (
+                    str(row[4]).strip()
+                    if len(row) > 4
+                    and row[4] is not None
+                    else ""
+                )
+
+                answer = (
+                    str(row[5]).strip().upper()
+                    if len(row) > 5
+                    and row[5] is not None
+                    else ""
+                )
+
+                if len(answer) > 1:
+
+                    answer = answer[0]
+
+                if answer not in [
+                    "A",
+                    "B",
+                    "C",
+                    "D"
+                ]:
+
+                    continue
 
                 new_questions.append({
-                    "question": q_text,
-                    "a": opt_a,
-                    "b": opt_b,
-                    "c": opt_c,
-                    "d": opt_d,
-                    "answer": ans
+
+                    "question":
+                        question_text,
+
+                    "a":
+                        option_a,
+
+                    "b":
+                        option_b,
+
+                    "c":
+                        option_c,
+
+                    "d":
+                        option_d,
+
+                    "answer":
+                        answer
+
                 })
 
-        elif filename.endswith(".json"):
-            new_questions = json.load(file)
 
-        if new_questions:
-            save_questions(new_questions)
+        # =====================================================
+        # JSON
+        # =====================================================
+
+        elif filename.endswith(".json"):
+
+            loaded_questions = json.load(
+                file
+            )
+
+            if isinstance(
+                loaded_questions,
+                list
+            ):
+
+                for q in loaded_questions:
+
+                    if not isinstance(
+                        q,
+                        dict
+                    ):
+
+                        continue
+
+                    question_text = str(
+                        q.get(
+                            "question",
+                            ""
+                        )
+                    ).strip()
+
+                    if not question_text:
+
+                        continue
+
+                    answer = str(
+                        q.get(
+                            "answer",
+                            ""
+                        )
+                    ).strip().upper()
+
+                    if len(answer) > 1:
+
+                        answer = answer[0]
+
+                    if answer not in [
+                        "A",
+                        "B",
+                        "C",
+                        "D"
+                    ]:
+
+                        continue
+
+                    new_questions.append({
+
+                        "question":
+                            question_text,
+
+                        "a":
+                            str(
+                                q.get(
+                                    "a",
+                                    ""
+                                )
+                            ).strip(),
+
+                        "b":
+                            str(
+                                q.get(
+                                    "b",
+                                    ""
+                                )
+                            ).strip(),
+
+                        "c":
+                            str(
+                                q.get(
+                                    "c",
+                                    ""
+                                )
+                            ).strip(),
+
+                        "d":
+                            str(
+                                q.get(
+                                    "d",
+                                    ""
+                                )
+                            ).strip(),
+
+                        "answer":
+                            answer
+
+                    })
+
+
+        else:
+
+            print(
+                "IMPORT ERROR: "
+                "Fayl formatı dəstəklənmir."
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+        # =====================================================
+        # BOŞ IMPORT OLARSA KÖHNƏ SUALLARI SİLMƏ
+        # =====================================================
+
+        if not new_questions:
+
+            print(
+                "IMPORT: Yeni sual tapılmadı. "
+                "Mövcud suallar saxlanıldı."
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+        # =====================================================
+        # GOOGLE SHEETS
+        # =====================================================
+
+        questions_sheet = get_questions_sheet()
+
+
+        # ƏVVƏLKİ SUALLARI SİL
+        questions_sheet.clear()
+
+
+        # BAŞLIQLARI YENİDƏN YAZ
+        questions_sheet.update(
+            "A1:F1",
+            [QUESTIONS_HEADERS]
+        )
+
+
+        # YENİ SUALLARI HAZIRLA
+        rows = []
+
+        for q in new_questions:
+
+            rows.append([
+
+                q["question"],
+
+                q["a"],
+
+                q["b"],
+
+                q["c"],
+
+                q["d"],
+
+                q["answer"]
+
+            ])
+
+
+        # YENİ SUALLARI GOOGLE SHEETS-Ə YAZ
+        questions_sheet.update(
+            f"A2:F{len(rows) + 1}",
+            rows
+        )
+
+
+        print(
+            f"IMPORT UĞURLU: "
+            f"{len(new_questions)} sual "
+            f"Google Sheets-də saxlanıldı."
+        )
+
 
     except Exception as e:
-        print("IMPORT ERROR:", str(e))
 
-    return redirect(url_for("admin"))
+        print(
+            "IMPORT ERROR:",
+            str(e)
+        )
+
+
+    return redirect(
+        url_for("admin")
+    )
 
 
 # =========================================================
