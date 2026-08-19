@@ -1,402 +1,1181 @@
-<!DOCTYPE html>
-<html lang="az">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin İdarəetmə Paneli</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #3b82f6;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --border: #334155;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-        }
+{% extends "base.html" %}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-        }
+{% block content %}
 
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            min-height: 100vh;
-            padding-bottom: 40px;
-        }
+<style>
 
-        /* Topbar */
-        .topbar {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            padding: 18px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+.admin-page {
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 25px 15px 50px;
+}
 
-        .brand-title {
-            font-size: 20px;
-            font-weight: 700;
-            background: linear-gradient(to right, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+/* =====================================================
+   HEADER
+   ===================================================== */
 
-        .logout-btn {
-            text-decoration: none;
-            color: var(--text-main);
-            background: #2563eb;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
+.admin-header {
+    background: linear-gradient(135deg, #173b73, #2563eb);
+    color: white;
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(23,59,115,0.18);
+}
 
-        .logout-btn:hover {
-            background: #1d4ed8;
-            box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
-        }
+.admin-header h1 {
+    margin: 0 0 7px;
+    font-size: 28px;
+    font-weight: 800;
+}
 
-        /* Layout */
-        .container {
-            max-width: 1300px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
+.admin-header p {
+    margin: 0;
+    opacity: .85;
+    font-size: 14px;
+}
 
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+.admin-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+}
 
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+.admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 17px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
 
-        .stat-label {
-            color: var(--text-sub);
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
+.btn-white {
+    background: white;
+    color: #173b73;
+}
 
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-        }
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
 
-        /* Controls / Search Bar */
-        .controls-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+.btn-blue {
+    background: #2563eb;
+    color: white;
+}
 
-        .search-input {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 10px 16px;
-            border-radius: 8px;
-            width: 300px;
-            outline: none;
-        }
+.btn-green {
+    background: #16a34a;
+    color: white;
+}
 
-        .search-input:focus {
-            border-color: var(--accent);
-        }
+/* =====================================================
+   CARDS
+   ===================================================== */
 
-        .action-btns {
-            display: flex;
-            gap: 10px;
-        }
+.admin-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 25px;
+    margin-bottom: 22px;
+    box-shadow: 0 7px 25px rgba(0,0,0,0.05);
+}
 
-        .btn {
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
-        }
+.admin-card h2 {
+    margin: 0 0 7px;
+    color: #172033;
+    font-size: 21px;
+}
 
-        .btn-export { background: var(--success); color: white; }
-        .btn-export:hover { background: #059669; }
-        .btn-refresh { background: var(--border); color: var(--text-main); }
-        .btn-refresh:hover { background: #475569; }
-        .btn-import { background: var(--accent); color: white; }
-        .btn-import:hover { background: #2563eb; }
+.admin-card-description {
+    color: #6b7280;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
 
-        /* Import Box Style */
-        .import-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
+/* =====================================================
+   FORM
+   ===================================================== */
 
-        .file-input {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            cursor: pointer;
-        }
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 14px;
+    align-items: end;
+}
 
-        /* Table */
-        .table-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 40px;
-        }
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
+.form-group label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
 
-        th {
-            background: #0f172a;
-            padding: 14px 18px;
-            font-size: 12px;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border);
-        }
+.form-control {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    background: white;
+}
 
-        td {
-            padding: 16px 18px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-        }
+.form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+}
 
-        tr:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
+.create-code-button {
+    border: none;
+    background: linear-gradient(135deg, #173b73, #2563eb);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
 
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
+.create-code-button:hover {
+    opacity: .92;
+}
 
-        .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-        .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+/* =====================================================
+   CODE TABLE
+   ===================================================== */
 
-        /* Section Title */
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
 
-        /* Questions Box */
-        .questions-grid {
-            display: grid;
-            gap: 12px;
-        }
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
 
-        .q-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-        }
+.admin-table th {
+    background: #f8fafc;
+    color: #374151;
+    font-size: 12px;
+    text-align: left;
+    padding: 13px 12px;
+    border-bottom: 2px solid #e5e7eb;
+}
 
-        .q-num {
-            color: var(--accent);
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-    </style>
-</head>
-<body>
+.admin-table td {
+    padding: 13px 12px;
+    border-bottom: 1px solid #eef0f3;
+    color: #374151;
+    font-size: 13px;
+    vertical-align: middle;
+}
 
-<header class="topbar">
-    <div class="brand-title">⚙️ Əmək Məcəlləsi Admin</div>
-    <a href="{{ url_for('admin_logout') }}" class="logout-btn">Çıxış</a>
-</header>
+.admin-table tr:hover td {
+    background: #fafcff;
+}
 
-<main class="container">
+.code-text {
+    font-weight: 800;
+    color: #173b73;
+    letter-spacing: .5px;
+}
 
-    <!-- Stat Kartları -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-label">İştirakçı Sayı</div>
-            <div class="stat-value" style="color: #60a5fa;">{{ results|length if results else 0 }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Bazadakı Suallar</div>
-            <div class="stat-value" style="color: #fbbf24;">{{ questions|length if questions else 0 }}</div>
-        </div>
-    </div>
+.status-active {
+    display: inline-block;
+    background: #dcfce7;
+    color: #166534;
+    padding: 5px 9px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 800;
+}
 
-    <!-- Sual Bazasını Yeniləmə / Import Bölməsi -->
-    <div class="import-card">
-        <div class="section-title" style="margin-bottom: 8px;">📥 Sual Bazasını Yenilə (Excel / JSON)</div>
-        <p style="color: var(--text-sub); font-size: 13px; margin-bottom: 15px;">
-            Sistemdəki sualları yeniləmək üçün kompyuterinizdə hazırladığınız Excel (<code>.xlsx</code>) və ya JSON (<code>.json</code>) faylını seçib yükləyin.
+.status-used {
+    display: inline-block;
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 5px 9px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* =====================================================
+   IMPORT
+   ===================================================== */
+
+.import-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.import-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.file-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 11px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 9px;
+}
+
+/* =====================================================
+   RESULTS
+   ===================================================== */
+
+.results-search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    outline: none;
+}
+
+.results-search:focus {
+    border-color: #2563eb;
+}
+
+/* =====================================================
+   STATS
+   ===================================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.stat-title {
+    color: #6b7280;
+    font-size: 12px;
+    margin-bottom: 7px;
+}
+
+.stat-value {
+    color: #173b73;
+    font-size: 25px;
+    font-weight: 900;
+}
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 850px) {
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .create-code-button {
+        width: 100%;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+
+    .admin-page {
+        padding: 12px 6px 35px;
+    }
+
+    .admin-header {
+        padding: 22px 18px;
+        border-radius: 15px;
+    }
+
+    .admin-header h1 {
+        font-size: 22px;
+    }
+
+    .admin-card {
+        padding: 18px;
+        border-radius: 15px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    .stat-value {
+        font-size: 21px;
+    }
+
+}
+
+</style>
+
+
+<div class="admin-page">
+
+
+    <!-- =================================================
+         ADMIN HEADER
+         ================================================= -->
+
+    <div class="admin-header">
+
+        <h1>
+            🔐 Admin Panel
+        </h1>
+
+        <p>
+            Əmək Məcəlləsi Sınaq Platformasının idarəetmə paneli
         </p>
-        <form action="/admin/import-questions" method="POST" enctype="multipart/form-data" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <input type="file" name="questions_file" accept=".xlsx, .xls, .json" required class="file-input">
-            <button type="submit" class="btn btn-import">
-                ⬆ Sualları Yenilə (Excel / JSON)
-            </button>
-        </form>
-    </div>
 
-    <!-- Nəticələr Bölməsi -->
-    <div class="controls-bar">
-        <input type="text" id="searchInput" class="search-input" placeholder="Ad və soyad ilə axtarış..." onkeyup="filterTable()">
-        <div class="action-btns">
-            <button class="btn btn-refresh" onclick="location.reload()">↻ Yenilə</button>
-            <a href="{{ url_for('admin_export') }}" class="btn btn-export">↓ Excel (.xlsx)</a>
+        <div class="admin-actions">
+
+            <a
+                href="{{ url_for('admin_export') }}"
+                class="admin-btn btn-white"
+            >
+                📊 Nəticələri Excel-ə yüklə
+            </a>
+
+            <a
+                href="{{ url_for('admin_logout') }}"
+                class="admin-btn btn-danger"
+            >
+                🚪 Çıxış
+            </a>
+
         </div>
+
     </div>
 
-    <div class="table-card">
-        <table id="resultsTable">
-            <thead>
-                <tr>
-                    <th>№</th>
-                    <th>Ad və Soyad</th>
-                    <th>Düzgün / Səhv</th>
-                    <th>Nəticə (%)</th>
-                    <th>Tarix</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if results %}
-                    {% for result in results %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td style="font-weight: 600;">
-                            {% if result is mapping %}
-                                {{ result.get("Ad və soyad", "—") }}
-                            {% else %}
-                                {{ result[1] if result|length > 1 else "—" }}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if result is mapping %}
-                                <span style="color: var(--success);">{{ result.get("Düzgün cavab", "0") }}</span> / 
-                                <span style="color: var(--danger);">{{ result.get("Səhv cavab", "0") }}</span>
-                            {% else %}
-                                <span style="color: var(--success);">{{ result[2] if result|length > 2 else "0" }}</span> / 
-                                <span style="color: var(--danger);">{{ result[4] if result|length > 4 else "0" }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if result is mapping %}
-                                <div>{{ result.get("Nəticə", "0%") }}</div>
-                            {% else %}
-                                <div>{{ result[5] if result|length > 5 else "0%" }}</div>
-                            {% endif %}
-                        </td>
-                        <td style="color: var(--text-sub);">
-                            {% if result is mapping %}
-                                {{ result.get("Tarix", "—") }}
-                            {% else %}
-                                {{ result[6] if result|length > 6 else "—" }}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% set status_text = result.get("Status", "") if result is mapping else (result[7] if result|length > 7 else "") %}
-                            {% if "Tamamlandı" in status_text %}
-                                <span class="badge badge-success">✓ Tamamlandı</span>
-                            {% else %}
-                                <span class="badge badge-warning">⚠ Yarımçıq</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-sub);">
-                            Hələ ki heç bir test nəticəsi qeydə alınmayıb.
-                        </td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
 
-    <!-- Suallar Bölməsi -->
-    <div class="section-title">📚 Sistemdəki Aktiv Suallar</div>
-    <div class="questions-grid">
-        {% for q in questions %}
-        <div class="q-card">
-            <div class="q-num">SUAL {{ loop.index }}</div>
-            <div>
-                {% if q is mapping %}
-                    {{ q.get("question", q.get("text", "Sual mətni yoxdur")) }}
-                {% else %}
-                    {{ q }}
-                {% endif %}
+    <!-- =================================================
+         STATISTICS
+         ================================================= -->
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+
+            <div class="stat-title">
+                Ümumi nəticə
             </div>
+
+            <div class="stat-value">
+                {{ results|length }}
+            </div>
+
         </div>
-        {% endfor %}
+
+
+        <div class="stat-card">
+
+            <div class="stat-title">
+                Ümumi sual
+            </div>
+
+            <div class="stat-value">
+                {{ questions|length }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-title">
+                Bölmə sayı
+            </div>
+
+            <div class="stat-value">
+                {{ sections|length }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-title">
+                Aktiv sistem
+            </div>
+
+            <div class="stat-value">
+                ✓
+            </div>
+
+        </div>
+
     </div>
 
-</main>
+
+    <!-- =================================================
+         KOD YARAT
+         ================================================= -->
+
+    <div class="admin-card">
+
+        <h2>
+            🔑 Yeni giriş kodu yarat
+        </h2>
+
+        <div class="admin-card-description">
+
+            İstifadəçiyə veriləcək giriş kodunu və həmin kodun
+            hansı bölməyə aid olduğunu burada müəyyən edə bilərsiniz.
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for('admin_create_code') }}"
+        >
+
+            <div class="form-grid">
+
+
+                <!-- KOD -->
+
+                <div class="form-group">
+
+                    <label>
+                        Giriş kodu
+                    </label>
+
+                    <input
+                        type="text"
+                        name="code"
+                        class="form-control"
+                        placeholder="Məsələn: EMK-001"
+                        required
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- BÖLMƏ -->
+
+                <div class="form-group">
+
+                    <label>
+                        Bölmə
+                    </label>
+
+                    <select
+                        name="section"
+                        class="form-control"
+                        required
+                    >
+
+                        <option value="">
+                            Bölmə seçin
+                        </option>
+
+                        {% for section in sections %}
+
+                        <option value="{{ section }}">
+                            {{ section }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- BUTTON -->
+
+                <button
+                    type="submit"
+                    class="create-code-button"
+                >
+                    ➕ KODU YARAT
+                </button>
+
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- =================================================
+         KODLAR
+         ================================================= -->
+
+    <div class="admin-card">
+
+        <h2>
+            🔐 Giriş kodları
+        </h2>
+
+        <div class="admin-card-description">
+
+            Burada yaradılmış bütün giriş kodlarını,
+            hansı bölməyə aid olduğunu və istifadə vəziyyətini görə bilərsiniz.
+
+        </div>
+
+
+        <input
+            type="text"
+            id="codeSearch"
+            class="results-search"
+            placeholder="🔎 Kod, bölmə və ya istifadəçi adı ilə axtar..."
+            autocomplete="off"
+        >
+
+
+        <div class="table-wrapper">
+
+            <table
+                class="admin-table"
+                id="codesTable"
+            >
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            №
+                        </th>
+
+                        <th>
+                            Kod
+                        </th>
+
+                        <th>
+                            Bölmə
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Ad və soyad
+                        </th>
+
+                        <th>
+                            İstifadə vaxtı
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% if codes %}
+
+                        {% for code in codes %}
+
+                        <tr>
+
+                            <td>
+                                {{ loop.index }}
+                            </td>
+
+                            <td>
+                                <span class="code-text">
+                                    {{ code.get("Kod", "") }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ code.get("Bölmə", "") }}
+                            </td>
+
+                            <td>
+
+                                {% set status = code.get("Status", "")|lower %}
+
+                                {% if status == "aktiv" %}
+
+                                    <span class="status-active">
+                                        AKTİV
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="status-used">
+                                        İSTİFADƏ OLUNUB
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ code.get("Ad və soyad", "") or "-" }}
+                            </td>
+
+                            <td>
+                                {{ code.get("İstifadə vaxtı", "") or "-" }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                style="
+                                    text-align:center;
+                                    color:#6b7280;
+                                    padding:30px;
+                                "
+                            >
+
+                                Hələ heç bir giriş kodu yaradılmayıb.
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SUALLARI IMPORT ET
+         ================================================= -->
+
+    <div class="admin-card">
+
+        <h2>
+            📚 Sualları idarə et
+        </h2>
+
+        <div class="admin-card-description">
+
+            Excel və ya JSON faylından yeni suallar yükləyə bilərsiniz.
+            Yeni import zamanı əvvəlki suallar silinərək yalnız
+            yeni fayldakı suallar sistemdə saxlanılacaq.
+
+        </div>
+
+
+        <div class="import-box">
+
+            <form
+                method="POST"
+                action="{{ url_for('import_questions') }}"
+                enctype="multipart/form-data"
+                class="import-form"
+            >
+
+                <input
+                    type="file"
+                    name="questions_file"
+                    class="file-input"
+                    accept=".xlsx,.xls,.json"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="admin-btn btn-blue"
+                >
+                    📥 SUALLARI İMPORT ET
+                </button>
+
+            </form>
+
+            <div
+                style="
+                    margin-top:12px;
+                    color:#6b7280;
+                    font-size:12px;
+                    line-height:1.6;
+                "
+            >
+
+                Excel formatı:
+
+                <strong>
+                    Bölmə | Sual | A | B | C | D | Cavab
+                </strong>
+
+                <br>
+
+                Bölmə üçün
+                <strong>1, 2, 3...</strong>
+                və ya
+                <strong>I Bölmə, II Bölmə...</strong>
+                istifadə edə bilərsiniz.
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SUALLAR
+         ================================================= -->
+
+    <div class="admin-card">
+
+        <h2>
+            📝 Sistemdəki suallar
+        </h2>
+
+        <div class="admin-card-description">
+
+            Hazırda sistemdə olan suallar.
+
+        </div>
+
+
+        <input
+            type="text"
+            id="questionSearch"
+            class="results-search"
+            placeholder="🔎 Sual və ya bölmə üzrə axtar..."
+            autocomplete="off"
+        >
+
+
+        <div class="table-wrapper">
+
+            <table
+                class="admin-table"
+                id="questionsTable"
+            >
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            №
+                        </th>
+
+                        <th>
+                            Bölmə
+                        </th>
+
+                        <th>
+                            Sual
+                        </th>
+
+                        <th>
+                            Cavab
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% if questions %}
+
+                        {% for q in questions %}
+
+                        <tr>
+
+                            <td>
+                                {{ loop.index }}
+                            </td>
+
+                            <td>
+                                {{ q.get("section", "") }}
+                            </td>
+
+                            <td>
+                                {{ q.get("question", "") }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ q.get("answer", "") }}
+                                </strong>
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr>
+
+                            <td
+                                colspan="4"
+                                style="
+                                    text-align:center;
+                                    color:#6b7280;
+                                    padding:30px;
+                                "
+                            >
+
+                                Sistemdə sual yoxdur.
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         NƏTİCƏLƏR
+         ================================================= -->
+
+    <div class="admin-card">
+
+        <h2>
+            📊 Test nəticələri
+        </h2>
+
+        <div class="admin-card-description">
+
+            İstifadəçilərin test nəticələri.
+
+        </div>
+
+
+        <input
+            type="text"
+            id="resultSearch"
+            class="results-search"
+            placeholder="🔎 Ad, bölmə, tarix və ya nəticə üzrə axtar..."
+            autocomplete="off"
+        >
+
+
+        <div class="table-wrapper">
+
+            <table
+                class="admin-table"
+                id="resultsTable"
+            >
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            №
+                        </th>
+
+                        <th>
+                            Ad və soyad
+                        </th>
+
+                        <th>
+                            Bölmə
+                        </th>
+
+                        <th>
+                            Düzgün
+                        </th>
+
+                        <th>
+                            Ümumi
+                        </th>
+
+                        <th>
+                            Səhv
+                        </th>
+
+                        <th>
+                            Nəticə
+                        </th>
+
+                        <th>
+                            Tarix
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Müddət
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% if results %}
+
+                        {% for result in results %}
+
+                        <tr>
+
+                            <td>
+                                {{ result.get("№", loop.index) }}
+                            </td>
+
+                            <td>
+                                {{ result.get("Ad və soyad", "") }}
+                            </td>
+
+                            <td>
+                                {{ result.get("Bölmə", "") }}
+                            </td>
+
+                            <td>
+                                {{ result.get("Düzgün cavab", "0") }}
+                            </td>
+
+                            <td>
+                                {{ result.get("Ümumi sual", "0") }}
+                            </td>
+
+                            <td>
+                                {{ result.get("Səhv cavab", "0") }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ result.get("Nəticə", "") }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ result.get("Tarix", "") }}
+                            </td>
+
+                            <td>
+                                {{ result.get("Status", "") }}
+                            </td>
+
+                            <td>
+                                {{ result.get("Müddət", "") }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr>
+
+                            <td
+                                colspan="10"
+                                style="
+                                    text-align:center;
+                                    color:#6b7280;
+                                    padding:30px;
+                                "
+                            >
+
+                                Hələ nəticə yoxdur.
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     AXTARIŞ JAVASCRIPT
+     ===================================================== -->
 
 <script>
-    function filterTable() {
-        let input = document.getElementById("searchInput");
-        let filter = input.value.toLowerCase();
-        let table = document.getElementById("resultsTable");
-        let tr = table.getElementsByTagName("tr");
 
-        for (let i = 1; i < tr.length; i++) {
-            let td = tr[i].getElementsByTagName("td")[1];
-            if (td) {
-                let txtValue = td.textContent || td.innerText;
-                if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
-                }
-            }
+/* =====================================================
+   KOD AXTARIŞI
+   ===================================================== */
+
+const codeSearch =
+    document.getElementById("codeSearch");
+
+if (codeSearch) {
+
+    codeSearch.addEventListener(
+        "input",
+        function () {
+
+            const search =
+                this.value.toLowerCase().trim();
+
+            const rows =
+                document.querySelectorAll(
+                    "#codesTable tbody tr"
+                );
+
+            rows.forEach(function (row) {
+
+                const text =
+                    row.innerText.toLowerCase();
+
+                row.style.display =
+                    text.includes(search)
+                        ? ""
+                        : "none";
+
+            });
+
         }
-    }
+    );
+
+}
+
+
+/* =====================================================
+   SUAL AXTARIŞI
+   ===================================================== */
+
+const questionSearch =
+    document.getElementById("questionSearch");
+
+if (questionSearch) {
+
+    questionSearch.addEventListener(
+        "input",
+        function () {
+
+            const search =
+                this.value.toLowerCase().trim();
+
+            const rows =
+                document.querySelectorAll(
+                    "#questionsTable tbody tr"
+                );
+
+            rows.forEach(function (row) {
+
+                const text =
+                    row.innerText.toLowerCase();
+
+                row.style.display =
+                    text.includes(search)
+                        ? ""
+                        : "none";
+
+            });
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   NƏTİCƏ AXTARIŞI
+   ===================================================== */
+
+const resultSearch =
+    document.getElementById("resultSearch");
+
+if (resultSearch) {
+
+    resultSearch.addEventListener(
+        "input",
+        function () {
+
+            const search =
+                this.value.toLowerCase().trim();
+
+            const rows =
+                document.querySelectorAll(
+                    "#resultsTable tbody tr"
+                );
+
+            rows.forEach(function (row) {
+
+                const text =
+                    row.innerText.toLowerCase();
+
+                row.style.display =
+                    text.includes(search)
+                        ? ""
+                        : "none";
+
+            });
+
+        }
+    );
+
+}
+
 </script>
 
-</body>
-</html>
+{% endblock %}
