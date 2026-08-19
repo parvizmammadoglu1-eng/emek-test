@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from io import BytesIO
+from functools import wraps
 
 from flask import (
     Flask,
@@ -124,8 +125,6 @@ def get_sheet():
             cols=11
         )
 
-    headers = sheet.row_values(1)
-
     required_headers = [
         "№",
         "Ad və soyad",
@@ -140,10 +139,12 @@ def get_sheet():
         "Bitmə vaxtı"
     ]
 
+    headers = sheet.row_values(1)
+
     if not headers:
 
         sheet.update(
-            "1:1",
+            "A1:K1",
             [required_headers]
         )
 
@@ -155,9 +156,7 @@ def get_sheet():
 
             if header not in headers:
 
-                headers.append(
-                    header
-                )
+                headers.append(header)
 
                 changed = True
 
@@ -287,7 +286,6 @@ def load_questions():
 
                 "answer":
                     answer
-
             })
 
         return questions
@@ -347,7 +345,7 @@ def get_codes_sheet():
 
 
 # =========================================================
-# GİRİŞ KODUNU YOXLAMA VƏ İSTİFADƏ ETMƏ
+# GİRİŞ KODUNU YOXLAMA
 # =========================================================
 
 def use_access_code(code, name):
@@ -380,27 +378,24 @@ def use_access_code(code, name):
             if not row:
                 continue
 
-            sheet_code = (
-                str(
-                    row[0]
-                    if len(row) > 0
-                    else ""
-                )
-                .strip()
-            )
+            sheet_code = str(
+                row[0]
+                if len(row) > 0
+                else ""
+            ).strip()
 
             if sheet_code.upper() != code.upper():
                 continue
 
-            status = (
-                str(
-                    row[1]
-                    if len(row) > 1
-                    else ""
-                )
-                .strip()
-                .lower()
-            )
+            status = str(
+                row[1]
+                if len(row) > 1
+                else ""
+            ).strip().lower()
+
+            # =================================================
+            # KOD ARTİQ İSTİFADƏ OLUNUBSA
+            # =================================================
 
             if status != "aktiv":
 
@@ -415,7 +410,7 @@ def use_access_code(code, name):
             )
 
             # =================================================
-            # KODU DƏRHAL İSTİFADƏ OLUNMUŞ EDİRİK
+            # KODU DƏRHAL YANDIRIRIQ
             # =================================================
 
             sheet.update_cell(
@@ -454,8 +449,7 @@ def use_access_code(code, name):
         )
 
         return False, (
-            "Giriş kodu yoxlanılarkən xəta baş verdi. "
-            "Bir qədər sonra yenidən cəhd edin."
+            "Giriş kodu yoxlanılarkən xəta baş verdi."
         )
 
 
@@ -465,6 +459,7 @@ def use_access_code(code, name):
 
 def admin_required(function):
 
+    @wraps(function)
     def wrapper(*args, **kwargs):
 
         if not session.get("admin"):
@@ -477,8 +472,6 @@ def admin_required(function):
             *args,
             **kwargs
         )
-
-    wrapper.__name__ = function.__name__
 
     return wrapper
 
@@ -505,15 +498,6 @@ def home():
             ""
         ).strip()
 
-        if not access_code:
-
-            return render_template(
-                "home.html",
-                error="Giriş kodunu daxil edin.",
-                name=name,
-                access_code=access_code
-            )
-
         if not name:
 
             return render_template(
@@ -523,8 +507,17 @@ def home():
                 access_code=access_code
             )
 
+        if not access_code:
+
+            return render_template(
+                "home.html",
+                error="Giriş kodunu daxil edin.",
+                name=name,
+                access_code=access_code
+            )
+
         # =====================================================
-        # KODU YOXLA VƏ DƏRHAL İSTİFADƏ ET
+        # KODU YOXLAYIRIQ
         # =====================================================
 
         code_valid, error_message = use_access_code(
@@ -679,7 +672,6 @@ def question(n):
         name=session["name"],
 
         exam_start_time=exam_start_time
-
     )
 
 
@@ -870,7 +862,6 @@ def finish():
 
             "is_empty":
                 is_empty
-
         })
 
     wrong = answered - correct
@@ -897,6 +888,10 @@ def finish():
             f"Yarımçıq bitirildi "
             f"({answered}/{total})"
         )
+
+    # =========================================================
+    # NƏTİCƏNİ GOOGLE SHEETS-Ə YAZ
+    # =========================================================
 
     try:
 
@@ -931,7 +926,6 @@ def finish():
             start_time_text,
 
             end_time_text
-
         ]
 
         sheet.append_row(
@@ -981,7 +975,6 @@ def finish():
         end_time_text=end_time_text,
 
         question_results=question_results
-
     )
 
 
@@ -1071,7 +1064,6 @@ def admin():
         results=values,
 
         questions=load_questions()
-
     )
 
 
@@ -1103,6 +1095,10 @@ def import_questions():
     new_questions = []
 
     try:
+
+        # =====================================================
+        # EXCEL
+        # =====================================================
 
         if (
             filename.endswith(".xlsx")
@@ -1201,8 +1197,11 @@ def import_questions():
 
                     "answer":
                         answer
-
                 })
+
+        # =====================================================
+        # JSON
+        # =====================================================
 
         elif filename.endswith(".json"):
 
@@ -1221,7 +1220,6 @@ def import_questions():
                         q,
                         dict
                     ):
-
                         continue
 
                     question_text = str(
@@ -1293,14 +1291,12 @@ def import_questions():
 
                         "answer":
                             answer
-
                     })
 
         else:
 
             print(
-                "IMPORT ERROR: "
-                "Fayl formatı dəstəklənmir."
+                "IMPORT ERROR: Fayl formatı dəstəklənmir."
             )
 
             return redirect(
@@ -1308,7 +1304,7 @@ def import_questions():
             )
 
         # =====================================================
-        # BOŞ IMPORT OLARSA KÖHNƏ SUALLARA TOXUNMURUQ
+        # BOŞ IMPORT
         # =====================================================
 
         if not new_questions:
@@ -1322,12 +1318,16 @@ def import_questions():
                 url_for("admin")
             )
 
+        # =====================================================
+        # GOOGLE SHEETS SUALLAR
+        # =====================================================
+
         questions_sheet = get_questions_sheet()
 
         # ƏVVƏLKİ SUALLARI TAM SİL
         questions_sheet.clear()
 
-        # BAŞLIQLARI YAZ
+        # BAŞLIQLAR
         questions_sheet.update(
             "A1:F1",
             [QUESTIONS_HEADERS]
@@ -1340,17 +1340,11 @@ def import_questions():
             rows.append([
 
                 q["question"],
-
                 q["a"],
-
                 q["b"],
-
                 q["c"],
-
                 q["d"],
-
                 q["answer"]
-
             ])
 
         questions_sheet.update(
@@ -1360,8 +1354,7 @@ def import_questions():
 
         print(
             f"IMPORT UĞURLU: "
-            f"{len(new_questions)} sual "
-            f"Google Sheets-də saxlanıldı."
+            f"{len(new_questions)} sual Google Sheets-də saxlanıldı."
         )
 
     except Exception as e:
@@ -1410,27 +1403,16 @@ def admin_export():
     headers = [
 
         "№",
-
         "Ad və soyad",
-
         "Düzgün cavab",
-
         "Ümumi sual",
-
         "Səhv cavab",
-
         "Nəticə",
-
         "Tarix",
-
         "Status",
-
         "Müddət",
-
         "Başlama vaxtı",
-
         "Bitmə vaxtı"
-
     ]
 
     for column, header in enumerate(
@@ -1457,129 +1439,88 @@ def admin_export():
         2
     ):
 
-        worksheet.cell(
-            row=row_number,
-            column=1,
-            value=result.get(
+        values = [
+
+            result.get(
                 "№",
                 row_number - 1
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=2,
-            value=result.get(
+            result.get(
                 "Ad və soyad",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=3,
-            value=result.get(
+            result.get(
                 "Düzgün cavab",
                 0
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=4,
-            value=result.get(
+            result.get(
                 "Ümumi sual",
                 0
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=5,
-            value=result.get(
+            result.get(
                 "Səhv cavab",
                 0
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=6,
-            value=result.get(
+            result.get(
                 "Nəticə",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=7,
-            value=result.get(
+            result.get(
                 "Tarix",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=8,
-            value=result.get(
+            result.get(
                 "Status",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=9,
-            value=result.get(
+            result.get(
                 "Müddət",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=10,
-            value=result.get(
+            result.get(
                 "Başlama vaxtı",
                 ""
-            )
-        )
+            ),
 
-        worksheet.cell(
-            row=row_number,
-            column=11,
-            value=result.get(
+            result.get(
                 "Bitmə vaxtı",
                 ""
             )
-        )
+        ]
+
+        for column, value in enumerate(
+            values,
+            1
+        ):
+
+            worksheet.cell(
+                row=row_number,
+                column=column,
+                value=value
+            )
 
     widths = {
 
         "A": 8,
-
         "B": 30,
-
         "C": 18,
-
         "D": 18,
-
         "E": 15,
-
         "F": 15,
-
         "G": 25,
-
         "H": 30,
-
         "I": 18,
-
         "J": 25,
-
         "K": 25
-
     }
 
     for column, width in widths.items():
@@ -1596,23 +1537,20 @@ def admin_export():
 
     output.seek(0)
 
-    filename = (
-        "emek_mecellesi_2026_test_neticeleri.xlsx"
-    )
-
     return send_file(
 
         output,
 
         as_attachment=True,
 
-        download_name=filename,
+        download_name=(
+            "emek_mecellesi_2026_test_neticeleri.xlsx"
+        ),
 
         mimetype=(
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"
         )
-
     )
 
 
@@ -1632,5 +1570,4 @@ if __name__ == "__main__":
                 5000
             )
         )
-
     )
