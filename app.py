@@ -1682,7 +1682,7 @@ def download_certificate():
     pdf.drawCentredString(
         page_width / 2,
         page_height - 87,
-        "ƏMƏK MƏCƏLLƏSİ"
+        "ƏMƏK MƏCƏLLƏSİ SINAQ PLATFORMASI"
     )
 
     # =====================================================
