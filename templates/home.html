@@ -121,7 +121,8 @@
         padding: 0;
     }
 
-    .name-input {
+    .name-input,
+    .code-input {
         display: block;
         width: 100%;
         max-width: 100%;
@@ -137,9 +138,19 @@
         box-sizing: border-box;
     }
 
-    .name-input:focus {
+    .code-input {
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
+
+    .name-input:focus,
+    .code-input:focus {
         border-color: #2563eb;
         box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+    }
+
+    .field-group {
+        margin-bottom: 18px;
     }
 
     .start-button {
@@ -171,6 +182,7 @@
         text-align: center;
         color: #6b7280;
         font-size: 12px;
+        line-height: 1.5;
     }
 
     .error {
@@ -186,60 +198,223 @@
         width: 100%;
     }
 
+    .code-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+        padding: 12px 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
     @media (max-width: 600px) {
-        .home-page { padding: 15px 8px; }
-        .welcome-card { border-radius: 17px; }
-        .welcome-top { padding: 32px 18px; }
-        .welcome-body { padding: 25px 18px; }
-        .features { grid-template-columns: 1fr; }
-        .feature { display: flex; align-items: center; text-align: left; gap: 10px; padding: 12px 14px; }
+
+        .home-page {
+            padding: 15px 8px;
+        }
+
+        .welcome-card {
+            border-radius: 17px;
+        }
+
+        .welcome-top {
+            padding: 32px 18px;
+        }
+
+        .welcome-body {
+            padding: 25px 18px;
+        }
+
+        .features {
+            grid-template-columns: 1fr;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            text-align: left;
+            gap: 10px;
+            padding: 12px 14px;
+        }
     }
 </style>
 
 <div class="home-page">
-    <div class="welcome-card">
-        <div class="welcome-top">
-            <div class="book-icon">📚</div>
-            <h1>ƏMƏK MƏCƏLLƏSİ SINAQ PLATFORMASI</h1>
-            <p class="subtitle">Onlayn Test Sistemi</p>
-        </div>
 
-        <div class="welcome-body">
-            <p class="description">
-                Əmək Məcəlləsi üzrə biliklərinizi yoxlamaq üçün hazırlanmış test sisteminə xoş gəlmisiniz.
-                Testə başlamaq üçün ad və soyadınızı daxil edin.
+    <div class="welcome-card">
+
+        <div class="welcome-top">
+
+            <div class="book-icon">
+                📚
+            </div>
+
+            <h1>
+                ƏMƏK MƏCƏLLƏSİ SINAQ PLATFORMASI
+            </h1>
+
+            <p class="subtitle">
+                Onlayn Test Sistemi
             </p>
 
+        </div>
+
+
+        <div class="welcome-body">
+
+            <p class="description">
+
+                Əmək Məcəlləsi üzrə biliklərinizi yoxlamaq
+                üçün hazırlanmış test sisteminə xoş gəlmisiniz.
+
+                Testə başlamaq üçün sizə təqdim olunmuş
+                giriş kodunu və ad-soyadınızı daxil edin.
+
+            </p>
+
+
             <div class="features">
+
                 <div class="feature">
-                    <div class="feature-icon">📝</div>
-                    <div><strong>Test sualları</strong><span>Biliklərinizi yoxlayın</span></div>
+
+                    <div class="feature-icon">
+                        📝
+                    </div>
+
+                    <div>
+                        <strong>
+                            Test sualları
+                        </strong>
+
+                        <span>
+                            Biliklərinizi yoxlayın
+                        </span>
+                    </div>
+
                 </div>
+
+
                 <div class="feature">
-                    <div class="feature-icon">📊</div>
-                    <div><strong>Nəticə</strong><span>Test sonunda hesablanır</span></div>
+
+                    <div class="feature-icon">
+                        📊
+                    </div>
+
+                    <div>
+                        <strong>
+                            Nəticə
+                        </strong>
+
+                        <span>
+                            Test sonunda hesablanır
+                        </span>
+                    </div>
+
                 </div>
+
+
                 <div class="feature">
-                    <div class="feature-icon">🎯</div>
-                    <div><strong>Qiymətləndirmə</strong><span>Düzgün cavab faizi</span></div>
+
+                    <div class="feature-icon">
+                        🎯
+                    </div>
+
+                    <div>
+                        <strong>
+                            Qiymətləndirmə
+                        </strong>
+
+                        <span>
+                            Düzgün cavab faizi
+                        </span>
+                    </div>
+
                 </div>
+
             </div>
+
 
             {% if error %}
-            <div class="error">{{ error }}</div>
+
+            <div class="error">
+                {{ error }}
+            </div>
+
             {% endif %}
 
-            <form method="post">
-                <div class="form-title">Ad və soyad</div>
-                <input type="text" name="name" class="name-input" placeholder="Məsələn: Pərviz Hüseynov" required autofocus>
 
-                <button type="submit" class="start-button">TESTƏ BAŞLA →</button>
+            <div class="code-info">
+
+                🔐 Sizə təqdim olunmuş giriş kodunu
+                yalnız bir dəfə istifadə etmək mümkündür.
+
+            </div>
+
+
+            <form method="post">
+
+                <div class="field-group">
+
+                    <div class="form-title">
+                        Giriş kodu
+                    </div>
+
+                    <input
+                        type="text"
+                        name="access_code"
+                        class="code-input"
+                        placeholder="Məsələn: EMEK-001"
+                        value="{{ access_code or '' }}"
+                        autocomplete="off"
+                        required
+                        autofocus
+                    >
+
+                </div>
+
+
+                <div class="field-group">
+
+                    <div class="form-title">
+                        Ad və soyad
+                    </div>
+
+                    <input
+                        type="text"
+                        name="name"
+                        class="name-input"
+                        placeholder="Məsələn: Pərviz Hüseynov"
+                        value="{{ name or '' }}"
+                        autocomplete="name"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="start-button"
+                >
+                    TESTƏ BAŞLA →
+                </button>
+
             </form>
 
+
             <div class="security">
-                🔒 Nəticəniz test tamamlandıqdan sonra qeydə alınır.
+
+                🔒 Giriş kodu testə daxil olduğunuz anda
+                istifadə olunur və ikinci dəfə istifadə edilə bilməz.
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
 {% endblock %}
