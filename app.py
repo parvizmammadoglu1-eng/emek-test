@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from io import BytesIO
@@ -20,10 +21,6 @@ from openpyxl.styles import Font, Alignment
 
 import gspread
 from google.oauth2.service_account import Credentials
-
-# =========================================================
-# PDF
-# =========================================================
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, landscape
@@ -116,7 +113,7 @@ def get_google_client():
 SECTIONS = [
     "I Bölmə (Əsas müddəalar)",
     "II Bölmə (Kollektiv müqavilə və sazişin bağlanmasının ümumi qaydaları)",
-    "III Bölmə (Əmək müqaviləsinin bağlanması əsasları və qaydası) ",
+    "III Bölmə (Əmək müqaviləsinin bağlanması əsasları və qaydası)",
     "IV Bölmə (İş vaxtının növləri və tənzimlənməsi qaydaları)",
     "V Bölmə (İstirahət vaxtı və işçilərin məzuniyyət hüquqları)",
     "VI Bölmə (Əmək normaları və işəmuzd qiymətləri)",
@@ -134,6 +131,48 @@ SECTIONS = [
 # BÖLMƏ NORMALİZASİYASI
 # =========================================================
 
+ROMAN_NUMBERS = {
+    1: "I",
+    2: "II",
+    3: "III",
+    4: "IV",
+    5: "V",
+    6: "VI",
+    7: "VII",
+    8: "VIII",
+    9: "IX",
+    10: "X",
+    11: "XI",
+    12: "XII",
+    13: "XIII"
+}
+
+
+def clean_section_text(value):
+
+    value = str(
+        value or ""
+    ).strip().lower()
+
+    value = (
+        value
+        .replace("ə", "e")
+        .replace("ı", "i")
+        .replace("ö", "o")
+        .replace("ü", "u")
+        .replace("ş", "s")
+        .replace("ç", "c")
+    )
+
+    value = re.sub(
+        r"[^a-z0-9ivx]+",
+        " ",
+        value
+    )
+
+    return value.strip()
+
+
 def normalize_section(value):
 
     value = str(
@@ -143,44 +182,133 @@ def normalize_section(value):
     if not value:
         return ""
 
-    numeric_sections = {
-        "1": "I Bölmə",
-        "2": "II Bölmə",
-        "3": "III Bölmə",
-        "4": "IV Bölmə",
-        "5": "V Bölmə",
-        "6": "VI Bölmə",
-        "7": "VII Bölmə",
-        "8": "VIII Bölmə",
-        "9": "IX Bölmə",
-        "10": "X Bölmə",
-        "11": "XI Bölmə",
-        "12": "XII Bölmə",
-        "13": "XIII Bölmə"
-    }
-
-    if value in numeric_sections:
-        return numeric_sections[value]
-
-    cleaned = (
+    cleaned = clean_section_text(
         value
-        .lower()
-        .replace("bölmə", "")
-        .replace("bölm", "")
-        .replace(" ", "")
-        .replace("-", "")
-        .replace("_", "")
     )
 
-    if cleaned in numeric_sections:
-        return numeric_sections[cleaned]
+    # -----------------------------------------------------
+    # ƏVVƏLCƏ TAM BÖLMƏ ADLARINI YOXLAYIRIQ
+    # -----------------------------------------------------
+
+    for index, section in enumerate(
+        SECTIONS,
+        start=1
+    ):
+
+        section_clean = clean_section_text(
+            section
+        )
+
+        if cleaned == section_clean:
+
+            return section
+
+    # -----------------------------------------------------
+    # 1, 2, 3 ... 13
+    # -----------------------------------------------------
+
+    numeric_match = re.search(
+        r"(?<!\d)(13|12|11|10|[1-9])(?!\d)",
+        cleaned
+    )
+
+    if numeric_match:
+
+        number = int(
+            numeric_match.group(1)
+        )
+
+        return f"{ROMAN_NUMBERS[number]} Bölmə"
+
+    # -----------------------------------------------------
+    # ROMAN RƏQƏMLƏRİ
+    # -----------------------------------------------------
+
+    roman_match = re.search(
+        r"\b(xiii|xii|xi|x|ix|viii|vii|vi|iv|iii|ii|i)\b",
+        cleaned
+    )
+
+    if roman_match:
+
+        roman = roman_match.group(1)
+
+        roman_to_number = {
+            "i": 1,
+            "ii": 2,
+            "iii": 3,
+            "iv": 4,
+            "v": 5,
+            "vi": 6,
+            "vii": 7,
+            "viii": 8,
+            "ix": 9,
+            "x": 10,
+            "xi": 11,
+            "xii": 12,
+            "xiii": 13
+        }
+
+        number = roman_to_number.get(
+            roman
+        )
+
+        if number:
+
+            return f"{ROMAN_NUMBERS[number]} Bölmə"
+
+    # -----------------------------------------------------
+    # "2-ci bölmə", "II-ci bölmə" və s.
+    # -----------------------------------------------------
+
+    ordinal_match = re.search(
+        r"\b(13|12|11|10|[1-9])\s*[-]?\s*(ci|cu|cü|cü|cı)\b",
+        cleaned
+    )
+
+    if ordinal_match:
+
+        number = int(
+            ordinal_match.group(1)
+        )
+
+        return f"{ROMAN_NUMBERS[number]} Bölmə"
+
+    # -----------------------------------------------------
+    # "1ci", "2ci" və s.
+    # -----------------------------------------------------
+
+    compact_match = re.search(
+        r"^(13|12|11|10|[1-9])(ci|cu|cü|cı)$",
+        cleaned.replace(" ", "")
+    )
+
+    if compact_match:
+
+        number = int(
+            compact_match.group(1)
+        )
+
+        return f"{ROMAN_NUMBERS[number]} Bölmə"
+
+    return value
+
+
+def get_display_section(normalized):
+
+    normalized = normalize_section(
+        normalized
+    )
 
     for section in SECTIONS:
 
-        if value.lower() == section.lower():
+        if normalize_section(
+            section
+        ) == normalized:
+
             return section
 
-    return value
+    return normalized
 
 
 # =========================================================
@@ -225,11 +353,6 @@ def register_pdf_font():
                     str(e)
                 )
 
-    print(
-        "PDF FONT: Azərbaycan hərflərini dəstəkləyən "
-        "font tapılmadı. Helvetica istifadə olunacaq."
-    )
-
     return "Helvetica"
 
 
@@ -259,8 +382,6 @@ def get_sheet():
             cols=12
         )
 
-    headers = sheet.row_values(1)
-
     required_headers = [
         "№",
         "Ad və soyad",
@@ -275,6 +396,8 @@ def get_sheet():
         "Başlama vaxtı",
         "Bitmə vaxtı"
     ]
+
+    headers = sheet.row_values(1)
 
     if not headers:
 
@@ -362,6 +485,17 @@ def get_questions_sheet():
             [QUESTIONS_HEADERS]
         )
 
+    else:
+
+        headers = sheet.row_values(1)
+
+        if not headers:
+
+            sheet.update(
+                "A1:G1",
+                [QUESTIONS_HEADERS]
+            )
+
     return sheet
 
 
@@ -378,6 +512,7 @@ def load_all_questions():
         values = sheet.get_all_values()
 
         if len(values) <= 1:
+
             return []
 
         questions = []
@@ -387,23 +522,59 @@ def load_all_questions():
             if not row:
                 continue
 
+            # Ən azı 7 sütun olmalıdır
             if len(row) < 7:
+                row = list(row) + [""] * (
+                    7 - len(row)
+                )
+
+            raw_section = str(
+                row[0] or ""
+            ).strip()
+
+            section = normalize_section(
+                raw_section
+            )
+
+            # -------------------------------------------------
+            # BÖLMƏNİ NORMALİZASİYA EDİRİK
+            # -------------------------------------------------
+
+            if not section:
                 continue
 
-            section = str(
-                row[0]
-            ).strip()
+            # Əgər bölmə tanınmırsa, keçirik
+            if not any(
+                normalize_section(s) == section
+                for s in SECTIONS
+            ):
+                continue
+
+            section = get_display_section(
+                section
+            )
 
             question_text = str(
-                row[1]
+                row[1] or ""
             ).strip()
 
-            if not section or not question_text:
+            if not question_text:
                 continue
 
             answer = str(
-                row[6]
+                row[6] or ""
             ).strip().upper()
+
+            # Məsələn "A)" gəlirsə A götür
+            if len(answer) > 1:
+
+                answer_match = re.search(
+                    r"[ABCD]",
+                    answer
+                )
+
+                if answer_match:
+                    answer = answer_match.group(0)
 
             if answer not in [
                 "A",
@@ -419,16 +590,50 @@ def load_all_questions():
 
                 "question": question_text,
 
-                "a": str(row[2]).strip(),
+                "a": str(
+                    row[2] or ""
+                ).strip(),
 
-                "b": str(row[3]).strip(),
+                "b": str(
+                    row[3] or ""
+                ).strip(),
 
-                "c": str(row[4]).strip(),
+                "c": str(
+                    row[4] or ""
+                ).strip(),
 
-                "d": str(row[5]).strip(),
+                "d": str(
+                    row[5] or ""
+                ).strip(),
 
                 "answer": answer
+
             })
+
+        print(
+            "LOAD QUESTIONS:",
+            len(questions),
+            "sual tapıldı."
+        )
+
+        # Bölmələr üzrə məlumat
+        section_counts = {}
+
+        for q in questions:
+
+            section_name = q["section"]
+
+            section_counts[
+                section_name
+            ] = section_counts.get(
+                section_name,
+                0
+            ) + 1
+
+        print(
+            "BÖLMƏLƏR:",
+            section_counts
+        )
 
         return questions
 
@@ -451,20 +656,48 @@ def load_questions(section=None):
     questions = load_all_questions()
 
     if section is None:
+
         return questions
 
-    section = str(
+    requested_section = normalize_section(
         section
-    ).strip()
+    )
 
-    return [
-        q
-        for q in questions
-        if q.get(
-            "section",
-            ""
-        ).strip() == section
-    ]
+    if not requested_section:
+
+        return []
+
+    filtered = []
+
+    for q in questions:
+
+        question_section = normalize_section(
+            q.get(
+                "section",
+                ""
+            )
+        )
+
+        if question_section == requested_section:
+
+            filtered.append(q)
+
+    print(
+        "REQUESTED SECTION:",
+        section
+    )
+
+    print(
+        "NORMALIZED SECTION:",
+        requested_section
+    )
+
+    print(
+        "FOUND QUESTIONS:",
+        len(filtered)
+    )
+
+    return filtered
 
 
 # =========================================================
@@ -520,38 +753,6 @@ def get_codes_sheet():
                 [CODES_HEADERS]
             )
 
-        else:
-
-            changed = False
-
-            for header in CODES_HEADERS:
-
-                if header not in headers:
-
-                    headers.append(
-                        header
-                    )
-
-                    changed = True
-
-            if changed:
-
-                sheet.resize(
-                    rows=max(
-                        sheet.row_count,
-                        2000
-                    ),
-                    cols=max(
-                        sheet.col_count,
-                        len(headers)
-                    )
-                )
-
-                sheet.update(
-                    "1:1",
-                    [headers]
-                )
-
     return sheet
 
 
@@ -583,7 +784,14 @@ def use_access_code(
             "Giriş kodunu daxil edin."
         )
 
-    if selected_section not in SECTIONS:
+    selected_normalized = normalize_section(
+        selected_section
+    )
+
+    if not any(
+        normalize_section(s) == selected_normalized
+        for s in SECTIONS
+    ):
 
         return False, (
             "Zəhmət olmasa bölmə seçin."
@@ -636,7 +844,9 @@ def use_access_code(
                     "Bu giriş kodu artıq istifadə olunub."
                 )
 
-            if sheet_section != selected_section:
+            if normalize_section(
+                sheet_section
+            ) != selected_normalized:
 
                 return False, (
                     "Bu giriş kodu seçdiyiniz bölmə üçün "
@@ -746,7 +956,18 @@ def home():
                 sections=SECTIONS
             )
 
-        if selected_section not in SECTIONS:
+        selected_normalized = normalize_section(
+            selected_section
+        )
+
+        selected_section = get_display_section(
+            selected_normalized
+        )
+
+        if not any(
+            normalize_section(s) == selected_normalized
+            for s in SECTIONS
+        ):
 
             return render_template(
                 "home.html",
@@ -768,6 +989,10 @@ def home():
                 sections=SECTIONS
             )
 
+        # -------------------------------------------------
+        # ƏVVƏL SUALLARI YOXLAYIRIQ
+        # -------------------------------------------------
+
         section_questions = load_questions(
             selected_section
         )
@@ -785,6 +1010,10 @@ def home():
                 selected_section=selected_section,
                 sections=SECTIONS
             )
+
+        # -------------------------------------------------
+        # SONRA KODU YOXLAYIRIQ
+        # -------------------------------------------------
 
         code_valid, error_message = use_access_code(
             access_code,
@@ -1157,32 +1386,23 @@ def finish():
 
         question_results.append({
 
-            "number":
-                index + 1,
+            "number": index + 1,
 
-            "question":
-                q["question"],
+            "question": q["question"],
 
-            "selected":
-                selected,
+            "selected": selected,
 
-            "selected_text":
-                selected_text,
+            "selected_text": selected_text,
 
-            "correct_answer":
-                correct_letter,
+            "correct_answer": correct_letter,
 
-            "correct_text":
-                correct_text,
+            "correct_text": correct_text,
 
-            "is_correct":
-                is_correct,
+            "is_correct": is_correct,
 
-            "is_wrong":
-                is_wrong,
+            "is_wrong": is_wrong,
 
-            "is_empty":
-                is_empty
+            "is_empty": is_empty
 
         })
 
@@ -1243,10 +1463,6 @@ def finish():
             value_input_option="USER_ENTERED"
         )
 
-        print(
-            "GOOGLE SHEETS: nəticə əlavə edildi."
-        )
-
     except Exception as e:
 
         print(
@@ -1302,19 +1518,13 @@ def finish():
 def download_certificate():
 
     if "name" not in session:
-        return redirect(
-            url_for("home")
-        )
+        return redirect(url_for("home"))
 
     if "section" not in session:
-        return redirect(
-            url_for("home")
-        )
+        return redirect(url_for("home"))
 
     if not session.get("exam_finished"):
-        return redirect(
-            url_for("finish")
-        )
+        return redirect(url_for("finish"))
 
     name = session.get(
         "name",
@@ -1341,14 +1551,20 @@ def download_certificate():
         0
     )
 
+    status = session.get(
+        "finish_status",
+        ""
+    )
+
+    duration_text = session.get(
+        "finish_duration_text",
+        ""
+    )
+
     end_time_text = session.get(
         "finish_end_time_text",
         "-"
     )
-
-    # =====================================================
-    # PDF
-    # =====================================================
 
     output = BytesIO()
 
@@ -1362,146 +1578,47 @@ def download_certificate():
     font_name = register_pdf_font()
 
     pdf.setTitle(
-        "Əmək Məcəlləsi - Sertifikat"
+        "Əmək Məcəlləsi - Test Sertifikatı"
     )
 
-    # =====================================================
-    # FON
-    # =====================================================
-
-    pdf.setFillColorRGB(
-        0.97,
-        0.98,
-        1
-    )
+    pdf.setLineWidth(3)
 
     pdf.rect(
-        0,
-        0,
-        page_width,
-        page_height,
-        fill=1,
-        stroke=0
-    )
-
-    # =====================================================
-    # ÇƏRÇİVƏ
-    # =====================================================
-
-    pdf.setStrokeColorRGB(
-        0.09,
-        0.23,
-        0.45
-    )
-
-    pdf.setLineWidth(4)
-
-    pdf.rect(
-        25,
-        25,
-        page_width - 50,
-        page_height - 50,
-        fill=0,
-        stroke=1
-    )
-
-    pdf.setLineWidth(1.5)
-
-    pdf.rect(
-        38,
-        38,
-        page_width - 76,
-        page_height - 76,
-        fill=0,
-        stroke=1
-    )
-
-    # =====================================================
-    # KƏNAR DEKORASİYASI
-    # =====================================================
-
-    pdf.setFillColorRGB(
-        0.09,
-        0.23,
-        0.45
-    )
-
-    points = [
-        (55, 55),
-        (page_width - 55, 55),
-        (55, page_height - 55),
-        (page_width - 55, page_height - 55)
-    ]
-
-    for x, y in points:
-
-        pdf.circle(
-            x,
-            y,
-            7,
-            fill=1,
-            stroke=0
-        )
-
-    # =====================================================
-    # BAŞLIQ
-    # =====================================================
-
-    pdf.setFillColorRGB(
-        0.09,
-        0.23,
-        0.45
-    )
-
-    pdf.setFont(
-        font_name,
-        15
-    )
-
-    pdf.drawCentredString(
-        page_width / 2,
-        page_height - 85,
-        "ƏMƏK MƏCƏLLƏSİ"
-    )
-
-    pdf.setFont(
-        font_name,
-        30
-    )
-
-    pdf.drawCentredString(
-        page_width / 2,
-        page_height - 125,
-        "SERTİFİKAT"
-    )
-
-    # =====================================================
-    # AYIRICI
-    # =====================================================
-
-    pdf.setStrokeColorRGB(
-        0.75,
-        0.80,
-        0.90
+        30,
+        30,
+        page_width - 60,
+        page_height - 60
     )
 
     pdf.setLineWidth(1)
 
-    pdf.line(
-        page_width / 2 - 170,
-        page_height - 145,
-        page_width / 2 + 170,
-        page_height - 145
+    pdf.rect(
+        42,
+        42,
+        page_width - 84,
+        page_height - 84
     )
 
-    # =====================================================
-    # MƏTN
-    # =====================================================
+    pdf.setFont(
+        font_name,
+        26
+    )
 
-    pdf.setFillColorRGB(
-        0.20,
-        0.25,
-        0.32
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 105,
+        "SERTİFİKAT"
+    )
+
+    pdf.setFont(
+        font_name,
+        14
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 135,
+        "ƏMƏK MƏCƏLLƏSİ ÜZRƏ TEST İŞTİRAKÇISI"
     )
 
     pdf.setFont(
@@ -1511,18 +1628,8 @@ def download_certificate():
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 180,
+        page_height - 190,
         "Bu sertifikat təsdiq edir ki,"
-    )
-
-    # =====================================================
-    # AD VƏ SOYAD
-    # =====================================================
-
-    pdf.setFillColorRGB(
-        0.09,
-        0.23,
-        0.45
     )
 
     pdf.setFont(
@@ -1532,7 +1639,7 @@ def download_certificate():
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 220,
+        page_height - 235,
         name
     )
 
@@ -1542,23 +1649,33 @@ def download_certificate():
         25
     )
 
-    pdf.setLineWidth(1)
-
     pdf.line(
         (page_width - name_width) / 2,
-        page_height - 230,
+        page_height - 245,
         (page_width + name_width) / 2,
-        page_height - 230
+        page_height - 245
     )
 
-    # =====================================================
-    # BÖLMƏ
-    # =====================================================
+    pdf.setFont(
+        font_name,
+        14
+    )
 
-    pdf.setFillColorRGB(
-        0.20,
-        0.25,
-        0.32
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 285,
+        f"{section} üzrə testdə iştirak etmişdir."
+    )
+
+    pdf.setFont(
+        font_name,
+        18
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 335,
+        f"Nəticə: {percent}%"
     )
 
     pdf.setFont(
@@ -1568,94 +1685,14 @@ def download_certificate():
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 265,
-        "Bölmə:"
-    )
-
-    section_font_size = 14
-
-    if len(section) > 65:
-        section_font_size = 10
-    elif len(section) > 50:
-        section_font_size = 11
-    elif len(section) > 35:
-        section_font_size = 12
-
-    pdf.setFillColorRGB(
-        0.09,
-        0.23,
-        0.45
-    )
-
-    pdf.setFont(
-        font_name,
-        section_font_size
+        page_height - 365,
+        f"Düzgün cavab: {correct} / {total}"
     )
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 287,
-        section
-    )
-
-    # =====================================================
-    # NƏTİCƏ BLOKU
-    # =====================================================
-
-    box_width = 390
-    box_height = 70
-
-    box_x = (
-        page_width - box_width
-    ) / 2
-
-    box_y = (
-        page_height - 385
-    )
-
-    pdf.setFillColorRGB(
-        0.94,
-        0.96,
-        1
-    )
-
-    pdf.setStrokeColorRGB(
-        0.75,
-        0.80,
-        0.90
-    )
-
-    pdf.roundRect(
-        box_x,
-        box_y,
-        box_width,
-        box_height,
-        12,
-        fill=1,
-        stroke=1
-    )
-
-    pdf.setFillColorRGB(
-        0.09,
-        0.23,
-        0.45
-    )
-
-    pdf.setFont(
-        font_name,
-        20
-    )
-
-    pdf.drawCentredString(
-        page_width / 2,
-        box_y + 43,
-        f"Nəticə: {percent}%"
-    )
-
-    pdf.setFillColorRGB(
-        0.20,
-        0.25,
-        0.32
+        page_height - 390,
+        f"Müddət: {duration_text}"
     )
 
     pdf.setFont(
@@ -1665,55 +1702,26 @@ def download_certificate():
 
     pdf.drawCentredString(
         page_width / 2,
-        box_y + 20,
-        f"Düzgün cavab: {correct} / {total}"
-    )
-
-    # =====================================================
-    # TARİX
-    # =====================================================
-
-    pdf.setFillColorRGB(
-        0.35,
-        0.39,
-        0.45
-    )
-
-    pdf.setFont(
-        font_name,
-        11
+        page_height - 425,
+        f"Status: {status}"
     )
 
     pdf.drawCentredString(
         page_width / 2,
-        82,
-        f"Tarix: {end_time_text}"
+        95,
+        f"Testin bitmə tarixi: {end_time_text}"
     )
-
-    # =====================================================
-    # ALT YAZI
-    # =====================================================
 
     pdf.setFont(
         font_name,
-        8
-    )
-
-    pdf.setFillColorRGB(
-        0.55,
-        0.58,
-        0.63
+        9
     )
 
     pdf.drawCentredString(
         page_width / 2,
-        60,
+        70,
         "Əmək Məcəlləsi üzrə elektron test sistemi"
     )
-
-    # =====================================================
-    # PDF BİTİR
-    # =====================================================
 
     pdf.showPage()
 
@@ -1721,15 +1729,10 @@ def download_certificate():
 
     output.seek(0)
 
-    # =====================================================
-    # FAYL ADI
-    # =====================================================
-
     safe_name = "".join(
         c
         for c in name
-        if c.isalnum()
-        or c in (
+        if c.isalnum() or c in (
             " ",
             "_",
             "-"
@@ -1744,10 +1747,15 @@ def download_certificate():
     )
 
     return send_file(
+
         output,
+
         as_attachment=True,
+
         download_name=filename,
+
         mimetype="application/pdf"
+
     )
 
 
@@ -1848,16 +1856,22 @@ def admin():
         codes = []
 
     return render_template(
+
         "admin.html",
+
         results=values,
+
         questions=questions,
+
         sections=SECTIONS,
+
         codes=codes
+
     )
 
 
 # =========================================================
-# ADMIN - KOD YARAT
+# ADMIN CREATE CODE
 # =========================================================
 
 def create_code():
@@ -1878,15 +1892,22 @@ def create_code():
             url_for("admin")
         )
 
-    section = normalize_section(
+    normalized = normalize_section(
         section
     )
 
-    if section not in SECTIONS:
+    if not any(
+        normalize_section(s) == normalized
+        for s in SECTIONS
+    ):
 
         return redirect(
             url_for("admin")
         )
+
+    section = get_display_section(
+        normalized
+    )
 
     try:
 
@@ -1913,16 +1934,12 @@ def create_code():
                 code.upper()
             ):
 
-                print(
-                    "ADD CODE: kod artıq mövcuddur:",
-                    code
-                )
-
                 return redirect(
                     url_for("admin")
                 )
 
         sheet.append_row(
+
             [
                 code,
                 section,
@@ -1930,14 +1947,9 @@ def create_code():
                 "",
                 ""
             ],
-            value_input_option="USER_ENTERED"
-        )
 
-        print(
-            "YENİ KOD YARADILDI:",
-            code,
-            "|",
-            section
+            value_input_option="USER_ENTERED"
+
         )
 
     except Exception as e:
@@ -2033,7 +2045,7 @@ def import_questions():
                 if not row:
                     continue
 
-                section_value = (
+                raw_section = (
                     str(row[0]).strip()
                     if len(row) > 0
                     and row[0] is not None
@@ -2041,17 +2053,24 @@ def import_questions():
                 )
 
                 section = normalize_section(
-                    section_value
+                    raw_section
                 )
 
-                if section not in SECTIONS:
+                if not any(
+                    normalize_section(s) == section
+                    for s in SECTIONS
+                ):
 
                     print(
-                        "IMPORT: Yanlış bölmə:",
-                        section_value
+                        "IMPORT: Tanınmayan bölmə:",
+                        raw_section
                     )
 
                     continue
+
+                section = get_display_section(
+                    section
+                )
 
                 question_text = (
                     str(row[1]).strip()
@@ -2098,8 +2117,14 @@ def import_questions():
                     else ""
                 )
 
-                if len(answer) > 1:
-                    answer = answer[0]
+                answer_match = re.search(
+                    r"[ABCD]",
+                    answer
+                )
+
+                if answer_match:
+
+                    answer = answer_match.group(0)
 
                 if answer not in [
                     "A",
@@ -2107,30 +2132,24 @@ def import_questions():
                     "C",
                     "D"
                 ]:
+
                     continue
 
                 new_questions.append({
 
-                    "section":
-                        section,
+                    "section": section,
 
-                    "question":
-                        question_text,
+                    "question": question_text,
 
-                    "a":
-                        option_a,
+                    "a": option_a,
 
-                    "b":
-                        option_b,
+                    "b": option_b,
 
-                    "c":
-                        option_c,
+                    "c": option_c,
 
-                    "d":
-                        option_d,
+                    "d": option_d,
 
-                    "answer":
-                        answer
+                    "answer": answer
 
                 })
 
@@ -2158,16 +2177,21 @@ def import_questions():
                         continue
 
                     section = normalize_section(
-                        str(
-                            q.get(
-                                "section",
-                                ""
-                            )
-                        ).strip()
+                        q.get(
+                            "section",
+                            ""
+                        )
                     )
 
-                    if section not in SECTIONS:
+                    if not any(
+                        normalize_section(s) == section
+                        for s in SECTIONS
+                    ):
                         continue
+
+                    section = get_display_section(
+                        section
+                    )
 
                     question_text = str(
                         q.get(
@@ -2186,8 +2210,14 @@ def import_questions():
                         )
                     ).strip().upper()
 
-                    if len(answer) > 1:
-                        answer = answer[0]
+                    answer_match = re.search(
+                        r"[ABCD]",
+                        answer
+                    )
+
+                    if answer_match:
+
+                        answer = answer_match.group(0)
 
                     if answer not in [
                         "A",
@@ -2195,50 +2225,44 @@ def import_questions():
                         "C",
                         "D"
                     ]:
+
                         continue
 
                     new_questions.append({
 
-                        "section":
-                            section,
+                        "section": section,
 
-                        "question":
-                            question_text,
+                        "question": question_text,
 
-                        "a":
-                            str(
-                                q.get(
-                                    "a",
-                                    ""
-                                )
-                            ).strip(),
+                        "a": str(
+                            q.get(
+                                "a",
+                                ""
+                            )
+                        ).strip(),
 
-                        "b":
-                            str(
-                                q.get(
-                                    "b",
-                                    ""
-                                )
-                            ).strip(),
+                        "b": str(
+                            q.get(
+                                "b",
+                                ""
+                            )
+                        ).strip(),
 
-                        "c":
-                            str(
-                                q.get(
-                                    "c",
-                                    ""
-                                )
-                            ).strip(),
+                        "c": str(
+                            q.get(
+                                "c",
+                                ""
+                            )
+                        ).strip(),
 
-                        "d":
-                            str(
-                                q.get(
-                                    "d",
-                                    ""
-                                )
-                            ).strip(),
+                        "d": str(
+                            q.get(
+                                "d",
+                                ""
+                            )
+                        ).strip(),
 
-                        "answer":
-                            answer
+                        "answer": answer
 
                     })
 
@@ -2268,7 +2292,13 @@ def import_questions():
             )
 
         # =================================================
-        # SUALLAR SHEET-İNİ TAM YENİLƏ
+        # GOOGLE SHEETS-İ TAM YENİLƏ
+        #
+        # Yəni:
+        # Köhnə suallar silinir
+        # Yeni fayldakı suallar yazılır
+        #
+        # Yeni import etməyənə qədər bunlar qalır.
         # =================================================
 
         questions_sheet = get_questions_sheet()
@@ -2287,11 +2317,17 @@ def import_questions():
             rows.append([
 
                 q["section"],
+
                 q["question"],
+
                 q["a"],
+
                 q["b"],
+
                 q["c"],
+
                 q["d"],
+
                 q["answer"]
 
             ])
@@ -2302,8 +2338,39 @@ def import_questions():
         )
 
         print(
-            f"IMPORT UĞURLU: "
-            f"{len(new_questions)} sual saxlanıldı."
+            "================================================"
+        )
+
+        print(
+            "IMPORT UĞURLU"
+        )
+
+        print(
+            "Sual sayı:",
+            len(new_questions)
+        )
+
+        # Bölmə saylarını göstər
+        imported_counts = {}
+
+        for q in new_questions:
+
+            section_name = q["section"]
+
+            imported_counts[
+                section_name
+            ] = imported_counts.get(
+                section_name,
+                0
+            ) + 1
+
+        print(
+            "Bölmələr:",
+            imported_counts
+        )
+
+        print(
+            "================================================"
         )
 
     except Exception as e:
@@ -2530,15 +2597,20 @@ def admin_export():
     output.seek(0)
 
     return send_file(
+
         output,
+
         as_attachment=True,
+
         download_name=(
             "emek_mecellesi_test_neticeleri.xlsx"
         ),
+
         mimetype=(
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"
         )
+
     )
 
 
@@ -2549,11 +2621,14 @@ def admin_export():
 if __name__ == "__main__":
 
     app.run(
+
         host="0.0.0.0",
+
         port=int(
             os.environ.get(
                 "PORT",
                 5000
             )
         )
+
     )
