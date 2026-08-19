@@ -3,243 +3,255 @@
 {% block content %}
 
 <style>
-    * {
-        box-sizing: border-box;
-    }
+
+* {
+    box-sizing: border-box;
+}
+
+.home-page {
+    min-height: 75vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 10px;
+    overflow-x: hidden;
+}
+
+.welcome-card {
+    width: 100%;
+    max-width: 720px;
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+}
+
+.welcome-top {
+    background: linear-gradient(135deg, #173b73, #2563eb);
+    color: white;
+    padding: 42px 35px;
+    text-align: center;
+}
+
+.book-icon {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 18px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+}
+
+.welcome-top h1 {
+    margin: 0 0 8px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.welcome-top .subtitle {
+    margin: 0;
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.welcome-body {
+    width: 100%;
+    padding: 35px;
+}
+
+.description {
+    text-align: center;
+    color: #4b5563;
+    line-height: 1.65;
+    font-size: 15px;
+    margin: 0 auto 28px;
+    max-width: 570px;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.feature {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 13px;
+    padding: 16px 10px;
+    text-align: center;
+}
+
+.feature-icon {
+    font-size: 22px;
+    margin-bottom: 7px;
+}
+
+.feature strong {
+    display: block;
+    color: #173b73;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.feature span {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.form-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 9px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.name-input,
+.code-input,
+.section-select {
+    display: block;
+    width: 100%;
+    height: 54px;
+    padding: 14px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    outline: none;
+    transition: 0.2s;
+    color: #1f2937;
+    background: white;
+    box-sizing: border-box;
+}
+
+.name-input:focus,
+.code-input:focus,
+.section-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+}
+
+.section-select {
+    cursor: pointer;
+}
+
+.code-input {
+    letter-spacing: 1px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.start-button {
+    display: block;
+    width: 100%;
+    height: 54px;
+    margin-top: 20px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #173b73, #2563eb);
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 6px 18px rgba(37,99,235,0.22);
+}
+
+.start-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 9px 24px rgba(37,99,235,0.28);
+}
+
+.security {
+    margin-top: 18px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    text-align: center;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.info-box {
+    margin-top: 15px;
+    padding: 12px 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    color: #1e40af;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+@media (max-width: 600px) {
 
     .home-page {
-        min-height: 75vh;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 30px 10px;
-        overflow-x: hidden;
+        padding: 15px 8px;
     }
 
     .welcome-card {
-        width: 100%;
-        max-width: 720px;
-        background: white;
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e5e7eb;
+        border-radius: 17px;
     }
 
     .welcome-top {
-        background: linear-gradient(135deg, #173b73, #2563eb);
-        color: white;
-        padding: 42px 35px;
-        text-align: center;
-    }
-
-    .book-icon {
-        width: 76px;
-        height: 76px;
-        margin: 0 auto 18px;
-        background: rgba(255,255,255,0.15);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 38px;
+        padding: 32px 18px;
     }
 
     .welcome-top h1 {
-        margin: 0 0 8px;
-        font-size: 30px;
-        font-weight: 800;
-        letter-spacing: 0.3px;
-    }
-
-    .welcome-top .subtitle {
-        margin: 0;
-        font-size: 16px;
-        opacity: 0.9;
+        font-size: 23px;
     }
 
     .welcome-body {
-        width: 100%;
-        padding: 35px;
-    }
-
-    .description {
-        text-align: center;
-        color: #4b5563;
-        line-height: 1.65;
-        font-size: 15px;
-        margin: 0 auto 28px;
-        max-width: 570px;
+        padding: 25px 18px;
     }
 
     .features {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        margin-bottom: 30px;
-        width: 100%;
+        grid-template-columns: 1fr;
     }
 
     .feature {
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
-        border-radius: 13px;
-        padding: 16px 10px;
-        text-align: center;
+        display: flex;
+        align-items: center;
+        text-align: left;
+        gap: 10px;
+        padding: 12px 14px;
     }
 
-    .feature-icon {
-        font-size: 22px;
-        margin-bottom: 7px;
-    }
+}
 
-    .feature strong {
-        display: block;
-        color: #173b73;
-        font-size: 13px;
-        margin-bottom: 3px;
-    }
-
-    .feature span {
-        color: #6b7280;
-        font-size: 12px;
-    }
-
-    .form-title {
-        font-size: 15px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 9px;
-    }
-
-    form {
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-
-    .name-input,
-    .code-input {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        height: 54px;
-        padding: 16px 17px;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
-        font-size: 16px;
-        outline: none;
-        transition: 0.2s;
-        color: #1f2937;
-        background: white;
-        box-sizing: border-box;
-    }
-
-    .code-input {
-        letter-spacing: 1px;
-        font-weight: 700;
-    }
-
-    .name-input:focus,
-    .code-input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
-    }
-
-    .field-group {
-        margin-bottom: 18px;
-    }
-
-    .start-button {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        height: 54px;
-        margin-top: 20px;
-        padding: 0 16px;
-        border: none;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #173b73, #2563eb);
-        color: white;
-        font-size: 16px;
-        font-weight: 800;
-        cursor: pointer;
-        transition: 0.2s;
-        box-shadow: 0 6px 18px rgba(37,99,235,0.22);
-        box-sizing: border-box;
-    }
-
-    .start-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 9px 24px rgba(37,99,235,0.28);
-    }
-
-    .security {
-        margin-top: 18px;
-        text-align: center;
-        color: #6b7280;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-
-    .error {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #b91c1c;
-        padding: 12px 15px;
-        border-radius: 10px;
-        margin-bottom: 18px;
-        font-size: 14px;
-        text-align: center;
-        box-sizing: border-box;
-        width: 100%;
-    }
-
-    .code-info {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: #1e40af;
-        padding: 12px 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        font-size: 13px;
-        line-height: 1.5;
-    }
-
-    @media (max-width: 600px) {
-
-        .home-page {
-            padding: 15px 8px;
-        }
-
-        .welcome-card {
-            border-radius: 17px;
-        }
-
-        .welcome-top {
-            padding: 32px 18px;
-        }
-
-        .welcome-body {
-            padding: 25px 18px;
-        }
-
-        .features {
-            grid-template-columns: 1fr;
-        }
-
-        .feature {
-            display: flex;
-            align-items: center;
-            text-align: left;
-            gap: 10px;
-            padding: 12px 14px;
-        }
-    }
 </style>
+
 
 <div class="home-page">
 
@@ -269,8 +281,9 @@
                 Əmək Məcəlləsi üzrə biliklərinizi yoxlamaq
                 üçün hazırlanmış test sisteminə xoş gəlmisiniz.
 
-                Testə başlamaq üçün sizə təqdim olunmuş
-                giriş kodunu və ad-soyadınızı daxil edin.
+                Testə başlamaq üçün bölməni seçin,
+                ad və soyadınızı və sizə verilmiş
+                giriş kodunu daxil edin.
 
             </p>
 
@@ -284,13 +297,15 @@
                     </div>
 
                     <div>
+
                         <strong>
-                            Test sualları
+                            Bölmə üzrə test
                         </strong>
 
                         <span>
-                            Biliklərinizi yoxlayın
+                            Seçdiyiniz bölmənin sualları
                         </span>
+
                     </div>
 
                 </div>
@@ -299,17 +314,19 @@
                 <div class="feature">
 
                     <div class="feature-icon">
-                        📊
+                        🔐
                     </div>
 
                     <div>
+
                         <strong>
-                            Nəticə
+                            Birdəfəlik giriş
                         </strong>
 
                         <span>
-                            Test sonunda hesablanır
+                            Kod yalnız bir dəfə istifadə olunur
                         </span>
+
                     </div>
 
                 </div>
@@ -322,13 +339,15 @@
                     </div>
 
                     <div>
+
                         <strong>
                             Qiymətləndirmə
                         </strong>
 
                         <span>
-                            Düzgün cavab faizi
+                            Nəticə test sonunda hesablanır
                         </span>
+
                     </div>
 
                 </div>
@@ -345,51 +364,100 @@
             {% endif %}
 
 
-            <div class="code-info">
-
-                🔐 Sizə təqdim olunmuş giriş kodunu
-                yalnız bir dəfə istifadə etmək mümkündür.
-
-            </div>
+            <form
+                method="post"
+                autocomplete="off"
+            >
 
 
-            <form method="post">
+                <!-- AD VƏ SOYAD -->
 
-                <div class="field-group">
+                <div class="form-group">
 
-                    <div class="form-title">
-                        Giriş kodu
-                    </div>
-
-                    <input
-                        type="text"
-                        name="access_code"
-                        class="code-input"
-                        placeholder="Məsələn: EMEK-001"
-                        value="{{ access_code or '' }}"
-                        autocomplete="off"
-                        required
-                        autofocus
-                    >
-
-                </div>
-
-
-                <div class="field-group">
-
-                    <div class="form-title">
+                    <label class="form-label">
                         Ad və soyad
-                    </div>
+                    </label>
 
                     <input
                         type="text"
                         name="name"
                         class="name-input"
                         placeholder="Məsələn: Pərviz Hüseynov"
-                        value="{{ name or '' }}"
-                        autocomplete="name"
+                        value="{{ name|default('') }}"
+                        required
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- BÖLMƏ -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Test bölməsini seçin
+                    </label>
+
+                    <select
+                        name="section"
+                        class="section-select"
                         required
                     >
+
+                        <option
+                            value=""
+                            {% if not selected_section %}
+                                selected
+                            {% endif %}
+                        >
+                            — Bölmə seçin —
+                        </option>
+
+
+                        {% for section in sections %}
+
+                        <option
+                            value="{{ section }}"
+                            {% if selected_section == section %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ section }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- GİRİŞ KODU -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Giriş kodu
+                    </label>
+
+                    <input
+                        type="text"
+                        name="access_code"
+                        class="code-input"
+                        placeholder="Sizə verilmiş kodu daxil edin"
+                        value="{{ access_code|default('') }}"
+                        required
+                        autocomplete="off"
+                        autocapitalize="characters"
+                    >
+
+                    <div class="info-box">
+
+                        🔒 Giriş kodu yalnız seçilmiş bölmə üçün
+                        keçərlidir və bir dəfə istifadə oluna bilər.
+
+                    </div>
 
                 </div>
 
@@ -398,16 +466,18 @@
                     type="submit"
                     class="start-button"
                 >
+
                     TESTƏ BAŞLA →
+
                 </button>
+
 
             </form>
 
 
             <div class="security">
 
-                🔒 Giriş kodu testə daxil olduğunuz anda
-                istifadə olunur və ikinci dəfə istifadə edilə bilməz.
+                🔒 Nəticəniz test tamamlandıqdan sonra qeydə alınır.
 
             </div>
 
@@ -416,5 +486,38 @@
     </div>
 
 </div>
+
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const codeInput =
+            document.querySelector(
+                ".code-input"
+            );
+
+        if (codeInput) {
+
+            codeInput.addEventListener(
+                "input",
+                function () {
+
+                    this.value =
+                        this.value
+                        .toUpperCase();
+
+                }
+            );
+
+        }
+
+    }
+);
+
+</script>
+
 
 {% endblock %}
