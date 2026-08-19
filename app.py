@@ -1302,13 +1302,19 @@ def finish():
 def download_certificate():
 
     if "name" not in session:
-        return redirect(url_for("home"))
+        return redirect(
+            url_for("home")
+        )
 
     if "section" not in session:
-        return redirect(url_for("home"))
+        return redirect(
+            url_for("home")
+        )
 
     if not session.get("exam_finished"):
-        return redirect(url_for("finish"))
+        return redirect(
+            url_for("finish")
+        )
 
     name = session.get(
         "name",
@@ -1335,24 +1341,14 @@ def download_certificate():
         0
     )
 
-    status = session.get(
-        "finish_status",
-        ""
-    )
-
-    duration_text = session.get(
-        "finish_duration_text",
-        ""
-    )
-
     end_time_text = session.get(
         "finish_end_time_text",
         "-"
     )
 
-    # -----------------------------------------------------
-    # PDF YARAT
-    # -----------------------------------------------------
+    # =====================================================
+    # PDF
+    # =====================================================
 
     output = BytesIO()
 
@@ -1365,65 +1361,148 @@ def download_certificate():
 
     font_name = register_pdf_font()
 
-    # -----------------------------------------------------
-    # SƏHİFƏ
-    # -----------------------------------------------------
-
     pdf.setTitle(
-        "Əmək Məcəlləsi - Test Sertifikatı"
+        "Əmək Məcəlləsi - Sertifikat"
     )
 
-    # -----------------------------------------------------
-    # KƏNAR ÇƏRÇİVƏ
-    # -----------------------------------------------------
+    # =====================================================
+    # FON
+    # =====================================================
 
-    pdf.setLineWidth(3)
+    pdf.setFillColorRGB(
+        0.97,
+        0.98,
+        1
+    )
 
     pdf.rect(
-        30,
-        30,
-        page_width - 60,
-        page_height - 60
+        0,
+        0,
+        page_width,
+        page_height,
+        fill=1,
+        stroke=0
+    )
+
+    # =====================================================
+    # ÇƏRÇİVƏ
+    # =====================================================
+
+    pdf.setStrokeColorRGB(
+        0.09,
+        0.23,
+        0.45
+    )
+
+    pdf.setLineWidth(4)
+
+    pdf.rect(
+        25,
+        25,
+        page_width - 50,
+        page_height - 50,
+        fill=0,
+        stroke=1
+    )
+
+    pdf.setLineWidth(1.5)
+
+    pdf.rect(
+        38,
+        38,
+        page_width - 76,
+        page_height - 76,
+        fill=0,
+        stroke=1
+    )
+
+    # =====================================================
+    # KƏNAR DEKORASİYASI
+    # =====================================================
+
+    pdf.setFillColorRGB(
+        0.09,
+        0.23,
+        0.45
+    )
+
+    points = [
+        (55, 55),
+        (page_width - 55, 55),
+        (55, page_height - 55),
+        (page_width - 55, page_height - 55)
+    ]
+
+    for x, y in points:
+
+        pdf.circle(
+            x,
+            y,
+            7,
+            fill=1,
+            stroke=0
+        )
+
+    # =====================================================
+    # BAŞLIQ
+    # =====================================================
+
+    pdf.setFillColorRGB(
+        0.09,
+        0.23,
+        0.45
+    )
+
+    pdf.setFont(
+        font_name,
+        15
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 85,
+        "ƏMƏK MƏCƏLLƏSİ"
+    )
+
+    pdf.setFont(
+        font_name,
+        30
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        page_height - 125,
+        "SERTİFİKAT"
+    )
+
+    # =====================================================
+    # AYIRICI
+    # =====================================================
+
+    pdf.setStrokeColorRGB(
+        0.75,
+        0.80,
+        0.90
     )
 
     pdf.setLineWidth(1)
 
-    pdf.rect(
-        42,
-        42,
-        page_width - 84,
-        page_height - 84
+    pdf.line(
+        page_width / 2 - 170,
+        page_height - 145,
+        page_width / 2 + 170,
+        page_height - 145
     )
 
-    # -----------------------------------------------------
-    # BAŞLIQ
-    # -----------------------------------------------------
+    # =====================================================
+    # MƏTN
+    # =====================================================
 
-    pdf.setFont(
-        font_name,
-        26
+    pdf.setFillColorRGB(
+        0.20,
+        0.25,
+        0.32
     )
-
-    pdf.drawCentredString(
-        page_width / 2,
-        page_height - 105,
-        "SERTİFİKAT"
-    )
-
-    pdf.setFont(
-        font_name,
-        14
-    )
-
-    pdf.drawCentredString(
-        page_width / 2,
-        page_height - 135,
-        "ƏMƏK MƏCƏLLƏSİ ÜZRƏ TEST İŞTİRAKÇISI"
-    )
-
-    # -----------------------------------------------------
-    # ƏSAS MƏTN
-    # -----------------------------------------------------
 
     pdf.setFont(
         font_name,
@@ -1432,13 +1511,19 @@ def download_certificate():
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 190,
+        page_height - 180,
         "Bu sertifikat təsdiq edir ki,"
     )
 
-    # -----------------------------------------------------
+    # =====================================================
     # AD VƏ SOYAD
-    # -----------------------------------------------------
+    # =====================================================
+
+    pdf.setFillColorRGB(
+        0.09,
+        0.23,
+        0.45
+    )
 
     pdf.setFont(
         font_name,
@@ -1447,52 +1532,33 @@ def download_certificate():
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 235,
+        page_height - 220,
         name
     )
 
-    # Adın alt xətti
     name_width = pdf.stringWidth(
         name,
         font_name,
         25
     )
 
+    pdf.setLineWidth(1)
+
     pdf.line(
         (page_width - name_width) / 2,
-        page_height - 245,
+        page_height - 230,
         (page_width + name_width) / 2,
-        page_height - 245
+        page_height - 230
     )
 
-    # -----------------------------------------------------
+    # =====================================================
     # BÖLMƏ
-    # -----------------------------------------------------
+    # =====================================================
 
-    pdf.setFont(
-        font_name,
-        14
-    )
-
-    pdf.drawCentredString(
-        page_width / 2,
-        page_height - 285,
-        f"{section} üzrə testdə iştirak etmişdir."
-    )
-
-    # -----------------------------------------------------
-    # NƏTİCƏ
-    # -----------------------------------------------------
-
-    pdf.setFont(
-        font_name,
-        18
-    )
-
-    pdf.drawCentredString(
-        page_width / 2,
-        page_height - 335,
-        f"Nəticə: {percent}%"
+    pdf.setFillColorRGB(
+        0.20,
+        0.25,
+        0.32
     )
 
     pdf.setFont(
@@ -1502,19 +1568,95 @@ def download_certificate():
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 365,
-        f"Düzgün cavab: {correct} / {total}"
+        page_height - 265,
+        "Bölmə:"
+    )
+
+    section_font_size = 14
+
+    if len(section) > 65:
+        section_font_size = 10
+    elif len(section) > 50:
+        section_font_size = 11
+    elif len(section) > 35:
+        section_font_size = 12
+
+    pdf.setFillColorRGB(
+        0.09,
+        0.23,
+        0.45
+    )
+
+    pdf.setFont(
+        font_name,
+        section_font_size
     )
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 390,
-        f"Müddət: {duration_text}"
+        page_height - 287,
+        section
     )
 
-    # -----------------------------------------------------
-    # STATUS
-    # -----------------------------------------------------
+    # =====================================================
+    # NƏTİCƏ BLOKU
+    # =====================================================
+
+    box_width = 390
+    box_height = 70
+
+    box_x = (
+        page_width - box_width
+    ) / 2
+
+    box_y = (
+        page_height - 385
+    )
+
+    pdf.setFillColorRGB(
+        0.94,
+        0.96,
+        1
+    )
+
+    pdf.setStrokeColorRGB(
+        0.75,
+        0.80,
+        0.90
+    )
+
+    pdf.roundRect(
+        box_x,
+        box_y,
+        box_width,
+        box_height,
+        12,
+        fill=1,
+        stroke=1
+    )
+
+    pdf.setFillColorRGB(
+        0.09,
+        0.23,
+        0.45
+    )
+
+    pdf.setFont(
+        font_name,
+        20
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        box_y + 43,
+        f"Nəticə: {percent}%"
+    )
+
+    pdf.setFillColorRGB(
+        0.20,
+        0.25,
+        0.32
+    )
 
     pdf.setFont(
         font_name,
@@ -1523,38 +1665,55 @@ def download_certificate():
 
     pdf.drawCentredString(
         page_width / 2,
-        page_height - 425,
-        f"Status: {status}"
+        box_y + 20,
+        f"Düzgün cavab: {correct} / {total}"
     )
 
-    # -----------------------------------------------------
+    # =====================================================
     # TARİX
-    # -----------------------------------------------------
+    # =====================================================
 
-    pdf.drawCentredString(
-        page_width / 2,
-        95,
-        f"Testin bitmə tarixi: {end_time_text}"
+    pdf.setFillColorRGB(
+        0.35,
+        0.39,
+        0.45
     )
-
-    # -----------------------------------------------------
-    # ALT YAZI
-    # -----------------------------------------------------
 
     pdf.setFont(
         font_name,
-        9
+        11
     )
 
     pdf.drawCentredString(
         page_width / 2,
-        70,
+        82,
+        f"Tarix: {end_time_text}"
+    )
+
+    # =====================================================
+    # ALT YAZI
+    # =====================================================
+
+    pdf.setFont(
+        font_name,
+        8
+    )
+
+    pdf.setFillColorRGB(
+        0.55,
+        0.58,
+        0.63
+    )
+
+    pdf.drawCentredString(
+        page_width / 2,
+        60,
         "Əmək Məcəlləsi üzrə elektron test sistemi"
     )
 
-    # -----------------------------------------------------
-    # PDF-İ BİTİR
-    # -----------------------------------------------------
+    # =====================================================
+    # PDF BİTİR
+    # =====================================================
 
     pdf.showPage()
 
@@ -1562,11 +1721,15 @@ def download_certificate():
 
     output.seek(0)
 
-    # Fayl adını təhlükəsizləşdiririk
+    # =====================================================
+    # FAYL ADI
+    # =====================================================
+
     safe_name = "".join(
         c
         for c in name
-        if c.isalnum() or c in (
+        if c.isalnum()
+        or c in (
             " ",
             "_",
             "-"
@@ -1581,15 +1744,10 @@ def download_certificate():
     )
 
     return send_file(
-
         output,
-
         as_attachment=True,
-
         download_name=filename,
-
         mimetype="application/pdf"
-
     )
 
 
@@ -1657,8 +1815,6 @@ def admin_logout():
 @admin_required
 def admin():
 
-    # NƏTİCƏLƏR
-
     try:
 
         sheet = get_sheet()
@@ -1674,11 +1830,7 @@ def admin():
 
         values = []
 
-    # SUALLAR
-
     questions = load_all_questions()
-
-    # KODLAR
 
     try:
 
@@ -1696,17 +1848,11 @@ def admin():
         codes = []
 
     return render_template(
-
         "admin.html",
-
         results=values,
-
         questions=questions,
-
         sections=SECTIONS,
-
         codes=codes
-
     )
 
 
@@ -1748,8 +1894,6 @@ def create_code():
 
         values = sheet.get_all_values()
 
-        # EYNİ KODU YOXLAYIRIQ
-
         for row in values[1:]:
 
             if not row:
@@ -1778,10 +1922,7 @@ def create_code():
                     url_for("admin")
                 )
 
-        # YENİ KODU GOOGLE SHEETS-Ə YAZ
-
         sheet.append_row(
-
             [
                 code,
                 section,
@@ -1789,9 +1930,7 @@ def create_code():
                 "",
                 ""
             ],
-
             value_input_option="USER_ENTERED"
-
         )
 
         print(
@@ -2391,20 +2530,15 @@ def admin_export():
     output.seek(0)
 
     return send_file(
-
         output,
-
         as_attachment=True,
-
         download_name=(
             "emek_mecellesi_test_neticeleri.xlsx"
         ),
-
         mimetype=(
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"
         )
-
     )
 
 
@@ -2415,14 +2549,11 @@ def admin_export():
 if __name__ == "__main__":
 
     app.run(
-
         host="0.0.0.0",
-
         port=int(
             os.environ.get(
                 "PORT",
                 5000
             )
         )
-
     )
