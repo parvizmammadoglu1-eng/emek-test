@@ -228,10 +228,6 @@ def get_questions_sheet():
     return sheet
 
 
-# =========================================================
-# SUALLARI GOOGLE SHEETS-DƏN OXU
-# =========================================================
-
 def load_questions():
 
     try:
@@ -241,7 +237,6 @@ def load_questions():
         values = sheet.get_all_values()
 
         if len(values) <= 1:
-
             return []
 
         questions = []
@@ -308,6 +303,163 @@ def load_questions():
 
 
 # =========================================================
+# KODLAR SHEET
+# =========================================================
+
+CODES_SHEET_NAME = "Kodlar"
+
+CODES_HEADERS = [
+    "Kod",
+    "Status",
+    "Ad və soyad",
+    "İstifadə vaxtı"
+]
+
+
+def get_codes_sheet():
+
+    client = get_google_client()
+
+    spreadsheet = client.open(
+        GOOGLE_SHEET_NAME
+    )
+
+    try:
+
+        sheet = spreadsheet.worksheet(
+            CODES_SHEET_NAME
+        )
+
+    except gspread.WorksheetNotFound:
+
+        sheet = spreadsheet.add_worksheet(
+            title=CODES_SHEET_NAME,
+            rows=2000,
+            cols=4
+        )
+
+        sheet.update(
+            "A1:D1",
+            [CODES_HEADERS]
+        )
+
+    return sheet
+
+
+# =========================================================
+# GİRİŞ KODUNU YOXLAMA VƏ İSTİFADƏ ETMƏ
+# =========================================================
+
+def use_access_code(code, name):
+
+    code = str(
+        code or ""
+    ).strip()
+
+    if not code:
+
+        return False, "Giriş kodunu daxil edin."
+
+    try:
+
+        sheet = get_codes_sheet()
+
+        values = sheet.get_all_values()
+
+        if len(values) <= 1:
+
+            return False, (
+                "Hazırda aktiv giriş kodu yoxdur."
+            )
+
+        for row_number, row in enumerate(
+            values[1:],
+            start=2
+        ):
+
+            if not row:
+                continue
+
+            sheet_code = (
+                str(
+                    row[0]
+                    if len(row) > 0
+                    else ""
+                )
+                .strip()
+            )
+
+            if sheet_code.upper() != code.upper():
+                continue
+
+            status = (
+                str(
+                    row[1]
+                    if len(row) > 1
+                    else ""
+                )
+                .strip()
+                .lower()
+            )
+
+            if status != "aktiv":
+
+                return False, (
+                    "Bu giriş kodu artıq istifadə olunub."
+                )
+
+            current_time = datetime.now(
+                ZoneInfo("Asia/Baku")
+            ).strftime(
+                "%d.%m.%Y %H:%M:%S"
+            )
+
+            # =================================================
+            # KODU DƏRHAL İSTİFADƏ OLUNMUŞ EDİRİK
+            # =================================================
+
+            sheet.update_cell(
+                row_number,
+                2,
+                "İstifadə olunub"
+            )
+
+            sheet.update_cell(
+                row_number,
+                3,
+                name
+            )
+
+            sheet.update_cell(
+                row_number,
+                4,
+                current_time
+            )
+
+            print(
+                f"GİRİŞ KODU İSTİFADƏ OLUNDU: {code}"
+            )
+
+            return True, ""
+
+        return False, (
+            "Giriş kodu yanlışdır."
+        )
+
+    except Exception as e:
+
+        print(
+            "ACCESS CODE ERROR:",
+            str(e)
+        )
+
+        return False, (
+            "Giriş kodu yoxlanılarkən xəta baş verdi. "
+            "Bir qədər sonra yenidən cəhd edin."
+        )
+
+
+# =========================================================
 # ADMIN
 # =========================================================
 
@@ -348,16 +500,56 @@ def home():
             ""
         ).strip()
 
+        access_code = request.form.get(
+            "access_code",
+            ""
+        ).strip()
+
+        if not access_code:
+
+            return render_template(
+                "home.html",
+                error="Giriş kodunu daxil edin.",
+                name=name,
+                access_code=access_code
+            )
+
         if not name:
 
             return render_template(
                 "home.html",
-                error="Ad və soyad daxil edin."
+                error="Ad və soyad daxil edin.",
+                name=name,
+                access_code=access_code
             )
+
+        # =====================================================
+        # KODU YOXLA VƏ DƏRHAL İSTİFADƏ ET
+        # =====================================================
+
+        code_valid, error_message = use_access_code(
+            access_code,
+            name
+        )
+
+        if not code_valid:
+
+            return render_template(
+                "home.html",
+                error=error_message,
+                name=name,
+                access_code=access_code
+            )
+
+        # =====================================================
+        # KOD DÜZGÜNDÜR
+        # =====================================================
 
         session.clear()
 
         session["name"] = name
+
+        session["access_code"] = access_code
 
         session["answers"] = {}
 
@@ -394,6 +586,12 @@ def home():
 def question(n):
 
     if "name" not in session:
+
+        return redirect(
+            url_for("home")
+        )
+
+    if "access_code" not in session:
 
         return redirect(
             url_for("home")
@@ -496,6 +694,12 @@ def question(n):
 def finish():
 
     if "name" not in session:
+
+        return redirect(
+            url_for("home")
+        )
+
+    if "access_code" not in session:
 
         return redirect(
             url_for("home")
@@ -900,10 +1104,6 @@ def import_questions():
 
     try:
 
-        # =====================================================
-        # EXCEL
-        # =====================================================
-
         if (
             filename.endswith(".xlsx")
             or filename.endswith(".xls")
@@ -1004,11 +1204,6 @@ def import_questions():
 
                 })
 
-
-        # =====================================================
-        # JSON
-        # =====================================================
-
         elif filename.endswith(".json"):
 
             loaded_questions = json.load(
@@ -1037,7 +1232,6 @@ def import_questions():
                     ).strip()
 
                     if not question_text:
-
                         continue
 
                     answer = str(
@@ -1102,7 +1296,6 @@ def import_questions():
 
                     })
 
-
         else:
 
             print(
@@ -1114,9 +1307,8 @@ def import_questions():
                 url_for("admin")
             )
 
-
         # =====================================================
-        # BOŞ IMPORT OLARSA KÖHNƏ SUALLARI SİLMƏ
+        # BOŞ IMPORT OLARSA KÖHNƏ SUALLARA TOXUNMURUQ
         # =====================================================
 
         if not new_questions:
@@ -1130,26 +1322,17 @@ def import_questions():
                 url_for("admin")
             )
 
-
-        # =====================================================
-        # GOOGLE SHEETS
-        # =====================================================
-
         questions_sheet = get_questions_sheet()
 
-
-        # ƏVVƏLKİ SUALLARI SİL
+        # ƏVVƏLKİ SUALLARI TAM SİL
         questions_sheet.clear()
 
-
-        # BAŞLIQLARI YENİDƏN YAZ
+        # BAŞLIQLARI YAZ
         questions_sheet.update(
             "A1:F1",
             [QUESTIONS_HEADERS]
         )
 
-
-        # YENİ SUALLARI HAZIRLA
         rows = []
 
         for q in new_questions:
@@ -1170,13 +1353,10 @@ def import_questions():
 
             ])
 
-
-        # YENİ SUALLARI GOOGLE SHEETS-Ə YAZ
         questions_sheet.update(
             f"A2:F{len(rows) + 1}",
             rows
         )
-
 
         print(
             f"IMPORT UĞURLU: "
@@ -1184,14 +1364,12 @@ def import_questions():
             f"Google Sheets-də saxlanıldı."
         )
 
-
     except Exception as e:
 
         print(
             "IMPORT ERROR:",
             str(e)
         )
-
 
     return redirect(
         url_for("admin")
