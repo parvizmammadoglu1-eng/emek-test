@@ -114,9 +114,9 @@ def get_google_client():
 # =========================================================
 
 SECTIONS = [
-    "I Bölmə",
-    "II Bölmə",
-    "III Bölmə",
+    "I Bölmə (Əsas müddəalar)",
+    "II Bölmə (Kollektiv müqavilə və sazişin bağlanmasının ümumi qaydaları)",
+    "III Bölmə ",
     "IV Bölmə",
     "V Bölmə",
     "VI Bölmə",
