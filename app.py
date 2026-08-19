@@ -1789,7 +1789,7 @@ def download_certificate():
     pdf.drawCentredString(
         page_width / 2,
         page_height - 190,
-        "Bu sertifikat təsdiq edir ki,"
+        "Bu sertifikat ona görə verilir ki,"
     )
 
     pdf.setFont(
