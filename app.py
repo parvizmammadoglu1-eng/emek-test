@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import secrets
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -14,7 +15,8 @@ from flask import (
     redirect,
     url_for,
     session,
-    send_file
+    send_file,
+    render_template_string
 )
 
 from openpyxl import Workbook, load_workbook
@@ -28,6 +30,9 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.utils import ImageReader
+
+import qrcode
 
 
 # =========================================================
@@ -118,13 +123,11 @@ def normalize_section(value):
 
     lower_value = value.lower()
 
-    # Tam ad
     for section in SECTIONS:
 
         if lower_value == section.lower():
             return section
 
-    # Sadə rəqəm: 1, 2, 3...
     if re.fullmatch(r"\d+", value):
 
         number = int(value)
@@ -132,7 +135,6 @@ def normalize_section(value):
         if 1 <= number <= len(SECTIONS):
             return SECTIONS[number - 1]
 
-    # 1 Bölmə, 2 Bölmə...
     match = re.match(
         r"^\s*(\d+)\s*b[öo]lm[əe]\b",
         lower_value
@@ -145,7 +147,6 @@ def normalize_section(value):
         if 1 <= number <= len(SECTIONS):
             return SECTIONS[number - 1]
 
-    # Roman rəqəmi
     first_word = re.split(
         r"[\s\-_()]+",
         value.upper()
@@ -158,7 +159,6 @@ def normalize_section(value):
         if 1 <= number <= len(SECTIONS):
             return SECTIONS[number - 1]
 
-    # II Bölmə
     roman_match = re.match(
         r"^\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI{0,2}|XII|XIII)"
         r"\s*b[öo]lm[əe]?",
@@ -176,7 +176,6 @@ def normalize_section(value):
 
             return SECTIONS[number - 1]
 
-    # Mətnin əvvəlindən roman rəqəmi
     roman_start = re.match(
         r"^\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI{0,2}|XII|XIII)\b",
         value,
@@ -193,7 +192,6 @@ def normalize_section(value):
                 ROMAN_NUMBERS[roman] - 1
             ]
 
-    # II Bölmə (...) kimi
     cleaned = (
         lower_value
         .replace("bölmə", "")
@@ -209,7 +207,6 @@ def normalize_section(value):
             ROMAN_NUMBERS[roman_only] - 1
         ]
 
-    # Tam bölmə adının əvvəlindən tanı
     for section in SECTIONS:
 
         section_lower = section.lower()
@@ -319,7 +316,7 @@ def get_sheet():
         sheet = spreadsheet.add_worksheet(
             title="Nəticələr",
             rows=1000,
-            cols=12
+            cols=13
         )
 
     required_headers = [
@@ -335,7 +332,8 @@ def get_sheet():
         "Status",
         "Müddət",
         "Başlama vaxtı",
-        "Bitmə vaxtı"
+        "Bitmə vaxtı",
+        "Sertifikat №"
 
     ]
 
@@ -344,7 +342,7 @@ def get_sheet():
     if not headers:
 
         sheet.update(
-            "A1:L1",
+            "A1:M1",
             [required_headers]
         )
 
@@ -379,6 +377,279 @@ def get_sheet():
             )
 
     return sheet
+
+
+# =========================================================
+# SERTİFİKATLAR SHEET
+# =========================================================
+
+CERTIFICATES_SHEET_NAME = "Sertifikatlar"
+
+CERTIFICATES_HEADERS = [
+
+    "Sertifikat №",
+    "Ad və soyad",
+    "Bölmə",
+    "Düzgün cavab",
+    "Ümumi sual",
+    "Nəticə",
+    "Tarix",
+    "Müddət",
+    "Status",
+    "Başlama vaxtı",
+    "Bitmə vaxtı"
+
+]
+
+
+def get_certificates_sheet():
+
+    client = get_google_client()
+
+    spreadsheet = client.open(
+        GOOGLE_SHEET_NAME
+    )
+
+    try:
+
+        sheet = spreadsheet.worksheet(
+            CERTIFICATES_SHEET_NAME
+        )
+
+    except gspread.WorksheetNotFound:
+
+        sheet = spreadsheet.add_worksheet(
+            title=CERTIFICATES_SHEET_NAME,
+            rows=2000,
+            cols=len(CERTIFICATES_HEADERS)
+        )
+
+        sheet.update(
+            "A1:K1",
+            [CERTIFICATES_HEADERS]
+        )
+
+    else:
+
+        headers = sheet.row_values(1)
+
+        if not headers:
+
+            sheet.update(
+                "A1:K1",
+                [CERTIFICATES_HEADERS]
+            )
+
+    return sheet
+
+
+# =========================================================
+# UNİKAL SERTİFİKAT NÖMRƏSİ
+# =========================================================
+
+def generate_certificate_number():
+
+    characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+    while True:
+
+        random_part = "".join(
+            secrets.choice(characters)
+            for _ in range(6)
+        )
+
+        certificate_number = (
+            f"EMEK-2026-{random_part}"
+        )
+
+        try:
+
+            sheet = get_certificates_sheet()
+
+            values = sheet.get_all_values()
+
+            existing_numbers = {
+
+                str(row[0]).strip().upper()
+
+                for row in values[1:]
+                if row
+
+            }
+
+            if (
+                certificate_number.upper()
+                not in existing_numbers
+            ):
+
+                return certificate_number
+
+        except Exception as e:
+
+            print(
+                "CERTIFICATE NUMBER CHECK ERROR:",
+                str(e)
+            )
+
+            return certificate_number
+
+
+# =========================================================
+# SERTİFİKAT YARAT
+# =========================================================
+
+def save_certificate(
+    certificate_number,
+    name,
+    section,
+    correct,
+    total,
+    percent,
+    created_at,
+    duration_text,
+    status,
+    start_time_text,
+    end_time_text
+):
+
+    sheet = get_certificates_sheet()
+
+    row_data = [
+
+        certificate_number,
+        name,
+        section,
+        correct,
+        total,
+        f"{percent}%",
+        created_at,
+        duration_text,
+        "Etibarlı",
+        start_time_text,
+        end_time_text
+
+    ]
+
+    sheet.append_row(
+        row_data,
+        value_input_option="USER_ENTERED"
+    )
+
+    return True
+
+
+# =========================================================
+# SERTİFİKAT TAP
+# =========================================================
+
+def find_certificate(certificate_number):
+
+    certificate_number = str(
+        certificate_number or ""
+    ).strip().upper()
+
+    if not certificate_number:
+        return None
+
+    try:
+
+        sheet = get_certificates_sheet()
+
+        values = sheet.get_all_values()
+
+        if len(values) <= 1:
+            return None
+
+        for row in values[1:]:
+
+            if not row:
+                continue
+
+            current_number = str(
+                row[0]
+                if len(row) > 0
+                else ""
+            ).strip().upper()
+
+            if current_number != certificate_number:
+                continue
+
+            return {
+
+                "certificate_number": current_number,
+
+                "name": (
+                    str(row[1]).strip()
+                    if len(row) > 1
+                    else ""
+                ),
+
+                "section": (
+                    str(row[2]).strip()
+                    if len(row) > 2
+                    else ""
+                ),
+
+                "correct": (
+                    str(row[3]).strip()
+                    if len(row) > 3
+                    else "0"
+                ),
+
+                "total": (
+                    str(row[4]).strip()
+                    if len(row) > 4
+                    else "0"
+                ),
+
+                "percent": (
+                    str(row[5]).strip()
+                    if len(row) > 5
+                    else "0%"
+                ),
+
+                "date": (
+                    str(row[6]).strip()
+                    if len(row) > 6
+                    else ""
+                ),
+
+                "duration": (
+                    str(row[7]).strip()
+                    if len(row) > 7
+                    else ""
+                ),
+
+                "status": (
+                    str(row[8]).strip()
+                    if len(row) > 8
+                    else "Etibarlı"
+                ),
+
+                "start_time": (
+                    str(row[9]).strip()
+                    if len(row) > 9
+                    else "-"
+                ),
+
+                "end_time": (
+                    str(row[10]).strip()
+                    if len(row) > 10
+                    else "-"
+                )
+
+            }
+
+        return None
+
+    except Exception as e:
+
+        print(
+            "FIND CERTIFICATE ERROR:",
+            str(e)
+        )
+
+        return None
 
 
 # =========================================================
@@ -1101,6 +1372,10 @@ def finish():
                 "finish_end_time_text",
                 "-"
             ),
+            certificate_number=session.get(
+                "certificate_number",
+                ""
+            ),
             question_results=session.get(
                 "finish_question_results",
                 []
@@ -1293,6 +1568,16 @@ def finish():
             f"({answered}/{total})"
         )
 
+    # =====================================================
+    # SERTİFİKAT NÖMRƏSİ
+    # =====================================================
+
+    certificate_number = generate_certificate_number()
+
+    # =====================================================
+    # NƏTİCƏLƏR SHEET
+    # =====================================================
+
     try:
 
         sheet = get_sheet()
@@ -1314,7 +1599,8 @@ def finish():
             status,
             duration_text,
             start_time_text,
-            end_time_text
+            end_time_text,
+            certificate_number
 
         ]
 
@@ -1334,7 +1620,53 @@ def finish():
             str(e)
         )
 
+    # =====================================================
+    # SERTİFİKAT SHEET
+    # =====================================================
+
+    try:
+
+        save_certificate(
+
+            certificate_number=certificate_number,
+
+            name=name,
+
+            section=selected_section,
+
+            correct=correct,
+
+            total=total,
+
+            percent=percent,
+
+            created_at=created_at,
+
+            duration_text=duration_text,
+
+            status=status,
+
+            start_time_text=start_time_text,
+
+            end_time_text=end_time_text
+
+        )
+
+        print(
+            "SERTİFİKAT YARADILDI:",
+            certificate_number
+        )
+
+    except Exception as e:
+
+        print(
+            "CERTIFICATE SAVE ERROR:",
+            str(e)
+        )
+
     session["exam_finished"] = True
+
+    session["certificate_number"] = certificate_number
 
     session["finish_correct"] = correct
     session["finish_total"] = total
@@ -1368,6 +1700,7 @@ def finish():
         duration_seconds=duration_seconds,
         start_time_text=start_time_text,
         end_time_text=end_time_text,
+        certificate_number=certificate_number,
         question_results=question_results
     )
 
@@ -1479,6 +1812,47 @@ def draw_wrapped_centered(
 
 
 # =========================================================
+# QR KOD YARAT
+# =========================================================
+
+def create_qr_image(data):
+
+    qr = qrcode.QRCode(
+
+        version=None,
+
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+
+        box_size=8,
+
+        border=2
+
+    )
+
+    qr.add_data(data)
+
+    qr.make(
+        fit=True
+    )
+
+    image = qr.make_image(
+        fill_color="black",
+        back_color="white"
+    )
+
+    output = BytesIO()
+
+    image.save(
+        output,
+        format="PNG"
+    )
+
+    output.seek(0)
+
+    return output
+
+
+# =========================================================
 # PDF SERTİFİKAT
 # =========================================================
 
@@ -1536,6 +1910,42 @@ def download_certificate():
         "-"
     )
 
+    certificate_number = session.get(
+        "certificate_number",
+        ""
+    )
+
+    if not certificate_number:
+
+        return redirect(
+            url_for("finish")
+        )
+
+    # =====================================================
+    # QR URL
+    # =====================================================
+
+    verify_url = (
+        request.host_url.rstrip("/")
+        +
+        url_for(
+            "verify_certificate",
+            certificate_number=certificate_number
+        )
+    )
+
+    qr_output = create_qr_image(
+        verify_url
+    )
+
+    qr_image = ImageReader(
+        qr_output
+    )
+
+    # =====================================================
+    # PDF
+    # =====================================================
+
     output = BytesIO()
 
     page_width, page_height = landscape(A4)
@@ -1571,10 +1981,6 @@ def download_certificate():
         "#D4A017"
     )
 
-    light_gold = colors.HexColor(
-        "#FFF7D6"
-    )
-
     green = colors.HexColor(
         "#159957"
     )
@@ -1603,7 +2009,7 @@ def download_certificate():
     )
 
     # =====================================================
-    # XARİCİ RƏNGLİ ÇƏRÇİVƏ
+    # XARİCİ ÇƏRÇİVƏ
     # =====================================================
 
     pdf.setFillColor(
@@ -1653,7 +2059,7 @@ def download_certificate():
     )
 
     # =====================================================
-    # YUXARI BAŞLIQ ZOLAĞI
+    # YUXARI BAŞLIQ
     # =====================================================
 
     pdf.setFillColor(
@@ -1704,7 +2110,6 @@ def download_certificate():
         "S E R T İ F İ K A T"
     )
 
-    # Alt xətt
     pdf.setStrokeColor(
         gold
     )
@@ -1719,7 +2124,7 @@ def download_certificate():
     )
 
     # =====================================================
-    # MEDAL / BADGE
+    # BADGE
     # =====================================================
 
     badge_x = 75
@@ -1898,6 +2303,7 @@ def download_certificate():
     )
 
     # Faiz
+
     pdf.setFillColor(
         green
     )
@@ -1929,6 +2335,7 @@ def download_certificate():
     )
 
     # Düzgün cavab
+
     pdf.setFillColor(
         dark_blue
     )
@@ -1960,6 +2367,7 @@ def download_certificate():
     )
 
     # Status
+
     pdf.setFillColor(
         dark_blue
     )
@@ -2021,11 +2429,6 @@ def download_certificate():
         dark_blue
     )
 
-    pdf.setFont(
-        font_name,
-        10
-    )
-
     pdf.drawString(
         205,
         70,
@@ -2033,34 +2436,72 @@ def download_certificate():
     )
 
     # =====================================================
-    # AŞAĞI SAĞ İŞARƏ
+    # SERTİFİKAT NÖMRƏSİ
     # =====================================================
 
     pdf.setFillColor(
-        gold
-    )
-
-    pdf.circle(
-        page_width - 85,
-        76,
-        20,
-        fill=1,
-        stroke=0
-    )
-
-    pdf.setFillColor(
-        white
+        dark_gray
     )
 
     pdf.setFont(
         font_name,
-        12
+        8
+    )
+
+    pdf.drawString(
+        105,
+        52,
+        "Sertifikat №:"
+    )
+
+    pdf.setFillColor(
+        dark_blue
+    )
+
+    pdf.setFont(
+        font_name,
+        9
+    )
+
+    pdf.drawString(
+        170,
+        52,
+        certificate_number
+    )
+
+    # =====================================================
+    # QR KOD
+    # =====================================================
+
+    qr_size = 58
+
+    qr_x = page_width - 125
+
+    qr_y = 30
+
+    pdf.drawImage(
+        qr_image,
+        qr_x,
+        qr_y,
+        width=qr_size,
+        height=qr_size,
+        preserveAspectRatio=True,
+        mask="auto"
+    )
+
+    pdf.setFillColor(
+        dark_gray
+    )
+
+    pdf.setFont(
+        font_name,
+        7
     )
 
     pdf.drawCentredString(
-        page_width - 85,
-        72,
-        "✓"
+        qr_x + qr_size / 2,
+        qr_y - 9,
+        "Sertifikatı yoxla"
     )
 
     # =====================================================
@@ -2131,6 +2572,349 @@ def download_certificate():
         download_name=filename,
         mimetype="application/pdf"
     )
+
+
+# =========================================================
+# SERTİFİKAT YOXLAMA
+# =========================================================
+
+@app.route(
+    "/verify/<certificate_number>"
+)
+def verify_certificate(
+    certificate_number
+):
+
+    certificate = find_certificate(
+        certificate_number
+    )
+
+    if not certificate:
+
+        return render_template_string(
+            VERIFY_TEMPLATE,
+            valid=False,
+            certificate_number=certificate_number
+        )
+
+    return render_template_string(
+        VERIFY_TEMPLATE,
+        valid=True,
+        certificate=certificate
+    )
+
+
+# =========================================================
+# VERİFİKASİYA SƏHİFƏSİ
+# =========================================================
+
+VERIFY_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="az">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Sertifikat yoxlanışı</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                linear-gradient(
+                    135deg,
+                    #eff6ff,
+                    #f8fafc
+                );
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+            color: #172033;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 650px;
+            background: white;
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow:
+                0 20px 60px
+                rgba(15, 23, 42, .12);
+            border: 1px solid #e5e7eb;
+        }
+
+        .icon {
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            margin: 0 auto 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 38px;
+            font-weight: 900;
+        }
+
+        .valid-icon {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .invalid-icon {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0;
+            font-size: 28px;
+            color: #123b63;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin: 10px 0 28px;
+        }
+
+        .certificate-number {
+            background: #eff6ff;
+            color: #173b73;
+            border-radius: 12px;
+            padding: 13px;
+            text-align: center;
+            font-family: monospace;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            word-break: break-word;
+        }
+
+        .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .item {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .label {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            color: #123b63;
+            font-weight: 800;
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        @media(max-width: 600px) {
+
+            .card {
+                padding: 25px 18px;
+                border-radius: 18px;
+            }
+
+            .info {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="card">
+
+        {% if valid %}
+
+            <div class="icon valid-icon">
+                ✓
+            </div>
+
+            <h1>
+                Sertifikat etibarlıdır
+            </h1>
+
+            <div class="subtitle">
+                Bu sertifikat sistemdə təsdiqlənmişdir.
+            </div>
+
+            <div class="certificate-number">
+                {{ certificate.certificate_number }}
+            </div>
+
+            <div class="info">
+
+                <div class="item">
+
+                    <div class="label">
+                        Ad və soyad
+                    </div>
+
+                    <div class="value">
+                        {{ certificate.name }}
+                    </div>
+
+                </div>
+
+                <div class="item">
+
+                    <div class="label">
+                        Bölmə
+                    </div>
+
+                    <div class="value">
+                        {{ certificate.section }}
+                    </div>
+
+                </div>
+
+                <div class="item">
+
+                    <div class="label">
+                        Nəticə
+                    </div>
+
+                    <div class="value">
+                        {{ certificate.percent }}
+                    </div>
+
+                </div>
+
+                <div class="item">
+
+                    <div class="label">
+                        Düzgün cavab sayı
+                    </div>
+
+                    <div class="value">
+                        {{ certificate.correct }}
+                        /
+                        {{ certificate.total }}
+                    </div>
+
+                </div>
+
+                <div class="item">
+
+                    <div class="label">
+                        Test tarixi
+                    </div>
+
+                    <div class="value">
+                        {{ certificate.date }}
+                    </div>
+
+                </div>
+
+                <div class="item">
+
+                    <div class="label">
+                        Müddət
+                    </div>
+
+                    <div class="value">
+                        {{ certificate.duration }}
+                    </div>
+
+                </div>
+
+                <div class="item">
+
+                    <div class="label">
+                        Status
+                    </div>
+
+                    <div class="value">
+                        {{ certificate.status }}
+                    </div>
+
+                </div>
+
+                <div class="item">
+
+                    <div class="label">
+                        Bitmə vaxtı
+                    </div>
+
+                    <div class="value">
+                        {{ certificate.end_time }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        {% else %}
+
+            <div class="icon invalid-icon">
+                ✕
+            </div>
+
+            <h1>
+                Sertifikat etibarsızdır
+            </h1>
+
+            <div class="subtitle">
+                Sertifikat tapılmadı.
+            </div>
+
+            <div class="certificate-number">
+                {{ certificate_number }}
+            </div>
+
+        {% endif %}
+
+        <div class="footer">
+            Əmək Məcəlləsi üzrə elektron test sistemi
+        </div>
+
+    </div>
+
+</body>
+
+</html>
+"""
 
 
 # =========================================================
@@ -2229,12 +3013,30 @@ def admin():
 
         codes = []
 
+    try:
+
+        certificates_sheet = get_certificates_sheet()
+
+        certificates = (
+            certificates_sheet.get_all_records()
+        )
+
+    except Exception as e:
+
+        print(
+            "ADMIN CERTIFICATES ERROR:",
+            str(e)
+        )
+
+        certificates = []
+
     return render_template(
         "admin.html",
         results=values,
         questions=questions,
         sections=SECTIONS,
-        codes=codes
+        codes=codes,
+        certificates=certificates
     )
 
 
@@ -2725,7 +3527,8 @@ def admin_export():
         "Status",
         "Müddət",
         "Başlama vaxtı",
-        "Bitmə vaxtı"
+        "Bitmə vaxtı",
+        "Sertifikat №"
 
     ]
 
@@ -2833,6 +3636,11 @@ def admin_export():
             result.get(
                 "Bitmə vaxtı",
                 ""
+            ),
+
+            result.get(
+                "Sertifikat №",
+                ""
             )
 
         ]
@@ -2867,7 +3675,8 @@ def admin_export():
         "I": 30,
         "J": 18,
         "K": 25,
-        "L": 25
+        "L": 25,
+        "M": 22
 
     }
 
