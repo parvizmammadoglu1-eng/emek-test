@@ -422,6 +422,99 @@
             margin-top: 20px;
         }
 
+        .cert-list {
+            margin-top: 20px;
+        }
+
+        .cert-row {
+            background: white;
+
+            border-radius: 14px;
+
+            padding: 18px 20px;
+
+            box-shadow:
+                0 6px 20px
+                rgba(15,23,42,.06);
+
+            border:
+                1px solid #edf1f5;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            margin-bottom: 12px;
+        }
+
+        .cert-row-info {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 3px;
+        }
+
+        .cert-row-title {
+            color: #123b63;
+
+            font-weight: 800;
+
+            font-size: 14px;
+        }
+
+        .cert-row-sub {
+            color: #64748b;
+
+            font-size: 12px;
+        }
+
+        .cert-row-buttons {
+            display: flex;
+
+            gap: 8px;
+        }
+
+        .cert-row-buttons a {
+            text-decoration: none;
+
+            padding: 8px 13px;
+
+            border-radius: 8px;
+
+            font-size: 12px;
+
+            font-weight: 800;
+        }
+
+        .cert-row-buttons .dl {
+            background: #123b63;
+
+            color: white;
+        }
+
+        .cert-row-buttons .vf {
+            background: #eef6ff;
+
+            color: #123b63;
+        }
+
+        .section-title {
+            color: #123b63;
+
+            font-size: 18px;
+
+            font-weight: 800;
+
+            margin: 25px 0 12px;
+        }
+
         @media(max-width: 850px) {
 
             .layout {
@@ -468,6 +561,12 @@
 
             .welcome h1 {
                 font-size: 23px;
+            }
+
+            .cert-row {
+                flex-direction: column;
+
+                align-items: flex-start;
             }
 
         }
@@ -534,13 +633,13 @@
         </a>
 
 
-        {% if certificate_number %}
+        {% if certificates %}
 
         <a
-            href="{{ url_for('download_certificate') }}"
+            href="#sertifikatlar"
             class="menu-item"
         >
-            📜 Sertifikatım
+            📜 Sertifikatlarım
         </a>
 
         {% endif %}
@@ -613,11 +712,15 @@
                 </div>
 
                 <div class="card-title">
-                    İştirak etdiyi bölmə
+                    Son iştirak etdiyi bölmə
                 </div>
 
                 <div class="card-value">
-                    {{ section }}
+                    {% if latest_result %}
+                        {{ latest_result.get("Bölmə", "-") }}
+                    {% else %}
+                        -
+                    {% endif %}
                 </div>
 
             </div>
@@ -626,15 +729,22 @@
             <div class="card">
 
                 <div class="card-icon">
-                    🔑
+                    📊
                 </div>
 
                 <div class="card-title">
-                    Giriş kodu
+                    Son nəticə
                 </div>
 
                 <div class="card-value">
-                    {{ access_code }}
+                    {% if latest_result %}
+                        {{ latest_result.get("Nəticə", "-") }}
+                        ({{ latest_result.get("Düzgün cavab", "-") }}
+                        /
+                        {{ latest_result.get("Ümumi sual", "-") }})
+                    {% else %}
+                        -
+                    {% endif %}
                 </div>
 
             </div>
@@ -660,7 +770,7 @@
         </section>
 
 
-        {% if certificate_number %}
+        {% if certificates %}
 
 
         <section class="certificate">
@@ -680,7 +790,7 @@
                 Sertifikat №
                 <br>
 
-                {{ certificate_number }}
+                {{ certificates[0].certificate_number }}
 
             </div>
 
@@ -689,7 +799,10 @@
 
 
                 <a
-                    href="{{ url_for('download_certificate') }}"
+                    href="{{ url_for(
+                        'download_certificate_by_number',
+                        certificate_number=certificates[0].certificate_number
+                    ) }}"
                     class="button"
                 >
                     📥 Sertifikatı yüklə
@@ -699,7 +812,7 @@
                 <a
                     href="{{ url_for(
                         'verify_certificate',
-                        certificate_number=certificate_number
+                        certificate_number=certificates[0].certificate_number
                     ) }}"
                     target="_blank"
                     class="button secondary"
@@ -711,6 +824,68 @@
             </div>
 
         </section>
+
+
+        {% if certificates|length > 1 %}
+
+        <div id="sertifikatlar" class="section-title">
+            Bütün sertifikatlarım
+        </div>
+
+        <div class="cert-list">
+
+            {% for cert in certificates %}
+
+            <div class="cert-row">
+
+                <div class="cert-row-info">
+
+                    <div class="cert-row-title">
+                        {{ cert.section }}
+                    </div>
+
+                    <div class="cert-row-sub">
+                        {{ cert.certificate_number }}
+                        &middot;
+                        {{ cert.percent }}
+                        &middot;
+                        {{ cert.date }}
+                    </div>
+
+                </div>
+
+                <div class="cert-row-buttons">
+
+                    <a
+                        class="dl"
+                        href="{{ url_for(
+                            'download_certificate_by_number',
+                            certificate_number=cert.certificate_number
+                        ) }}"
+                    >
+                        📥 Yüklə
+                    </a>
+
+                    <a
+                        class="vf"
+                        target="_blank"
+                        href="{{ url_for(
+                            'verify_certificate',
+                            certificate_number=cert.certificate_number
+                        ) }}"
+                    >
+                        🔍 Yoxla
+                    </a>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
 
 
         {% else %}
