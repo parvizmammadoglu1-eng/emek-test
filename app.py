@@ -3767,7 +3767,6 @@ def finish():
     # =====================================================
 
     try:
-
         sheet = get_sheet()
 
     all_values = sheet.get_all_values()
@@ -3775,14 +3774,10 @@ def finish():
     number = len(all_values)
 
     user_id = str(
-        session.get(
-            "user_id",
-            ""
-        )
+        session.get("user_id", "")
     ).strip()
 
     row_data = [
-
         number,
         user_id,
         name,
@@ -3797,7 +3792,6 @@ def finish():
         start_time_text,
         end_time_text,
         certificate_number
-
     ]
 
     sheet.append_row(
@@ -3805,12 +3799,9 @@ def finish():
         value_input_option="USER_ENTERED"
     )
 
-    print(
-        "GOOGLE SHEETS: nəticə əlavə edildi."
-    )
+    print("GOOGLE SHEETS: nəticə əlavə edildi.")
 
 except Exception as e:
-
     print(
         "GOOGLE SHEETS ERROR:",
         str(e)
