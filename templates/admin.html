@@ -18,18 +18,25 @@
     <style>
 
         :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --border: #334155;
+            --bg: #0b1120;
+            --sidebar: #111827;
+            --card: #172033;
+            --card2: #1b2639;
+            --border: #2b3850;
             --text: #f8fafc;
             --muted: #94a3b8;
+
             --blue: #3b82f6;
             --blue2: #2563eb;
+
             --green: #10b981;
             --red: #ef4444;
             --orange: #f59e0b;
             --purple: #8b5cf6;
+
+            --sidebar-width: 250px;
         }
+
 
         * {
             box-sizing: border-box;
@@ -38,394 +45,1049 @@
             font-family: Inter, sans-serif;
         }
 
+
         body {
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            padding-bottom: 50px;
         }
+
+
+        /* =====================================================
+           SIDEBAR
+        ====================================================== */
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+
+            width: var(--sidebar-width);
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #111827 0%,
+                    #0f172a 100%
+                );
+
+            border-right: 1px solid var(--border);
+
+            display: flex;
+            flex-direction: column;
+
+            z-index: 1000;
+
+            overflow-y: auto;
+        }
+
+
+        .sidebar-header {
+            padding: 25px 20px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+
+            background:
+                linear-gradient(
+                    to right,
+                    #60a5fa,
+                    #a78bfa
+                );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            line-height: 1.4;
+        }
+
+
+        .brand-subtitle {
+            margin-top: 5px;
+
+            color: var(--muted);
+
+            font-size: 11px;
+        }
+
+
+        .menu {
+            padding: 18px 12px;
+
+            flex: 1;
+        }
+
+
+        .menu-title {
+            color: #64748b;
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            padding: 0 10px 10px;
+        }
+
+
+        .menu-item {
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 12px 13px;
+
+            margin-bottom: 5px;
+
+            border-radius: 10px;
+
+            color: #cbd5e1;
+
+            background: transparent;
+
+            border: none;
+
+            text-decoration: none;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: .2s;
+
+            text-align: left;
+        }
+
+
+        .menu-item:hover {
+            background: rgba(59,130,246,.10);
+
+            color: white;
+        }
+
+
+        .menu-item.active {
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(59,130,246,.22),
+                    rgba(37,99,235,.12)
+                );
+
+            color: #60a5fa;
+
+            border: 1px solid rgba(59,130,246,.18);
+        }
+
+
+        .menu-icon {
+            width: 25px;
+
+            text-align: center;
+
+            font-size: 17px;
+        }
+
+
+        .sidebar-footer {
+            padding: 15px 12px;
+
+            border-top: 1px solid var(--border);
+        }
+
+
+        .logout {
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: 8px;
+
+            background: rgba(239,68,68,.10);
+
+            border: 1px solid rgba(239,68,68,.15);
+
+            color: #f87171;
+
+            padding: 11px;
+
+            border-radius: 9px;
+
+            text-decoration: none;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            transition: .2s;
+        }
+
+
+        .logout:hover {
+            background: rgba(239,68,68,.18);
+        }
+
+
+        /* =====================================================
+           MAIN
+        ====================================================== */
+
+        .main {
+            margin-left: var(--sidebar-width);
+
+            min-height: 100vh;
+        }
+
 
         .topbar {
             position: sticky;
+
             top: 0;
+
             z-index: 100;
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(12px);
+
+            height: 72px;
+
+            background:
+                rgba(11,17,32,.88);
+
+            backdrop-filter: blur(14px);
+
             border-bottom: 1px solid var(--border);
-            padding: 18px 40px;
+
             display: flex;
-            justify-content: space-between;
+
             align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 32px;
         }
 
-        .brand {
+
+        .page-title {
             font-size: 20px;
+
             font-weight: 800;
-            background: linear-gradient(
-                to right,
-                #60a5fa,
-                #a78bfa
-            );
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
-        .logout {
-            background: var(--blue2);
+
+        .page-subtitle {
+            color: var(--muted);
+
+            font-size: 12px;
+
+            margin-top: 3px;
+        }
+
+
+        .mobile-menu {
+            display: none;
+
+            background: var(--card);
+
             color: white;
-            padding: 9px 17px;
-            border-radius: 9px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 700;
+
+            border: 1px solid var(--border);
+
+            border-radius: 8px;
+
+            width: 40px;
+
+            height: 40px;
+
+            cursor: pointer;
+
+            font-size: 18px;
         }
 
-        .logout:hover {
-            background: #1d4ed8;
+
+        .content {
+            max-width: 1500px;
+
+            margin: 0 auto;
+
+            padding: 30px;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 30px auto;
-            padding: 0 20px;
+
+        /* =====================================================
+           SECTIONS
+        ====================================================== */
+
+        .module {
+            display: none;
         }
+
+
+        .module.active {
+            display: block;
+
+            animation: fadeIn .2s ease;
+        }
+
+
+        @keyframes fadeIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+
+        .module-header {
+            margin-bottom: 22px;
+        }
+
+
+        .module-header h2 {
+            font-size: 24px;
+
+            font-weight: 800;
+
+            margin-bottom: 6px;
+        }
+
+
+        .module-header p {
+            color: var(--muted);
+
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           STATS
+        ====================================================== */
 
         .stats {
             display: grid;
+
             grid-template-columns:
-                repeat(auto-fit, minmax(210px, 1fr));
-            gap: 18px;
+                repeat(auto-fit, minmax(200px, 1fr));
+
+            gap: 16px;
+
             margin-bottom: 25px;
         }
+
 
         .stat {
             background: var(--card);
+
             border: 1px solid var(--border);
+
             border-radius: 14px;
-            padding: 22px;
+
+            padding: 21px;
+
             box-shadow:
                 0 5px 15px rgba(0,0,0,.15);
+
+            transition: .2s;
         }
+
+
+        .stat:hover {
+            transform: translateY(-2px);
+
+            border-color: #3b4b67;
+        }
+
+
+        .stat-top {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            margin-bottom: 12px;
+        }
+
 
         .stat-title {
             color: var(--muted);
-            font-size: 13px;
-            margin-bottom: 8px;
+
+            font-size: 12px;
+
+            font-weight: 600;
         }
 
+
+        .stat-icon {
+            width: 35px;
+
+            height: 35px;
+
+            border-radius: 9px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: rgba(59,130,246,.12);
+
+            font-size: 16px;
+        }
+
+
         .stat-value {
-            font-size: 30px;
+            font-size: 29px;
+
             font-weight: 800;
         }
 
+
+        /* =====================================================
+           CARDS
+        ====================================================== */
+
         .card {
             background: var(--card);
+
             border: 1px solid var(--border);
+
             border-radius: 14px;
-            padding: 24px;
-            margin-bottom: 25px;
+
+            padding: 23px;
+
+            margin-bottom: 20px;
+
             box-shadow:
                 0 5px 15px rgba(0,0,0,.12);
         }
 
+
         .card-title {
-            font-size: 19px;
+            font-size: 17px;
+
             font-weight: 800;
-            margin-bottom: 8px;
+
+            margin-bottom: 7px;
         }
+
 
         .card-description {
             color: var(--muted);
-            font-size: 13px;
+
+            font-size: 12px;
+
             margin-bottom: 20px;
-            line-height: 1.5;
+
+            line-height: 1.6;
         }
+
+
+        /* =====================================================
+           FORM
+        ====================================================== */
 
         .form-grid {
             display: grid;
+
             grid-template-columns:
                 1fr 1fr auto;
+
             gap: 12px;
+
             align-items: end;
         }
 
+
         .field {
             display: flex;
+
             flex-direction: column;
+
             gap: 7px;
         }
 
+
         .field label {
             color: var(--muted);
-            font-size: 12px;
+
+            font-size: 11px;
+
             font-weight: 700;
         }
 
+
         .field input,
         .field select {
+
             width: 100%;
-            background: #0f172a;
+
+            background: #0d1526;
+
             border: 1px solid var(--border);
+
             color: white;
+
             padding: 12px 13px;
+
             border-radius: 9px;
+
             outline: none;
-            font-size: 14px;
+
+            font-size: 13px;
         }
+
 
         .field input:focus,
         .field select:focus {
+
             border-color: var(--blue);
+
             box-shadow:
                 0 0 0 2px rgba(59,130,246,.15);
         }
 
-        .create-btn {
+
+        .create-btn,
+        .import-btn {
+
             border: none;
+
             background:
                 linear-gradient(
                     135deg,
                     #173b73,
                     #2563eb
                 );
+
             color: white;
-            padding: 12px 22px;
+
+            padding: 12px 20px;
+
             border-radius: 9px;
-            font-size: 14px;
+
+            font-size: 13px;
+
             font-weight: 800;
+
             cursor: pointer;
+
             white-space: nowrap;
+
+            transition: .2s;
         }
+
+
+        .create-btn:hover,
+        .import-btn:hover {
+
+            transform: translateY(-1px);
+
+            filter: brightness(1.08);
+        }
+
+
+        /* =====================================================
+           TABLE
+        ====================================================== */
 
         .table-wrapper {
             width: 100%;
+
             overflow-x: auto;
         }
 
+
         table {
             width: 100%;
+
             border-collapse: collapse;
+
             min-width: 700px;
         }
 
+
         th {
-            background: #0f172a;
+            background: #0d1526;
+
             color: var(--muted);
-            font-size: 12px;
+
+            font-size: 10px;
+
             text-transform: uppercase;
-            padding: 14px;
+
+            padding: 13px;
+
             text-align: left;
+
             border-bottom: 1px solid var(--border);
+
             white-space: nowrap;
         }
 
+
         td {
-            padding: 14px;
+            padding: 13px;
+
             border-bottom: 1px solid var(--border);
-            font-size: 14px;
+
+            font-size: 13px;
         }
+
 
         tr:hover {
             background: rgba(255,255,255,.025);
         }
 
+
         .code {
             display: inline-block;
-            background: #0f172a;
+
+            background: #0d1526;
+
             border: 1px solid var(--border);
-            padding: 7px 11px;
+
+            padding: 6px 9px;
+
             border-radius: 7px;
+
             font-family: monospace;
+
             font-weight: 800;
+
             letter-spacing: 1px;
         }
 
+
+        /* =====================================================
+           BADGES
+        ====================================================== */
+
         .badge {
             display: inline-block;
-            padding: 5px 11px;
+
+            padding: 5px 10px;
+
             border-radius: 20px;
-            font-size: 12px;
+
+            font-size: 11px;
+
             font-weight: 800;
+
             white-space: nowrap;
         }
+
 
         .badge-active {
             background: rgba(16,185,129,.15);
+
             color: #34d399;
         }
 
+
         .badge-used {
             background: rgba(239,68,68,.15);
+
             color: #f87171;
         }
 
+
         .badge-other {
             background: rgba(245,158,11,.15);
+
             color: #fbbf24;
         }
 
+
         .badge-certificate {
             background: rgba(139,92,246,.15);
+
             color: #c4b5fd;
         }
 
+
         .verify-btn {
+
             display: inline-block;
+
             background: rgba(59,130,246,.15);
+
             color: #60a5fa;
-            padding: 7px 10px;
+
+            padding: 6px 10px;
+
             border-radius: 7px;
+
             text-decoration: none;
-            font-size: 12px;
+
+            font-size: 11px;
+
             font-weight: 800;
+
             white-space: nowrap;
         }
+
 
         .verify-btn:hover {
             background: rgba(59,130,246,.25);
         }
 
+
+        /* =====================================================
+           IMPORT
+        ====================================================== */
+
         .import-form {
+
             display: flex;
-            gap: 12px;
+
+            gap: 10px;
+
             flex-wrap: wrap;
+
             align-items: center;
         }
 
+
         .file-input {
-            background: #0f172a;
+
+            background: #0d1526;
+
             border: 1px solid var(--border);
+
             color: white;
-            padding: 10px;
+
+            padding: 9px;
+
             border-radius: 8px;
+
+            font-size: 12px;
         }
 
-        .import-btn {
-            background: var(--blue);
-            color: white;
-            border: none;
-            padding: 11px 18px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-        }
+
+        /* =====================================================
+           RESULTS CONTROLS
+        ====================================================== */
 
         .controls {
+
             display: flex;
+
             justify-content: space-between;
+
             gap: 12px;
+
             margin-bottom: 15px;
+
             flex-wrap: wrap;
         }
 
+
         .search {
-            background: var(--card);
+
+            background: #0d1526;
+
             border: 1px solid var(--border);
+
             color: white;
+
             padding: 11px 14px;
+
             border-radius: 8px;
+
             width: 300px;
+
             outline: none;
+
+            font-size: 13px;
         }
+
+
+        .search:focus {
+            border-color: var(--blue);
+        }
+
 
         .actions {
+
             display: flex;
-            gap: 10px;
+
+            gap: 8px;
         }
+
 
         .action {
-            padding: 10px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 700;
-        }
 
-        .refresh {
-            background: var(--border);
-            color: white;
+            padding: 10px 15px;
+
+            border-radius: 8px;
+
+            text-decoration: none;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
             border: none;
+
             cursor: pointer;
         }
 
-        .export {
-            background: var(--green);
+
+        .refresh {
+
+            background: var(--border);
+
             color: white;
         }
 
-        .question-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 10px;
+
+        .export {
+
+            background: var(--green);
+
+            color: white;
         }
 
+
+        /* =====================================================
+           QUESTIONS
+        ====================================================== */
+
+        .question-card {
+
+            background: #111a2b;
+
+            border: 1px solid var(--border);
+
+            border-radius: 10px;
+
+            padding: 15px;
+
+            margin-bottom: 9px;
+        }
+
+
         .question-number {
+
             color: #60a5fa;
-            font-size: 12px;
+
+            font-size: 10px;
+
             font-weight: 800;
+
+            margin-bottom: 6px;
+        }
+
+
+        .question-section {
+
+            display: inline-block;
+
+            background: rgba(59,130,246,.12);
+
+            color: #60a5fa;
+
+            padding: 4px 8px;
+
+            border-radius: 5px;
+
+            font-size: 10px;
+
             margin-bottom: 7px;
         }
 
-        .question-section {
-            display: inline-block;
-            background: rgba(59,130,246,.12);
-            color: #60a5fa;
-            padding: 4px 8px;
-            border-radius: 5px;
-            font-size: 11px;
-            margin-bottom: 8px;
-        }
 
         .question-text {
-            font-size: 14px;
+
+            font-size: 13px;
+
             line-height: 1.5;
         }
 
+
         .empty {
+
             text-align: center;
+
             padding: 40px;
+
             color: var(--muted);
         }
 
-        @media(max-width: 700px) {
+
+        /* =====================================================
+           MOBILE OVERLAY
+        ====================================================== */
+
+        .overlay {
+
+            display: none;
+
+            position: fixed;
+
+            inset: 0;
+
+            background: rgba(0,0,0,.55);
+
+            z-index: 900;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media(max-width: 850px) {
+
+            .sidebar {
+
+                transform: translateX(-100%);
+
+                transition: .25s;
+            }
+
+
+            .sidebar.open {
+
+                transform: translateX(0);
+            }
+
+
+            .overlay.show {
+
+                display: block;
+            }
+
+
+            .main {
+
+                margin-left: 0;
+            }
+
+
+            .mobile-menu {
+
+                display: block;
+            }
+
 
             .topbar {
-                padding: 15px 18px;
+
+                padding: 0 18px;
             }
 
-            .brand {
-                font-size: 16px;
+
+            .content {
+
+                padding: 20px 14px;
             }
 
-            .container {
-                padding: 0 12px;
-            }
 
             .form-grid {
+
                 grid-template-columns: 1fr;
             }
 
+
             .create-btn {
+
                 width: 100%;
             }
+
 
             .search {
+
                 width: 100%;
             }
 
+
             .controls {
+
                 flex-direction: column;
             }
 
+
             .actions {
+
                 width: 100%;
             }
 
+
             .action {
+
                 flex: 1;
+
                 text-align: center;
+            }
+
+        }
+
+
+        @media(max-width: 500px) {
+
+            .page-title {
+
+                font-size: 16px;
+            }
+
+
+            .page-subtitle {
+
+                display: none;
+            }
+
+
+            .stats {
+
+                grid-template-columns: 1fr 1fr;
+
+                gap: 10px;
+            }
+
+
+            .stat {
+
+                padding: 15px;
+            }
+
+
+            .stat-value {
+
+                font-size: 23px;
+            }
+
+
+            .stat-icon {
+
+                display: none;
+            }
+
+
+            .card {
+
+                padding: 16px;
             }
 
         }
@@ -434,885 +1096,1421 @@
 
 </head>
 
+
 <body>
 
-<header class="topbar">
 
-    <div class="brand">
-        ⚙️ Əmək Məcəlləsi Admin
-    </div>
+<!-- =====================================================
+     SIDEBAR
+====================================================== -->
 
-    <a
-        href="{{ url_for('admin_logout') }}"
-        class="logout"
-    >
-        Çıxış
-    </a>
-
-</header>
+<aside class="sidebar" id="sidebar">
 
 
-<main class="container">
+    <div class="sidebar-header">
 
-
-    <!-- =====================================================
-         STATLAR
-    ====================================================== -->
-
-    <div class="stats">
-
-        <div class="stat">
-
-            <div class="stat-title">
-                İştirakçı sayı
-            </div>
-
-            <div
-                class="stat-value"
-                style="color:#60a5fa;"
-            >
-                {{ results|length if results else 0 }}
-            </div>
-
+        <div class="brand">
+            ⚙️ Əmək Məcəlləsi
         </div>
 
-
-        <div class="stat">
-
-            <div class="stat-title">
-                Bazadakı suallar
-            </div>
-
-            <div
-                class="stat-value"
-                style="color:#fbbf24;"
-            >
-                {{ questions|length if questions else 0 }}
-            </div>
-
-        </div>
-
-
-        <div class="stat">
-
-            <div class="stat-title">
-                Aktiv kodlar
-            </div>
-
-            <div
-                class="stat-value"
-                style="color:#34d399;"
-            >
-                {% if codes %}
-                    {{ codes|selectattr("Status", "equalto", "Aktiv")|list|length }}
-                {% else %}
-                    0
-                {% endif %}
-            </div>
-
-        </div>
-
-
-        <div class="stat">
-
-            <div class="stat-title">
-                İstifadə olunmuş kodlar
-            </div>
-
-            <div
-                class="stat-value"
-                style="color:#f87171;"
-            >
-                {% if codes %}
-                    {{ codes|selectattr("Status", "equalto", "İstifadə olunub")|list|length }}
-                {% else %}
-                    0
-                {% endif %}
-            </div>
-
-        </div>
-
-
-        <div class="stat">
-
-            <div class="stat-title">
-                Sertifikat sayı
-            </div>
-
-            <div
-                class="stat-value"
-                style="color:#a78bfa;"
-            >
-                {{ certificates|length if certificates else 0 }}
-            </div>
-
+        <div class="brand-subtitle">
+            İdarəetmə paneli
         </div>
 
     </div>
 
 
-    <!-- =====================================================
-         YENİ KOD YARAT
-    ====================================================== -->
+    <nav class="menu">
 
-    <div class="card">
 
-        <div class="card-title">
-            🔑 Yeni kod yarat
+        <div class="menu-title">
+            İdarəetmə
         </div>
 
-        <div class="card-description">
-            İstifadəçiyə veriləcək giriş kodunu və həmin kodun
-            hansı bölmə üçün aktiv olacağını müəyyən edin.
-        </div>
 
-        <form
-            method="POST"
-            action="/admin/create-code"
+        <button
+            class="menu-item active"
+            onclick="showModule('dashboard', this)"
         >
 
-            <div class="form-grid">
+            <span class="menu-icon">📊</span>
 
-                <div class="field">
+            <span>Dashboard</span>
 
-                    <label>
-                        Kodun bölməsi
-                    </label>
+        </button>
 
-                    <select
-                        name="section"
-                        required
+
+        <button
+            class="menu-item"
+            onclick="showModule('codes', this)"
+        >
+
+            <span class="menu-icon">🔑</span>
+
+            <span>Giriş kodları</span>
+
+        </button>
+
+
+        <button
+            class="menu-item"
+            onclick="showModule('certificates', this)"
+        >
+
+            <span class="menu-icon">📜</span>
+
+            <span>Sertifikatlar</span>
+
+        </button>
+
+
+        <button
+            class="menu-item"
+            onclick="showModule('questions', this)"
+        >
+
+            <span class="menu-icon">📚</span>
+
+            <span>Sual bazası</span>
+
+        </button>
+
+
+        <button
+            class="menu-item"
+            onclick="showModule('results', this)"
+        >
+
+            <span class="menu-icon">📈</span>
+
+            <span>Test nəticələri</span>
+
+        </button>
+
+
+    </nav>
+
+
+    <div class="sidebar-footer">
+
+        <a
+            href="{{ url_for('admin_logout') }}"
+            class="logout"
+        >
+            🚪 Çıxış
+        </a>
+
+    </div>
+
+
+</aside>
+
+
+<div
+    class="overlay"
+    id="overlay"
+    onclick="closeSidebar()"
+></div>
+
+
+<!-- =====================================================
+     MAIN
+====================================================== -->
+
+<div class="main">
+
+
+    <header class="topbar">
+
+
+        <div>
+
+            <button
+                class="mobile-menu"
+                onclick="toggleSidebar()"
+            >
+                ☰
+            </button>
+
+        </div>
+
+
+        <div style="flex:1; margin-left:15px;">
+
+            <div
+                class="page-title"
+                id="pageTitle"
+            >
+                Dashboard
+            </div>
+
+            <div class="page-subtitle">
+                Əmək Məcəlləsi test sisteminin idarə edilməsi
+            </div>
+
+        </div>
+
+
+    </header>
+
+
+    <main class="content">
+
+
+        <!-- =================================================
+             DASHBOARD
+        ================================================== -->
+
+        <section
+            id="dashboard"
+            class="module active"
+        >
+
+
+            <div class="module-header">
+
+                <h2>
+                    📊 Dashboard
+                </h2>
+
+                <p>
+                    Sistemin ümumi vəziyyətinə buradan baxa bilərsiniz.
+                </p>
+
+            </div>
+
+
+            <div class="stats">
+
+
+                <div class="stat">
+
+                    <div class="stat-top">
+
+                        <div class="stat-title">
+                            İştirakçı sayı
+                        </div>
+
+                        <div class="stat-icon">
+                            👥
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        style="color:#60a5fa;"
                     >
-
-                        <option value="">
-                            Bölmə seçin
-                        </option>
-
-                        {% for section in sections %}
-
-                            <option value="{{ section }}">
-                                {{ section }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
+                        {{ results|length if results else 0 }}
+                    </div>
 
                 </div>
 
 
-                <div class="field">
+                <div class="stat">
 
-                    <label>
-                        Giriş kodu
-                    </label>
+                    <div class="stat-top">
+
+                        <div class="stat-title">
+                            Bazadakı suallar
+                        </div>
+
+                        <div class="stat-icon">
+                            📚
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        style="color:#fbbf24;"
+                    >
+                        {{ questions|length if questions else 0 }}
+                    </div>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <div class="stat-top">
+
+                        <div class="stat-title">
+                            Aktiv kodlar
+                        </div>
+
+                        <div class="stat-icon">
+                            🔑
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        style="color:#34d399;"
+                    >
+
+                        {% if codes %}
+
+                            {{
+                                codes
+                                |selectattr(
+                                    "Status",
+                                    "equalto",
+                                    "Aktiv"
+                                )
+                                |list
+                                |length
+                            }}
+
+                        {% else %}
+
+                            0
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <div class="stat-top">
+
+                        <div class="stat-title">
+                            İstifadə olunmuş kodlar
+                        </div>
+
+                        <div class="stat-icon">
+                            🔒
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        style="color:#f87171;"
+                    >
+
+                        {% if codes %}
+
+                            {{
+                                codes
+                                |selectattr(
+                                    "Status",
+                                    "equalto",
+                                    "İstifadə olunub"
+                                )
+                                |list
+                                |length
+                            }}
+
+                        {% else %}
+
+                            0
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <div class="stat-top">
+
+                        <div class="stat-title">
+                            Sertifikat sayı
+                        </div>
+
+                        <div class="stat-icon">
+                            📜
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        style="color:#a78bfa;"
+                    >
+                        {{ certificates|length if certificates else 0 }}
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    👋 Xoş gəlmisiniz
+                </div>
+
+                <div class="card-description">
+                    Sol menyudan idarə etmək istədiyiniz bölməni seçin.
+                    Buradan giriş kodlarını, sertifikatları, sual bazasını
+                    və test nəticələrini idarə edə bilərsiniz.
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             CODES
+        ================================================== -->
+
+        <section
+            id="codes"
+            class="module"
+        >
+
+
+            <div class="module-header">
+
+                <h2>
+                    🔑 Giriş kodları
+                </h2>
+
+                <p>
+                    Yeni giriş kodları yaradın və mövcud kodların
+                    vəziyyətini izləyin.
+                </p>
+
+            </div>
+
+
+            <!-- NEW CODE -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    ➕ Yeni kod yarat
+                </div>
+
+                <div class="card-description">
+                    İstifadəçiyə veriləcək giriş kodunu və həmin
+                    kodun hansı bölmə üçün aktiv olacağını müəyyən edin.
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="/admin/create-code"
+                >
+
+                    <div class="form-grid">
+
+
+                        <div class="field">
+
+                            <label>
+                                Kodun bölməsi
+                            </label>
+
+                            <select
+                                name="section"
+                                required
+                            >
+
+                                <option value="">
+                                    Bölmə seçin
+                                </option>
+
+                                {% for section in sections %}
+
+                                    <option value="{{ section }}">
+                                        {{ section }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label>
+                                Giriş kodu
+                            </label>
+
+                            <input
+                                type="text"
+                                name="code"
+                                placeholder="Məsələn: EM2026-001"
+                                autocomplete="off"
+                                required
+                            >
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="create-btn"
+                        >
+                            ➕ Kodu yarat
+                        </button>
+
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- EXISTING CODES -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    🔐 Mövcud giriş kodları
+                </div>
+
+                <div class="card-description">
+                    Yaradılmış bütün giriş kodlarını,
+                    onların bölməsini və istifadə vəziyyətini görə bilərsiniz.
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>№</th>
+                                <th>Kod</th>
+                                <th>Bölmə</th>
+                                <th>Status</th>
+                                <th>Ad və soyad</th>
+                                <th>İstifadə vaxtı</th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% if codes %}
+
+                                {% for code in codes %}
+
+                                    <tr>
+
+                                        <td>
+                                            {{ loop.index }}
+                                        </td>
+
+                                        <td>
+
+                                            <span class="code">
+                                                {{ code.get("Kod", "—") }}
+                                            </span>
+
+                                        </td>
+
+                                        <td>
+                                            {{ code.get("Bölmə", "—") }}
+                                        </td>
+
+                                        <td>
+
+                                            {% set status =
+                                                code.get("Status", "")
+                                                |string
+                                                |lower
+                                            %}
+
+
+                                            {% if status == "aktiv" %}
+
+                                                <span class="badge badge-active">
+                                                    ● Aktiv
+                                                </span>
+
+                                            {% elif status == "istifadə olunub" %}
+
+                                                <span class="badge badge-used">
+                                                    ✓ İstifadə olunub
+                                                </span>
+
+                                            {% else %}
+
+                                                <span class="badge badge-other">
+                                                    {{ code.get("Status", "—") }}
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+                                        <td>
+                                            {{ code.get("Ad və soyad", "—") }}
+                                        </td>
+
+                                        <td style="color:var(--muted);">
+                                            {{ code.get("İstifadə vaxtı", "—") }}
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            {% else %}
+
+                                <tr>
+
+                                    <td
+                                        colspan="6"
+                                        class="empty"
+                                    >
+                                        Hələ heç bir giriş kodu yaradılmayıb.
+                                    </td>
+
+                                </tr>
+
+                            {% endif %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             CERTIFICATES
+        ================================================== -->
+
+        <section
+            id="certificates"
+            class="module"
+        >
+
+
+            <div class="module-header">
+
+                <h2>
+                    📜 Sertifikatlar
+                </h2>
+
+                <p>
+                    Testi tamamlayan iştirakçılara verilmiş sertifikatlar.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+
+                <div class="card-title">
+                    📜 Verilmiş sertifikatlar
+                </div>
+
+
+                <div class="card-description">
+
+                    Elektron sertifikatlar burada saxlanılır.
+                    QR kod vasitəsilə hər sertifikatın həqiqiliyini
+                    yoxlamaq mümkündür.
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table id="certificatesTable">
+
+
+                        <thead>
+
+                            <tr>
+
+                                <th>№</th>
+                                <th>Sertifikat №</th>
+                                <th>Ad və soyad</th>
+                                <th>Bölmə</th>
+                                <th>Nəticə</th>
+                                <th>Düzgün</th>
+                                <th>Tarix</th>
+                                <th>Müddət</th>
+                                <th>Status</th>
+                                <th>Yoxlama</th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% if certificates %}
+
+                                {% for certificate in certificates|reverse %}
+
+                                    <tr>
+
+                                        <td>
+                                            {{ loop.index }}
+                                        </td>
+
+
+                                        <td>
+
+                                            <span class="code">
+                                                {{ certificate.get(
+                                                    "Sertifikat №",
+                                                    "—"
+                                                ) }}
+                                            </span>
+
+                                        </td>
+
+
+                                        <td style="font-weight:700;">
+
+                                            {{ certificate.get(
+                                                "Ad və soyad",
+                                                "—"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            {{ certificate.get(
+                                                "Bölmə",
+                                                "—"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td
+                                            style="
+                                                color:#34d399;
+                                                font-weight:800;
+                                            "
+                                        >
+
+                                            {{ certificate.get(
+                                                "Nəticə",
+                                                "—"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            {{ certificate.get(
+                                                "Düzgün cavab",
+                                                "0"
+                                            ) }}
+
+                                            /
+
+                                            {{ certificate.get(
+                                                "Ümumi sual",
+                                                "0"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td style="color:var(--muted);">
+
+                                            {{ certificate.get(
+                                                "Tarix",
+                                                "—"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            {{ certificate.get(
+                                                "Müddət",
+                                                "—"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span class="badge badge-certificate">
+
+                                                ✓
+
+                                                {{ certificate.get(
+                                                    "Status",
+                                                    "Etibarlı"
+                                                ) }}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            {% set cert_no =
+                                                certificate.get(
+                                                    "Sertifikat №",
+                                                    ""
+                                                )
+                                            %}
+
+
+                                            {% if cert_no %}
+
+                                                <a
+                                                    href="{{ url_for(
+                                                        'verify_certificate',
+                                                        certificate_number=cert_no
+                                                    ) }}"
+                                                    target="_blank"
+                                                    class="verify-btn"
+                                                >
+                                                    🔍 Yoxla
+                                                </a>
+
+                                            {% else %}
+
+                                                —
+
+                                            {% endif %}
+
+                                        </td>
+
+
+                                    </tr>
+
+                                {% endfor %}
+
+
+                            {% else %}
+
+                                <tr>
+
+                                    <td
+                                        colspan="10"
+                                        class="empty"
+                                    >
+                                        Hələ heç bir sertifikat yaradılmayıb.
+                                    </td>
+
+                                </tr>
+
+                            {% endif %}
+
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             QUESTIONS
+        ================================================== -->
+
+        <section
+            id="questions"
+            class="module"
+        >
+
+
+            <div class="module-header">
+
+                <h2>
+                    📚 Sual bazası
+                </h2>
+
+                <p>
+                    Sistemdə istifadə olunan sualları idarə edin.
+                </p>
+
+            </div>
+
+
+            <!-- IMPORT -->
+
+            <div class="card">
+
+
+                <div class="card-title">
+                    📥 Sual bazasını yenilə
+                </div>
+
+
+                <div class="card-description">
+
+                    Excel (.xlsx / .xls) və ya JSON faylı yükləyərək
+                    mövcud sual bazasını yeniləyə bilərsiniz.
+
+                    <br><br>
+
+                    <strong>
+                        Fayl formatı:
+                    </strong>
+
+                    Bölmə | Sual | A | B | C | D | Cavab
+
+                </div>
+
+
+                <form
+                    action="/admin/import-questions"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    class="import-form"
+                >
+
+                    <input
+                        type="file"
+                        name="questions_file"
+                        accept=".xlsx,.xls,.json"
+                        required
+                        class="file-input"
+                    >
+
+
+                    <button
+                        type="submit"
+                        class="import-btn"
+                    >
+                        ⬆ Sualları yenilə
+                    </button>
+
+                </form>
+
+
+            </div>
+
+
+            <!-- ACTIVE QUESTIONS -->
+
+            <div class="card">
+
+
+                <div class="card-title">
+                    📋 Aktiv suallar
+                </div>
+
+
+                <div class="card-description">
+                    Hazırda sistemdə istifadə olunan suallar.
+                </div>
+
+
+                {% if questions %}
+
+
+                    {% for q in questions %}
+
+
+                        <div class="question-card">
+
+
+                            <div class="question-number">
+                                SUAL {{ loop.index }}
+                            </div>
+
+
+                            {% if q is mapping %}
+
+
+                                <div class="question-section">
+
+                                    {{ q.get(
+                                        "section",
+                                        "Bölmə yoxdur"
+                                    ) }}
+
+                                </div>
+
+
+                                <div class="question-text">
+
+                                    {{ q.get(
+                                        "question",
+                                        "Sual mətni yoxdur"
+                                    ) }}
+
+                                </div>
+
+
+                            {% else %}
+
+
+                                <div class="question-text">
+                                    {{ q }}
+                                </div>
+
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                    {% endfor %}
+
+
+                {% else %}
+
+
+                    <div class="empty">
+                        Sistemdə sual yoxdur.
+                    </div>
+
+
+                {% endif %}
+
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             RESULTS
+        ================================================== -->
+
+        <section
+            id="results"
+            class="module"
+        >
+
+
+            <div class="module-header">
+
+                <h2>
+                    📈 Test nəticələri
+                </h2>
+
+                <p>
+                    İştirakçıların test nəticələrinə baxın və Excel
+                    formatında ixrac edin.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+
+                <div class="controls">
+
 
                     <input
                         type="text"
-                        name="code"
-                        placeholder="Məsələn: EM2026-001"
-                        autocomplete="off"
-                        required
+                        id="searchInput"
+                        class="search"
+                        placeholder="🔍 Ad və soyad ilə axtarış..."
+                        onkeyup="filterTable()"
                     >
 
-                </div>
 
+                    <div class="actions">
 
-                <button
-                    type="submit"
-                    class="create-btn"
-                >
-                    ➕ Kodu yarat
-                </button>
 
-            </div>
+                        <button
+                            class="action refresh"
+                            onclick="location.reload()"
+                        >
+                            ↻ Yenilə
+                        </button>
 
-        </form>
 
-    </div>
+                        <a
+                            href="{{ url_for('admin_export') }}"
+                            class="action export"
+                        >
+                            ↓ Excel
+                        </a>
 
 
-    <!-- =====================================================
-         MÖVCUD KODLAR
-    ====================================================== -->
-
-    <div class="card">
-
-        <div class="card-title">
-            🔐 Mövcud giriş kodları
-        </div>
-
-        <div class="card-description">
-            Burada yaradılmış bütün giriş kodlarını,
-            onların bölməsini və istifadə vəziyyətini görə bilərsiniz.
-        </div>
-
-        <div class="table-wrapper">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>№</th>
-                        <th>Kod</th>
-                        <th>Bölmə</th>
-                        <th>Status</th>
-                        <th>Ad və soyad</th>
-                        <th>İstifadə vaxtı</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% if codes %}
-
-                        {% for code in codes %}
-
-                            <tr>
-
-                                <td>
-                                    {{ loop.index }}
-                                </td>
-
-                                <td>
-
-                                    <span class="code">
-                                        {{ code.get("Kod", "—") }}
-                                    </span>
-
-                                </td>
-
-                                <td>
-                                    {{ code.get("Bölmə", "—") }}
-                                </td>
-
-                                <td>
-
-                                    {% set status =
-                                        code.get("Status", "")
-                                        |string
-                                        |lower
-                                    %}
-
-                                    {% if status == "aktiv" %}
-
-                                        <span class="badge badge-active">
-                                            ● Aktiv
-                                        </span>
-
-                                    {% elif status == "istifadə olunub" %}
-
-                                        <span class="badge badge-used">
-                                            ✓ İstifadə olunub
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="badge badge-other">
-                                            {{ code.get("Status", "—") }}
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
-
-                                <td>
-                                    {{ code.get("Ad və soyad", "—") }}
-                                </td>
-
-                                <td style="color:var(--muted);">
-                                    {{ code.get("İstifadə vaxtı", "—") }}
-                                </td>
-
-                            </tr>
-
-                        {% endfor %}
-
-                    {% else %}
-
-                        <tr>
-
-                            <td colspan="6" class="empty">
-                                Hələ heç bir giriş kodu yaradılmayıb.
-                            </td>
-
-                        </tr>
-
-                    {% endif %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         SERTİFİKATLAR
-    ====================================================== -->
-
-    <div class="card">
-
-        <div class="card-title">
-            📜 Sertifikatlar
-        </div>
-
-        <div class="card-description">
-            Testi tamamlayan iştirakçılara verilmiş elektron
-            sertifikatlar burada saxlanılır. QR kod vasitəsilə
-            hər sertifikatın həqiqiliyini yoxlamaq mümkündür.
-        </div>
-
-        <div class="table-wrapper">
-
-            <table id="certificatesTable">
-
-                <thead>
-
-                    <tr>
-
-                        <th>№</th>
-                        <th>Sertifikat №</th>
-                        <th>Ad və soyad</th>
-                        <th>Bölmə</th>
-                        <th>Nəticə</th>
-                        <th>Düzgün</th>
-                        <th>Tarix</th>
-                        <th>Müddət</th>
-                        <th>Status</th>
-                        <th>Yoxlama</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% if certificates %}
-
-                        {% for certificate in certificates|reverse %}
-
-                            <tr>
-
-                                <td>
-                                    {{ loop.index }}
-                                </td>
-
-                                <td>
-
-                                    <span class="code">
-                                        {{ certificate.get(
-                                            "Sertifikat №",
-                                            "—"
-                                        ) }}
-                                    </span>
-
-                                </td>
-
-                                <td style="font-weight:700;">
-
-                                    {{ certificate.get(
-                                        "Ad və soyad",
-                                        "—"
-                                    ) }}
-
-                                </td>
-
-                                <td>
-
-                                    {{ certificate.get(
-                                        "Bölmə",
-                                        "—"
-                                    ) }}
-
-                                </td>
-
-                                <td
-                                    style="
-                                        color:#34d399;
-                                        font-weight:800;
-                                    "
-                                >
-
-                                    {{ certificate.get(
-                                        "Nəticə",
-                                        "—"
-                                    ) }}
-
-                                </td>
-
-                                <td>
-
-                                    {{ certificate.get(
-                                        "Düzgün cavab",
-                                        "0"
-                                    ) }}
-                                    /
-                                    {{ certificate.get(
-                                        "Ümumi sual",
-                                        "0"
-                                    ) }}
-
-                                </td>
-
-                                <td
-                                    style="color:var(--muted);"
-                                >
-
-                                    {{ certificate.get(
-                                        "Tarix",
-                                        "—"
-                                    ) }}
-
-                                </td>
-
-                                <td>
-
-                                    {{ certificate.get(
-                                        "Müddət",
-                                        "—"
-                                    ) }}
-
-                                </td>
-
-                                <td>
-
-                                    <span class="badge badge-certificate">
-                                        ✓
-                                        {{ certificate.get(
-                                            "Status",
-                                            "Etibarlı"
-                                        ) }}
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    {% set cert_no =
-                                        certificate.get(
-                                            "Sertifikat №",
-                                            ""
-                                        )
-                                    %}
-
-                                    {% if cert_no %}
-
-                                        <a
-                                            href="{{ url_for(
-                                                'verify_certificate',
-                                                certificate_number=cert_no
-                                            ) }}"
-                                            target="_blank"
-                                            class="verify-btn"
-                                        >
-                                            🔍 Yoxla
-                                        </a>
-
-                                    {% else %}
-
-                                        —
-
-                                    {% endif %}
-
-                                </td>
-
-                            </tr>
-
-                        {% endfor %}
-
-                    {% else %}
-
-                        <tr>
-
-                            <td
-                                colspan="10"
-                                class="empty"
-                            >
-                                Hələ heç bir sertifikat yaradılmayıb.
-                            </td>
-
-                        </tr>
-
-                    {% endif %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         SUAL IMPORT
-    ====================================================== -->
-
-    <div class="card">
-
-        <div class="card-title">
-            📥 Sual bazasını yenilə
-        </div>
-
-        <div class="card-description">
-
-            Excel (.xlsx / .xls) və ya JSON faylı yükləyərək
-            sual bazasını yeniləyə bilərsiniz.
-
-            <br><br>
-
-            <strong>
-                Fayl formatı:
-            </strong>
-
-            Bölmə | Sual | A | B | C | D | Cavab
-
-        </div>
-
-        <form
-            action="/admin/import-questions"
-            method="POST"
-            enctype="multipart/form-data"
-            class="import-form"
-        >
-
-            <input
-                type="file"
-                name="questions_file"
-                accept=".xlsx,.xls,.json"
-                required
-                class="file-input"
-            >
-
-            <button
-                type="submit"
-                class="import-btn"
-            >
-                ⬆ Sualları yenilə
-            </button>
-
-        </form>
-
-    </div>
-
-
-    <!-- =====================================================
-         NƏTİCƏLƏR
-    ====================================================== -->
-
-    <div class="card">
-
-        <div class="card-title">
-            📊 Test nəticələri
-        </div>
-
-        <br>
-
-        <div class="controls">
-
-            <input
-                type="text"
-                id="searchInput"
-                class="search"
-                placeholder="Ad və soyad ilə axtarış..."
-                onkeyup="filterTable()"
-            >
-
-            <div class="actions">
-
-                <button
-                    class="action refresh"
-                    onclick="location.reload()"
-                >
-                    ↻ Yenilə
-                </button>
-
-                <a
-                    href="{{ url_for('admin_export') }}"
-                    class="action export"
-                >
-                    ↓ Excel
-                </a>
-
-            </div>
-
-        </div>
-
-        <div class="table-wrapper">
-
-            <table id="resultsTable">
-
-                <thead>
-
-                    <tr>
-
-                        <th>№</th>
-                        <th>Ad və soyad</th>
-                        <th>Bölmə</th>
-                        <th>Düzgün</th>
-                        <th>Səhv</th>
-                        <th>Nəticə</th>
-                        <th>Tarix</th>
-                        <th>Status</th>
-                        <th>Sertifikat</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% if results %}
-
-                        {% for result in results|reverse %}
-
-                            <tr>
-
-                                <td>
-                                    {{ loop.index }}
-                                </td>
-
-                                <td style="font-weight:700;">
-
-                                    {{ result.get(
-                                        "Ad və soyad",
-                                        "—"
-                                    ) }}
-
-                                </td>
-
-                                <td>
-
-                                    {{ result.get(
-                                        "Bölmə",
-                                        "—"
-                                    ) }}
-
-                                </td>
-
-                                <td
-                                    style="
-                                        color:#34d399;
-                                        font-weight:700;
-                                    "
-                                >
-
-                                    {{ result.get(
-                                        "Düzgün cavab",
-                                        "0"
-                                    ) }}
-
-                                </td>
-
-                                <td
-                                    style="
-                                        color:#f87171;
-                                        font-weight:700;
-                                    "
-                                >
-
-                                    {{ result.get(
-                                        "Səhv cavab",
-                                        "0"
-                                    ) }}
-
-                                </td>
-
-                                <td>
-
-                                    {{ result.get(
-                                        "Nəticə",
-                                        "0%"
-                                    ) }}
-
-                                </td>
-
-                                <td style="color:var(--muted);">
-
-                                    {{ result.get(
-                                        "Tarix",
-                                        "—"
-                                    ) }}
-
-                                </td>
-
-                                <td>
-
-                                    {% set status =
-                                        result.get(
-                                            "Status",
-                                            ""
-                                        )
-                                    %}
-
-                                    {% if "Tamamlandı" in status %}
-
-                                        <span class="badge badge-active">
-                                            ✓ Tamamlandı
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="badge badge-other">
-                                            ⚠ Yarımçıq
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
-
-                                <td>
-
-                                    {% set cert_no =
-                                        result.get(
-                                            "Sertifikat №",
-                                            ""
-                                        )
-                                    %}
-
-                                    {% if cert_no %}
-
-                                        <a
-                                            href="{{ url_for(
-                                                'verify_certificate',
-                                                certificate_number=cert_no
-                                            ) }}"
-                                            target="_blank"
-                                            class="verify-btn"
-                                        >
-                                            {{ cert_no }}
-                                        </a>
-
-                                    {% else %}
-
-                                        —
-
-                                    {% endif %}
-
-                                </td>
-
-                            </tr>
-
-                        {% endfor %}
-
-                    {% else %}
-
-                        <tr>
-
-                            <td
-                                colspan="9"
-                                class="empty"
-                            >
-                                Hələ heç bir test nəticəsi yoxdur.
-                            </td>
-
-                        </tr>
-
-                    {% endif %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         SUALLAR
-    ====================================================== -->
-
-    <div class="card">
-
-        <div class="card-title">
-            📚 Aktiv suallar
-        </div>
-
-        <div class="card-description">
-            Hazırda sistemdə istifadə olunan suallar.
-        </div>
-
-        {% if questions %}
-
-            {% for q in questions %}
-
-                <div class="question-card">
-
-                    <div class="question-number">
-                        SUAL {{ loop.index }}
                     </div>
 
-                    {% if q is mapping %}
-
-                        <div class="question-section">
-                            {{ q.get(
-                                "section",
-                                "Bölmə yoxdur"
-                            ) }}
-                        </div>
-
-                        <div class="question-text">
-
-                            {{ q.get(
-                                "question",
-                                "Sual mətni yoxdur"
-                            ) }}
-
-                        </div>
-
-                    {% else %}
-
-                        <div class="question-text">
-                            {{ q }}
-                        </div>
-
-                    {% endif %}
 
                 </div>
 
-            {% endfor %}
 
-        {% else %}
+                <div class="table-wrapper">
 
-            <div class="empty">
-                Sistemdə sual yoxdur.
+
+                    <table id="resultsTable">
+
+
+                        <thead>
+
+                            <tr>
+
+                                <th>№</th>
+                                <th>Ad və soyad</th>
+                                <th>Bölmə</th>
+                                <th>Düzgün</th>
+                                <th>Səhv</th>
+                                <th>Nəticə</th>
+                                <th>Tarix</th>
+                                <th>Status</th>
+                                <th>Sertifikat</th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+
+                            {% if results %}
+
+
+                                {% for result in results|reverse %}
+
+
+                                    <tr>
+
+
+                                        <td>
+                                            {{ loop.index }}
+                                        </td>
+
+
+                                        <td style="font-weight:700;">
+
+                                            {{ result.get(
+                                                "Ad və soyad",
+                                                "—"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            {{ result.get(
+                                                "Bölmə",
+                                                "—"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td
+                                            style="
+                                                color:#34d399;
+                                                font-weight:700;
+                                            "
+                                        >
+
+                                            {{ result.get(
+                                                "Düzgün cavab",
+                                                "0"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td
+                                            style="
+                                                color:#f87171;
+                                                font-weight:700;
+                                            "
+                                        >
+
+                                            {{ result.get(
+                                                "Səhv cavab",
+                                                "0"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            {{ result.get(
+                                                "Nəticə",
+                                                "0%"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td style="color:var(--muted);">
+
+                                            {{ result.get(
+                                                "Tarix",
+                                                "—"
+                                            ) }}
+
+                                        </td>
+
+
+                                        <td>
+
+
+                                            {% set status =
+                                                result.get(
+                                                    "Status",
+                                                    ""
+                                                )
+                                            %}
+
+
+                                            {% if "Tamamlandı" in status %}
+
+
+                                                <span class="badge badge-active">
+                                                    ✓ Tamamlandı
+                                                </span>
+
+
+                                            {% else %}
+
+
+                                                <span class="badge badge-other">
+                                                    ⚠ Yarımçıq
+                                                </span>
+
+
+                                            {% endif %}
+
+
+                                        </td>
+
+
+                                        <td>
+
+
+                                            {% set cert_no =
+                                                result.get(
+                                                    "Sertifikat №",
+                                                    ""
+                                                )
+                                            %}
+
+
+                                            {% if cert_no %}
+
+
+                                                <a
+                                                    href="{{ url_for(
+                                                        'verify_certificate',
+                                                        certificate_number=cert_no
+                                                    ) }}"
+                                                    target="_blank"
+                                                    class="verify-btn"
+                                                >
+                                                    {{ cert_no }}
+                                                </a>
+
+
+                                            {% else %}
+
+                                                —
+
+                                            {% endif %}
+
+
+                                        </td>
+
+
+                                    </tr>
+
+
+                                {% endfor %}
+
+
+                            {% else %}
+
+
+                                <tr>
+
+                                    <td
+                                        colspan="9"
+                                        class="empty"
+                                    >
+                                        Hələ heç bir test nəticəsi yoxdur.
+                                    </td>
+
+                                </tr>
+
+
+                            {% endif %}
+
+
+                        </tbody>
+
+
+                    </table>
+
+
+                </div>
+
+
             </div>
 
-        {% endif %}
 
-    </div>
+        </section>
 
 
-</main>
+    </main>
+
+
+</div>
 
 
 <script>
 
+
+/* =====================================================
+   MODULE SWITCH
+====================================================== */
+
+function showModule(moduleId, button) {
+
+    const modules =
+        document.querySelectorAll(".module");
+
+
+    modules.forEach(function(module) {
+
+        module.classList.remove("active");
+
+    });
+
+
+    const selected =
+        document.getElementById(moduleId);
+
+
+    if (selected) {
+
+        selected.classList.add("active");
+
+    }
+
+
+    const buttons =
+        document.querySelectorAll(".menu-item");
+
+
+    buttons.forEach(function(btn) {
+
+        btn.classList.remove("active");
+
+    });
+
+
+    if (button) {
+
+        button.classList.add("active");
+
+    }
+
+
+    const titles = {
+
+        dashboard: "Dashboard",
+
+        codes: "Giriş kodları",
+
+        certificates: "Sertifikatlar",
+
+        questions: "Sual bazası",
+
+        results: "Test nəticələri"
+
+    };
+
+
+    const pageTitle =
+        document.getElementById("pageTitle");
+
+
+    if (pageTitle) {
+
+        pageTitle.textContent =
+            titles[moduleId] || "Admin Panel";
+
+    }
+
+
+    closeSidebar();
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+/* =====================================================
+   RESULT SEARCH
+====================================================== */
+
 function filterTable() {
 
     const input =
-        document.getElementById(
-            "searchInput"
-        );
+        document.getElementById("searchInput");
+
+
+    if (!input) {
+        return;
+    }
+
 
     const filter =
         input.value.toLowerCase();
 
+
     const table =
-        document.getElementById(
-            "resultsTable"
-        );
+        document.getElementById("resultsTable");
+
+
+    if (!table) {
+        return;
+    }
+
 
     const rows =
         table.getElementsByTagName("tr");
+
 
     for (
         let i = 1;
@@ -1320,17 +2518,21 @@ function filterTable() {
         i++
     ) {
 
+
         const cells =
             rows[i].getElementsByTagName("td");
+
 
         if (!cells.length) {
             continue;
         }
 
+
         const name =
             cells[1]
             ? cells[1].textContent.toLowerCase()
             : "";
+
 
         if (
             name.indexOf(filter) > -1
@@ -1347,6 +2549,45 @@ function filterTable() {
     }
 
 }
+
+
+/* =====================================================
+   MOBILE SIDEBAR
+====================================================== */
+
+function toggleSidebar() {
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+
+    const overlay =
+        document.getElementById("overlay");
+
+
+    sidebar.classList.toggle("open");
+
+    overlay.classList.toggle("show");
+
+}
+
+
+function closeSidebar() {
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+
+    const overlay =
+        document.getElementById("overlay");
+
+
+    sidebar.classList.remove("open");
+
+    overlay.classList.remove("show");
+
+}
+
 
 </script>
 
