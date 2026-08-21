@@ -2473,11 +2473,15 @@ def download_certificate():
     # QR KOD
     # =====================================================
 
+    # QR kod aşağı sərhəddən yuxarı qaldırıldı.
+    # Beləliklə QR kod və "Sertifikatı yoxla"
+    # yazısı daxili çərçivənin daxilində qalır.
+
     qr_size = 58
 
     qr_x = page_width - 125
 
-    qr_y = 30
+    qr_y = 105
 
     pdf.drawImage(
         qr_image,
