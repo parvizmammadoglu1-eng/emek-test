@@ -1919,30 +1919,38 @@ def save_certificate(
     end_time_text
 ):
 
-    sheet = get_certificates_sheet()
+    try:
 
-    row_data = [
+        sheet = get_certificates_sheet()
 
-        certificate_number,
-        name,
-        section,
-        correct,
-        total,
-        f"{percent}%",
-        created_at,
-        duration_text,
-        "Etibarlı",
-        start_time_text,
-        end_time_text
+        row_data = [
+            certificate_number,
+            name,
+            section,
+            correct,
+            total,
+            f"{percent}%",
+            created_at,
+            duration_text,
+            "Etibarlı",
+            start_time_text,
+            end_time_text
+        ]
 
-    ]
+        sheet.append_row(
+            row_data,
+            value_input_option="USER_ENTERED"
+        )
 
-    sheet.append_row(
-        row_data,
-        value_input_option="USER_ENTERED"
-    )
+        print("CERTIFICATE: saxlanıldı.")
 
-    return True
+        return True
+
+    except Exception as e:
+
+        print("CERTIFICATE SAVE ERROR:", str(e))
+
+        return False
 
 
 # =========================================================
@@ -3750,7 +3758,8 @@ def finish():
             status,
             duration_text,
             start_time_text,
-            end_time_text
+            end_time_text,
+            certificate_number
         ]
 
         sheet.append_row(
