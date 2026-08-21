@@ -2952,6 +2952,16 @@ def verify_reset():
             )
         ).strip()
 
+        def verify_reset_code(user, code):
+    # BURANI ƏLAVƏ ET:
+    print("DEBUG USER DATA:", user)
+    print(
+        "DEBUG EXPY TEXT:",
+        user.get("reset_code_expiry"),
+    )
+
+    code = str(code or "").strip()
+    # qalan kodlar...
         if not verify_reset_code(
             user,
             code
