@@ -3188,6 +3188,10 @@ def reset_password():
 # HOME
 # =========================================================
 
+# =========================================================
+# HOME
+# =========================================================
+
 @app.route(
     "/",
     methods=["GET", "POST"]
@@ -3198,13 +3202,20 @@ def home():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    # 2. Giriş edibsə, qalan bütün kodlar normal işləyir:
+    # Sessiyadan istifadəçinin adını çəkirik (əgər "user_name" və ya uyğun açar işlədirsənsə)
+    # Qeyd: Sənin proqramında sessiyada ad hansı açarla saxlanılırsa onu yaza bilərsən (məs: session.get("name"))
+    logged_in_name = session.get("user_name", "") 
+
     if request.method == "POST":
 
+        # Əgər input boş gələrsə, birbaşa sessiyadakı adı götürürük
         name = request.form.get(
             "name",
             ""
         ).strip()
+        
+        if not name:
+            name = logged_in_name
 
         access_code = request.form.get(
             "access_code",
@@ -3226,7 +3237,8 @@ def home():
                 name=name,
                 access_code=access_code,
                 selected_section=selected_section,
-                sections=SECTIONS
+                sections=SECTIONS,
+                user_name=logged_in_name
             )
 
         if selected_section not in SECTIONS:
@@ -3237,7 +3249,8 @@ def home():
                 name=name,
                 access_code=access_code,
                 selected_section=selected_section,
-                sections=SECTIONS
+                sections=SECTIONS,
+                user_name=logged_in_name
             )
 
         if not access_code:
@@ -3248,7 +3261,8 @@ def home():
                 name=name,
                 access_code=access_code,
                 selected_section=selected_section,
-                sections=SECTIONS
+                sections=SECTIONS,
+                user_name=logged_in_name
             )
 
         section_questions = load_questions(
@@ -3266,7 +3280,8 @@ def home():
                 name=name,
                 access_code=access_code,
                 selected_section=selected_section,
-                sections=SECTIONS
+                sections=SECTIONS,
+                user_name=logged_in_name
             )
 
         code_valid, error_message = use_access_code(
@@ -3283,8 +3298,17 @@ def home():
                 name=name,
                 access_code=access_code,
                 selected_section=selected_section,
-                sections=SECTIONS
+                sections=SECTIONS,
+                user_name=logged_in_name
             )
+
+    # GET sorğusu gəldikdə və ya səhifə ilk açıldıqda ad avtomatik ötürülür
+    return render_template(
+        "home.html",
+        sections=SECTIONS,
+        name=logged_in_name,
+        user_name=logged_in_name
+    )
 
         # =================================================
         # HESAB MƏLUMATLARINI QORU
