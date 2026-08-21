@@ -2675,8 +2675,7 @@ def register():
         REGISTER_TEMPLATE,
         style=ACCOUNT_BASE_STYLE
     )
-
-        @app.route('/cabinet')
+@app.route('/cabinet')
 def cabinet():
     return render_template('cabinet.html')
 
