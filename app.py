@@ -3768,45 +3768,53 @@ def finish():
 
     try:
 
-        sheet = get_sheet()
+    sheet = get_sheet()
 
-        all_values = sheet.get_all_values()
+    all_values = sheet.get_all_values()
 
-        number = len(all_values)
+    number = len(all_values)
 
-        row_data = [
-
-            number,
-            name,
-            selected_section,
-            correct,
-            total,
-            wrong,
-            f"{percent}%",
-            created_at,
-            status,
-            duration_text,
-            start_time_text,
-            end_time_text,
-            certificate_number
-
-        ]
-
-        sheet.append_row(
-            row_data,
-            value_input_option="USER_ENTERED"
+    user_id = str(
+        session.get(
+            "user_id",
+            ""
         )
+    ).strip()
 
-        print(
-            "GOOGLE SHEETS: nəticə əlavə edildi."
-        )
+    row_data = [
 
-    except Exception as e:
+        number,
+        user_id,
+        name,
+        selected_section,
+        correct,
+        total,
+        wrong,
+        f"{percent}%",
+        created_at,
+        status,
+        duration_text,
+        start_time_text,
+        end_time_text,
+        certificate_number
 
-        print(
-            "GOOGLE SHEETS ERROR:",
-            str(e)
-        )
+    ]
+
+    sheet.append_row(
+        row_data,
+        value_input_option="USER_ENTERED"
+    )
+
+    print(
+        "GOOGLE SHEETS: nəticə əlavə edildi."
+    )
+
+except Exception as e:
+
+    print(
+        "GOOGLE SHEETS ERROR:",
+        str(e)
+    )
 
     # =====================================================
     # SERTİFİKAT SHEET
