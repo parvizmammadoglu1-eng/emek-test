@@ -3768,7 +3768,7 @@ def finish():
 
     try:
 
-    sheet = get_sheet()
+        sheet = get_sheet()
 
     all_values = sheet.get_all_values()
 
