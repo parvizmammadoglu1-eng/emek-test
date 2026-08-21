@@ -3184,53 +3184,26 @@ def reset_password():
 # HOME
 # =========================================================
 
-# =========================================================
-# HOME
-# =========================================================
-
-# =========================================================
-# HOME
-# =========================================================
-
-@app.route(
-    "/",
-    methods=["GET", "POST"]
-)
+@app.route("/", methods=["GET", "POST"])
 def home():
-
     # 1. Ən başda yoxlayırıq: İstifadəçi daxil olubmu?
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    # Sessiyadan istifadəçinin adını çəkirik (əgər "user_name" və ya uyğun açar işlədirsənsə)
-    # Qeyd: Sənin proqramında sessiyada ad hansı açarla saxlanılırsa onu yaza bilərsən (məs: session.get("name"))
+    # Sessiyadan istifadəçinin adını çəkirik
     logged_in_name = session.get("user_name", "") 
 
     if request.method == "POST":
-
         # Əgər input boş gələrsə, birbaşa sessiyadakı adı götürürük
-        name = request.form.get(
-            "name",
-            ""
-        ).strip()
+        name = request.form.get("name", "").strip()
         
         if not name:
             name = logged_in_name
 
-        access_code = request.form.get(
-            "access_code",
-            ""
-        ).strip()
-
-        selected_section = normalize_section(
-            request.form.get(
-                "section",
-                ""
-            ).strip()
-        )
+        access_code = request.form.get("access_code", "").strip()
+        selected_section = normalize_section(request.form.get("section", "").strip())
 
         if not name:
-
             return render_template(
                 "home.html",
                 error="Ad və soyad daxil edin.",
@@ -3242,7 +3215,6 @@ def home():
             )
 
         if selected_section not in SECTIONS:
-
             return render_template(
                 "home.html",
                 error="Bölmə seçin.",
@@ -3254,7 +3226,6 @@ def home():
             )
 
         if not access_code:
-
             return render_template(
                 "home.html",
                 error="Giriş kodunu daxil edin.",
@@ -3265,18 +3236,12 @@ def home():
                 user_name=logged_in_name
             )
 
-        section_questions = load_questions(
-            selected_section
-        )
+        section_questions = load_questions(selected_section)
 
         if not section_questions:
-
             return render_template(
                 "home.html",
-                error=(
-                    f"{selected_section} üzrə hazırda "
-                    f"sual mövcud deyil."
-                ),
+                error=f"{selected_section} üzrə hazırda sual mövcud deyil.",
                 name=name,
                 access_code=access_code,
                 selected_section=selected_section,
@@ -3291,7 +3256,6 @@ def home():
         )
 
         if not code_valid:
-
             return render_template(
                 "home.html",
                 error=error_message,
