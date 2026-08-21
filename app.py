@@ -2,9 +2,17 @@ import os
 import json
 import re
 import secrets
-from werkzeug.security import generate_password_hash, check_password_hash
+import smtplib
 
-from datetime import datetime
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
+
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from io import BytesIO
 from functools import wraps
@@ -59,6 +67,7 @@ ADMIN_PASSWORD = os.environ.get(
 
 GOOGLE_SHEET_NAME = "Emek Test 2026"
 
+
 # =========================================================
 # İSTİFADƏÇİLƏR SHEET
 # =========================================================
@@ -66,11 +75,14 @@ GOOGLE_SHEET_NAME = "Emek Test 2026"
 USERS_SHEET_NAME = "İstifadəçilər"
 
 USERS_HEADERS = [
+    "İstifadəçi ID",
     "İstifadəçi adı",
     "E-mail",
     "Şifrə hash",
     "Ad və soyad",
-    "Qeydiyyat tarixi"
+    "Qeydiyyat tarixi",
+    "Reset kod hash",
+    "Reset kod bitmə vaxtı"
 ]
 
 
@@ -93,11 +105,11 @@ def get_users_sheet():
         sheet = spreadsheet.add_worksheet(
             title=USERS_SHEET_NAME,
             rows=2000,
-            cols=5
+            cols=len(USERS_HEADERS)
         )
 
         sheet.update(
-            "A1:E1",
+            f"A1:H1",
             [USERS_HEADERS]
         )
 
@@ -108,11 +120,1431 @@ def get_users_sheet():
         if not headers:
 
             sheet.update(
-                "A1:E1",
+                "A1:H1",
                 [USERS_HEADERS]
             )
 
+        else:
+
+            changed = False
+
+            for header in USERS_HEADERS:
+
+                if header not in headers:
+
+                    headers.append(header)
+
+                    changed = True
+
+            if changed:
+
+                sheet.resize(
+                    rows=max(
+                        sheet.row_count,
+                        2000
+                    ),
+                    cols=max(
+                        sheet.col_count,
+                        len(headers)
+                    )
+                )
+
+                sheet.update(
+                    "1:1",
+                    [headers]
+                )
+
     return sheet
+
+
+# =========================================================
+# İSTİFADƏÇİ ID
+# =========================================================
+
+def generate_user_id():
+
+    while True:
+
+        user_id = (
+            "USR-"
+            +
+            secrets.token_hex(5).upper()
+        )
+
+        try:
+
+            sheet = get_users_sheet()
+
+            values = sheet.get_all_values()
+
+            existing_ids = set()
+
+            for row in values[1:]:
+
+                if row:
+
+                    existing_ids.add(
+                        str(
+                            row[0]
+                            if len(row) > 0
+                            else ""
+                        ).strip().upper()
+                    )
+
+            if user_id not in existing_ids:
+
+                return user_id
+
+        except Exception as e:
+
+            print(
+                "USER ID CHECK ERROR:",
+                str(e)
+            )
+
+            return user_id
+
+
+# =========================================================
+# İSTİFADƏÇİ MƏLUMATI NORMALİZASİYASI
+# =========================================================
+
+def normalize_username(value):
+
+    return str(
+        value or ""
+    ).strip().lower()
+
+
+def normalize_email(value):
+
+    return str(
+        value or ""
+    ).strip().lower()
+
+
+def normalize_name(value):
+
+    return re.sub(
+        r"\s+",
+        " ",
+        str(value or "").strip()
+    )
+
+
+# =========================================================
+# E-MAIL YOXLAMA
+# =========================================================
+
+def is_valid_email(email):
+
+    pattern = (
+        r"^[A-Za-z0-9._%+-]+@"
+        r"[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+    )
+
+    return bool(
+        re.fullmatch(
+            pattern,
+            email
+        )
+    )
+
+
+# =========================================================
+# İSTİFADƏÇİ TAP
+# =========================================================
+
+def find_user_by_username(username):
+
+    username = normalize_username(
+        username
+    )
+
+    if not username:
+        return None
+
+    try:
+
+        sheet = get_users_sheet()
+
+        values = sheet.get_all_values()
+
+        if len(values) <= 1:
+            return None
+
+        for row_number, row in enumerate(
+            values[1:],
+            start=2
+        ):
+
+            if not row:
+                continue
+
+            current_username = normalize_username(
+                row[1]
+                if len(row) > 1
+                else ""
+            )
+
+            if current_username != username:
+                continue
+
+            return {
+
+                "row_number": row_number,
+
+                "user_id": (
+                    str(row[0]).strip()
+                    if len(row) > 0
+                    else ""
+                ),
+
+                "username": (
+                    str(row[1]).strip()
+                    if len(row) > 1
+                    else ""
+                ),
+
+                "email": (
+                    str(row[2]).strip()
+                    if len(row) > 2
+                    else ""
+                ),
+
+                "password_hash": (
+                    str(row[3]).strip()
+                    if len(row) > 3
+                    else ""
+                ),
+
+                "name": (
+                    str(row[4]).strip()
+                    if len(row) > 4
+                    else ""
+                ),
+
+                "registration_date": (
+                    str(row[5]).strip()
+                    if len(row) > 5
+                    else ""
+                ),
+
+                "reset_code_hash": (
+                    str(row[6]).strip()
+                    if len(row) > 6
+                    else ""
+                ),
+
+                "reset_code_expiry": (
+                    str(row[7]).strip()
+                    if len(row) > 7
+                    else ""
+                )
+
+            }
+
+        return None
+
+    except Exception as e:
+
+        print(
+            "FIND USER BY USERNAME ERROR:",
+            str(e)
+        )
+
+        return None
+
+
+# =========================================================
+# E-MAIL İLƏ İSTİFADƏÇİ TAP
+# =========================================================
+
+def find_user_by_email(email):
+
+    email = normalize_email(
+        email
+    )
+
+    if not email:
+        return None
+
+    try:
+
+        sheet = get_users_sheet()
+
+        values = sheet.get_all_values()
+
+        if len(values) <= 1:
+            return None
+
+        for row_number, row in enumerate(
+            values[1:],
+            start=2
+        ):
+
+            if not row:
+                continue
+
+            current_email = normalize_email(
+                row[2]
+                if len(row) > 2
+                else ""
+            )
+
+            if current_email != email:
+                continue
+
+            return {
+
+                "row_number": row_number,
+
+                "user_id": (
+                    str(row[0]).strip()
+                    if len(row) > 0
+                    else ""
+                ),
+
+                "username": (
+                    str(row[1]).strip()
+                    if len(row) > 1
+                    else ""
+                ),
+
+                "email": (
+                    str(row[2]).strip()
+                    if len(row) > 2
+                    else ""
+                ),
+
+                "password_hash": (
+                    str(row[3]).strip()
+                    if len(row) > 3
+                    else ""
+                ),
+
+                "name": (
+                    str(row[4]).strip()
+                    if len(row) > 4
+                    else ""
+                ),
+
+                "registration_date": (
+                    str(row[5]).strip()
+                    if len(row) > 5
+                    else ""
+                ),
+
+                "reset_code_hash": (
+                    str(row[6]).strip()
+                    if len(row) > 6
+                    else ""
+                ),
+
+                "reset_code_expiry": (
+                    str(row[7]).strip()
+                    if len(row) > 7
+                    else ""
+                )
+
+            }
+
+        return None
+
+    except Exception as e:
+
+        print(
+            "FIND USER BY EMAIL ERROR:",
+            str(e)
+        )
+
+        return None
+
+
+# =========================================================
+# İSTİFADƏÇİ YARAT
+# =========================================================
+
+def create_user(
+    username,
+    email,
+    password,
+    name
+):
+
+    username = normalize_username(
+        username
+    )
+
+    email = normalize_email(
+        email
+    )
+
+    name = normalize_name(
+        name
+    )
+
+    if not username:
+        return False, "İstifadəçi adı daxil edin."
+
+    if not email:
+        return False, "E-mail daxil edin."
+
+    if not name:
+        return False, "Ad və soyad daxil edin."
+
+    if not is_valid_email(email):
+
+        return False, (
+            "Düzgün e-mail ünvanı daxil edin."
+        )
+
+    if len(username) < 3:
+
+        return False, (
+            "İstifadəçi adı ən azı 3 simvol olmalıdır."
+        )
+
+    if len(password) < 6:
+
+        return False, (
+            "Şifrə ən azı 6 simvol olmalıdır."
+        )
+
+    if find_user_by_username(username):
+
+        return False, (
+            "Bu istifadəçi adı artıq mövcuddur."
+        )
+
+    if find_user_by_email(email):
+
+        return False, (
+            "Bu e-mail artıq qeydiyyatdan keçib."
+        )
+
+    try:
+
+        sheet = get_users_sheet()
+
+        user_id = generate_user_id()
+
+        password_hash = generate_password_hash(
+            password
+        )
+
+        registration_date = datetime.now(
+            ZoneInfo("Asia/Baku")
+        ).strftime(
+            "%d.%m.%Y %H:%M:%S"
+        )
+
+        sheet.append_row(
+            [
+                user_id,
+                username,
+                email,
+                password_hash,
+                name,
+                registration_date,
+                "",
+                ""
+            ],
+            value_input_option="USER_ENTERED"
+        )
+
+        return True, user_id
+
+    except Exception as e:
+
+        print(
+            "CREATE USER ERROR:",
+            str(e)
+        )
+
+        return False, (
+            "Qeydiyyat zamanı xəta baş verdi."
+        )
+
+
+# =========================================================
+# LOGIN
+# =========================================================
+
+def login_user(
+    username,
+    password
+):
+
+    user = find_user_by_username(
+        username
+    )
+
+    if not user:
+
+        return False, (
+            "İstifadəçi adı və ya şifrə yanlışdır."
+        )
+
+    password_hash = user.get(
+        "password_hash",
+        ""
+    )
+
+    if not password_hash:
+
+        return False, (
+            "İstifadəçi hesabında şifrə məlumatı yoxdur."
+        )
+
+    try:
+
+        valid = check_password_hash(
+            password_hash,
+            password
+        )
+
+    except Exception as e:
+
+        print(
+            "PASSWORD CHECK ERROR:",
+            str(e)
+        )
+
+        valid = False
+
+    if not valid:
+
+        return False, (
+            "İstifadəçi adı və ya şifrə yanlışdır."
+        )
+
+    return True, user
+
+
+# =========================================================
+# E-MAIL SETTINGS
+# =========================================================
+
+SMTP_HOST = os.environ.get(
+    "SMTP_HOST",
+    "smtp.gmail.com"
+)
+
+SMTP_PORT = int(
+    os.environ.get(
+        "SMTP_PORT",
+        "587"
+    )
+)
+
+SMTP_USERNAME = os.environ.get(
+    "SMTP_USERNAME",
+    ""
+)
+
+SMTP_PASSWORD = os.environ.get(
+    "SMTP_PASSWORD",
+    ""
+)
+
+SMTP_FROM_EMAIL = os.environ.get(
+    "SMTP_FROM_EMAIL",
+    ""
+)
+
+
+def send_email(
+    recipient,
+    subject,
+    body
+):
+
+    if not SMTP_USERNAME or not SMTP_PASSWORD:
+
+        raise RuntimeError(
+            "SMTP məlumatları Render Environment Variables "
+            "bölməsində yoxdur."
+        )
+
+    sender = (
+        SMTP_FROM_EMAIL
+        or
+        SMTP_USERNAME
+    )
+
+    message = MIMEMultipart()
+
+    message["From"] = sender
+
+    message["To"] = recipient
+
+    message["Subject"] = subject
+
+    message.attach(
+        MIMEText(
+            body,
+            "plain",
+            "utf-8"
+        )
+    )
+
+    with smtplib.SMTP(
+        SMTP_HOST,
+        SMTP_PORT,
+        timeout=30
+    ) as server:
+
+        server.starttls()
+
+        server.login(
+            SMTP_USERNAME,
+            SMTP_PASSWORD
+        )
+
+        server.sendmail(
+            sender,
+            recipient,
+            message.as_string()
+        )
+
+    return True
+
+
+# =========================================================
+# RESET KODU
+# =========================================================
+
+RESET_CODE_MINUTES = 10
+
+
+def generate_reset_code():
+
+    return (
+        f"{secrets.randbelow(1000000):06d}"
+    )
+
+
+def save_reset_code(
+    user,
+    code
+):
+
+    sheet = get_users_sheet()
+
+    expiry = datetime.now(
+        ZoneInfo("Asia/Baku")
+    ) + timedelta(
+        minutes=RESET_CODE_MINUTES
+    )
+
+    code_hash = generate_password_hash(
+        code
+    )
+
+    row_number = user["row_number"]
+
+    sheet.update_cell(
+        row_number,
+        7,
+        code_hash
+    )
+
+    sheet.update_cell(
+        row_number,
+        8,
+        expiry.strftime(
+            "%d.%m.%Y %H:%M:%S"
+        )
+    )
+
+    return expiry
+
+
+def verify_reset_code(
+    user,
+    code
+):
+
+    code = str(
+        code or ""
+    ).strip()
+
+    if not re.fullmatch(
+        r"\d{6}",
+        code
+    ):
+
+        return False
+
+    code_hash = user.get(
+        "reset_code_hash",
+        ""
+    )
+
+    expiry_text = user.get(
+        "reset_code_expiry",
+        ""
+    )
+
+    if not code_hash or not expiry_text:
+
+        return False
+
+    try:
+
+        if not check_password_hash(
+            code_hash,
+            code
+        ):
+
+            return False
+
+    except Exception as e:
+
+        print(
+            "RESET CODE HASH ERROR:",
+            str(e)
+        )
+
+        return False
+
+    try:
+
+        expiry = datetime.strptime(
+            expiry_text,
+            "%d.%m.%Y %H:%M:%S"
+        ).replace(
+            tzinfo=ZoneInfo("Asia/Baku")
+        )
+
+    except Exception as e:
+
+        print(
+            "RESET CODE DATE ERROR:",
+            str(e)
+        )
+
+        return False
+
+    now = datetime.now(
+        ZoneInfo("Asia/Baku")
+    )
+
+    if now > expiry:
+
+        return False
+
+    return True
+
+
+def clear_reset_code(user):
+
+    try:
+
+        sheet = get_users_sheet()
+
+        row_number = user["row_number"]
+
+        sheet.update_cell(
+            row_number,
+            7,
+            ""
+        )
+
+        sheet.update_cell(
+            row_number,
+            8,
+            ""
+        )
+
+    except Exception as e:
+
+        print(
+            "CLEAR RESET CODE ERROR:",
+            str(e)
+        )
+
+
+# =========================================================
+# ACCOUNT PAGE TEMPLATES
+# =========================================================
+
+ACCOUNT_BASE_STYLE = """
+<style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+        background:
+            linear-gradient(
+                135deg,
+                #eff6ff,
+                #f8fafc
+            );
+        color: #172033;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .account-card {
+        width: 100%;
+        max-width: 500px;
+        background: white;
+        border-radius: 24px;
+        padding: 35px;
+        box-shadow:
+            0 20px 60px
+            rgba(15, 23, 42, .12);
+        border: 1px solid #e5e7eb;
+    }
+
+    .logo {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 18px;
+        border-radius: 20px;
+        background: #123b63;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 30px;
+        font-weight: 900;
+    }
+
+    h1 {
+        margin: 0;
+        text-align: center;
+        color: #123b63;
+        font-size: 28px;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #6b7280;
+        margin: 10px 0 25px;
+        line-height: 1.5;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    input {
+        width: 100%;
+        padding: 14px 15px;
+        border-radius: 12px;
+        border: 1px solid #dbe2ea;
+        outline: none;
+        font-size: 15px;
+        background: #f8fafc;
+    }
+
+    input:focus {
+        border-color: #1e73be;
+        background: white;
+        box-shadow:
+            0 0 0 3px
+            rgba(30, 115, 190, .10);
+    }
+
+    button {
+        width: 100%;
+        border: 0;
+        border-radius: 12px;
+        padding: 14px;
+        background: #123b63;
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+
+    button:hover {
+        background: #1e73be;
+    }
+
+    .error {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 18px;
+        line-height: 1.4;
+    }
+
+    .success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 18px;
+        line-height: 1.4;
+    }
+
+    .links {
+        margin-top: 20px;
+        text-align: center;
+        line-height: 2;
+    }
+
+    .links a {
+        color: #1e73be;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .links a:hover {
+        text-decoration: underline;
+    }
+
+    .code-input {
+        text-align: center;
+        letter-spacing: 7px;
+        font-size: 24px;
+        font-weight: 900;
+    }
+
+    .note {
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: #1e3a5f;
+        padding: 13px;
+        border-radius: 12px;
+        margin-bottom: 18px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    @media(max-width: 600px) {
+
+        .account-card {
+            padding: 25px 18px;
+            border-radius: 18px;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+    }
+
+</style>
+"""
+
+
+REGISTER_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şəxsi kabinet yarat</title>
+    {{ style|safe }}
+</head>
+
+<body>
+
+<div class="account-card">
+
+    <div class="logo">ƏM</div>
+
+    <h1>Şəxsi kabinet yarat</h1>
+
+    <div class="subtitle">
+        Hesab yaradın və imtahan nəticələrinizi
+        şəxsi kabinetinizdən idarə edin.
+    </div>
+
+    {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    {% if success %}
+        <div class="success">
+            {{ success }}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+
+        <div class="form-group">
+
+            <label>
+                Ad və soyad
+            </label>
+
+            <input
+                type="text"
+                name="name"
+                value="{{ name or '' }}"
+                placeholder="Ad və soyad"
+                required
+                autocomplete="name"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                İstifadəçi adı
+            </label>
+
+            <input
+                type="text"
+                name="username"
+                value="{{ username or '' }}"
+                placeholder="Məsələn: perviz"
+                required
+                autocomplete="username"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                E-mail
+            </label>
+
+            <input
+                type="email"
+                name="email"
+                value="{{ email or '' }}"
+                placeholder="example@gmail.com"
+                required
+                autocomplete="email"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Şifrə
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Ən azı 6 simvol"
+                required
+                minlength="6"
+                autocomplete="new-password"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Şifrəni təkrar daxil edin
+            </label>
+
+            <input
+                type="password"
+                name="password_confirm"
+                placeholder="Şifrəni təkrar yazın"
+                required
+                minlength="6"
+                autocomplete="new-password"
+            >
+
+        </div>
+
+        <button type="submit">
+            ŞƏXSİ KABİNET YARAT
+        </button>
+
+    </form>
+
+    <div class="links">
+
+        Artıq hesabınız var?
+
+        <br>
+
+        <a href="{{ url_for('login') }}">
+            Şəxsi kabinetə daxil olun
+        </a>
+
+        <br>
+
+        <a href="{{ url_for('home') }}">
+            ← Test səhifəsinə qayıt
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+"""
+
+
+LOGIN_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şəxsi kabinetə daxil ol</title>
+    {{ style|safe }}
+</head>
+
+<body>
+
+<div class="account-card">
+
+    <div class="logo">ƏM</div>
+
+    <h1>Şəxsi kabinet</h1>
+
+    <div class="subtitle">
+        Hesabınıza daxil olun.
+    </div>
+
+    {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    {% if success %}
+        <div class="success">
+            {{ success }}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+
+        <div class="form-group">
+
+            <label>
+                İstifadəçi adı
+            </label>
+
+            <input
+                type="text"
+                name="username"
+                value="{{ username or '' }}"
+                placeholder="İstifadəçi adı"
+                required
+                autocomplete="username"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Şifrə
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Şifrə"
+                required
+                autocomplete="current-password"
+            >
+
+        </div>
+
+        <button type="submit">
+            DAXİL OL
+        </button>
+
+    </form>
+
+    <div class="links">
+
+        <a href="{{ url_for('forgot_password') }}">
+            Şifrəni unutdum
+        </a>
+
+        <br>
+
+        Hesabınız yoxdur?
+
+        <a href="{{ url_for('register') }}">
+            Şəxsi kabinet yaradın
+        </a>
+
+        <br>
+
+        <a href="{{ url_for('home') }}">
+            ← Test səhifəsinə qayıt
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+"""
+
+
+FORGOT_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şifrəni unutdum</title>
+    {{ style|safe }}
+</head>
+
+<body>
+
+<div class="account-card">
+
+    <div class="logo">?</div>
+
+    <h1>Şifrəni unutdum</h1>
+
+    <div class="subtitle">
+        Hesabınıza bağlı e-mail ünvanını daxil edin.
+    </div>
+
+    {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    {% if success %}
+        <div class="success">
+            {{ success }}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+
+        <div class="form-group">
+
+            <label>
+                E-mail
+            </label>
+
+            <input
+                type="email"
+                name="email"
+                value="{{ email or '' }}"
+                placeholder="example@gmail.com"
+                required
+                autocomplete="email"
+            >
+
+        </div>
+
+        <button type="submit">
+            TƏSDİQ KODU GÖNDƏR
+        </button>
+
+    </form>
+
+    <div class="links">
+
+        <a href="{{ url_for('login') }}">
+            ← Login səhifəsinə qayıt
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+"""
+
+
+RESET_CODE_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Təsdiq kodu</title>
+    {{ style|safe }}
+</head>
+
+<body>
+
+<div class="account-card">
+
+    <div class="logo">✓</div>
+
+    <h1>Təsdiq kodu</h1>
+
+    <div class="subtitle">
+        E-mail ünvanınıza göndərilən 6 rəqəmli
+        kodu daxil edin.
+    </div>
+
+    {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    {% if success %}
+        <div class="success">
+            {{ success }}
+        </div>
+    {% endif %}
+
+    <div class="note">
+        Kod {{ minutes }} dəqiqə ərzində etibarlıdır.
+    </div>
+
+    <form method="POST">
+
+        <div class="form-group">
+
+            <label>
+                6 rəqəmli təsdiq kodu
+            </label>
+
+            <input
+                class="code-input"
+                type="text"
+                name="code"
+                maxlength="6"
+                minlength="6"
+                pattern="[0-9]{6}"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                placeholder="000000"
+                required
+            >
+
+        </div>
+
+        <button type="submit">
+            KODU TƏSDİQLƏ
+        </button>
+
+    </form>
+
+    <div class="links">
+
+        <a href="{{ url_for('forgot_password') }}">
+            Yeni kod göndər
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+"""
+
+
+RESET_PASSWORD_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeni şifrə</title>
+    {{ style|safe }}
+</head>
+
+<body>
+
+<div class="account-card">
+
+    <div class="logo">🔒</div>
+
+    <h1>Yeni şifrə</h1>
+
+    <div class="subtitle">
+        Hesabınız üçün yeni şifrə təyin edin.
+    </div>
+
+    {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+
+        <div class="form-group">
+
+            <label>
+                Yeni şifrə
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                minlength="6"
+                placeholder="Ən azı 6 simvol"
+                required
+                autocomplete="new-password"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Yeni şifrəni təkrar daxil edin
+            </label>
+
+            <input
+                type="password"
+                name="password_confirm"
+                minlength="6"
+                placeholder="Şifrəni təkrar yazın"
+                required
+                autocomplete="new-password"
+            >
+
+        </div>
+
+        <button type="submit">
+            ŞİFRƏNİ YENİLƏ
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+</html>
+"""
+
 
 # =========================================================
 # BÖLMƏLƏR
@@ -259,16 +1691,23 @@ def normalize_section(value):
     if roman_only in ROMAN_NUMBERS:
 
         return SECTIONS[
-            ROMAN_NUMBERS[roman_only] - 1
+            ROMAN_NUMBERS[roman_only]
+            - 1
         ]
 
     for section in SECTIONS:
 
         section_lower = section.lower()
 
-        section_prefix = section_lower.split("(")[0].strip()
+        section_prefix = (
+            section_lower
+            .split("(")[0]
+            .strip()
+        )
 
-        if lower_value.startswith(section_prefix):
+        if lower_value.startswith(
+            section_prefix
+        ):
             return section
 
     return value
@@ -899,7 +2338,8 @@ def load_questions(section=None):
         if normalize_section(
             q.get("section", "")
         )
-        == normalized_requested
+        ==
+        normalized_requested
 
     ]
 
@@ -1124,6 +2564,680 @@ def admin_required(function):
 
 
 # =========================================================
+# ACCOUNT AUTH
+# =========================================================
+
+def account_required(function):
+
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+
+        if not session.get("user_id"):
+
+            return redirect(
+                url_for("login")
+            )
+
+        return function(
+            *args,
+            **kwargs
+        )
+
+    return wrapper
+
+
+# =========================================================
+# REGISTER
+# =========================================================
+
+@app.route(
+    "/register",
+    methods=["GET", "POST"]
+)
+def register():
+
+    if session.get("user_id"):
+
+        return redirect(
+            url_for("cabinet")
+        )
+
+    if request.method == "POST":
+
+        name = normalize_name(
+            request.form.get(
+                "name",
+                ""
+            )
+        )
+
+        username = normalize_username(
+            request.form.get(
+                "username",
+                ""
+            )
+        )
+
+        email = normalize_email(
+            request.form.get(
+                "email",
+                ""
+            )
+        )
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        password_confirm = request.form.get(
+            "password_confirm",
+            ""
+        )
+
+        if password != password_confirm:
+
+            return render_template_string(
+                REGISTER_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error="Şifrələr eyni deyil.",
+                name=name,
+                username=username,
+                email=email
+            )
+
+        success, result = create_user(
+            username=username,
+            email=email,
+            password=password,
+            name=name
+        )
+
+        if not success:
+
+            return render_template_string(
+                REGISTER_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error=result,
+                name=name,
+                username=username,
+                email=email
+            )
+
+        return redirect(
+            url_for(
+                "login",
+                registered="1"
+            )
+        )
+
+    return render_template_string(
+        REGISTER_TEMPLATE,
+        style=ACCOUNT_BASE_STYLE
+    )
+
+
+# =========================================================
+# LOGIN
+# =========================================================
+
+@app.route(
+    "/login",
+    methods=["GET", "POST"]
+)
+def login():
+
+    if session.get("user_id"):
+
+        return redirect(
+            url_for("cabinet")
+        )
+
+    registered = request.args.get(
+        "registered"
+    )
+
+    success = None
+
+    if registered == "1":
+
+        success = (
+            "Hesabınız uğurla yaradıldı. "
+            "İndi şəxsi kabinetə daxil ola bilərsiniz."
+        )
+
+    if request.method == "POST":
+
+        username = normalize_username(
+            request.form.get(
+                "username",
+                ""
+            )
+        )
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        valid, result = login_user(
+            username,
+            password
+        )
+
+        if not valid:
+
+            return render_template_string(
+                LOGIN_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error=result,
+                success=success,
+                username=username
+            )
+
+        session["user_id"] = result["user_id"]
+
+        session["username"] = result["username"]
+
+        session["email"] = result["email"]
+
+        session["account_name"] = result["name"]
+
+        session.modified = True
+
+        return redirect(
+            url_for("cabinet")
+        )
+
+    return render_template_string(
+        LOGIN_TEMPLATE,
+        style=ACCOUNT_BASE_STYLE,
+        success=success
+    )
+
+
+# =========================================================
+# LOGOUT
+# =========================================================
+
+@app.route(
+    "/logout"
+)
+def logout():
+
+    session.clear()
+
+    return redirect(
+        url_for("home")
+    )
+
+
+# =========================================================
+# FORGOT PASSWORD
+# =========================================================
+
+@app.route(
+    "/forgot-password",
+    methods=["GET", "POST"]
+)
+def forgot_password():
+
+    if request.method == "POST":
+
+        email = normalize_email(
+            request.form.get(
+                "email",
+                ""
+            )
+        )
+
+        if not is_valid_email(email):
+
+            return render_template_string(
+                FORGOT_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error=(
+                    "Düzgün e-mail ünvanı daxil edin."
+                ),
+                email=email
+            )
+
+        user = find_user_by_email(
+            email
+        )
+
+        if not user:
+
+            return render_template_string(
+                FORGOT_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error=(
+                    "Bu e-mail ilə qeydiyyatdan keçmiş "
+                    "istifadəçi tapılmadı."
+                ),
+                email=email
+            )
+
+        code = generate_reset_code()
+
+        try:
+
+            save_reset_code(
+                user,
+                code
+            )
+
+            email_body = f"""
+Salam, {user["name"]}!
+
+Şifrəni yeniləmək üçün təsdiq kodunuz:
+
+{code}
+
+Bu kod {RESET_CODE_MINUTES} dəqiqə ərzində etibarlıdır.
+
+Əgər bu sorğunu siz göndərməmisinizsə,
+bu e-maili nəzərə almayın.
+
+Əmək Məcəlləsi test sistemi
+"""
+
+            send_email(
+                recipient=user["email"],
+                subject="Şifrə yeniləmə təsdiq kodu",
+                body=email_body
+            )
+
+            session["reset_user_id"] = user["user_id"]
+
+            session["reset_email"] = user["email"]
+
+            session.modified = True
+
+            return redirect(
+                url_for("verify_reset")
+            )
+
+        except Exception as e:
+
+            print(
+                "SEND RESET EMAIL ERROR:",
+                str(e)
+            )
+
+            return render_template_string(
+                FORGOT_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error=(
+                    "Təsdiq kodu göndərilərkən xəta baş verdi. "
+                    "SMTP məlumatlarını yoxlayın."
+                ),
+                email=email
+            )
+
+    return render_template_string(
+        FORGOT_TEMPLATE,
+        style=ACCOUNT_BASE_STYLE
+    )
+
+
+# =========================================================
+# VERIFY RESET CODE
+# =========================================================
+
+@app.route(
+    "/verify-reset",
+    methods=["GET", "POST"]
+)
+def verify_reset():
+
+    user_id = session.get(
+        "reset_user_id"
+    )
+
+    if not user_id:
+
+        return redirect(
+            url_for("forgot_password")
+        )
+
+    user = find_user_by_username(
+        session.get(
+            "reset_username",
+            ""
+        )
+    )
+
+    if not user:
+
+        try:
+
+            sheet = get_users_sheet()
+
+            values = sheet.get_all_values()
+
+            for row_number, row in enumerate(
+                values[1:],
+                start=2
+            ):
+
+                if not row:
+                    continue
+
+                current_id = str(
+                    row[0]
+                    if len(row) > 0
+                    else ""
+                ).strip()
+
+                if current_id != str(user_id).strip():
+                    continue
+
+                user = {
+
+                    "row_number": row_number,
+
+                    "user_id": current_id,
+
+                    "username": (
+                        str(row[1]).strip()
+                        if len(row) > 1
+                        else ""
+                    ),
+
+                    "email": (
+                        str(row[2]).strip()
+                        if len(row) > 2
+                        else ""
+                    ),
+
+                    "password_hash": (
+                        str(row[3]).strip()
+                        if len(row) > 3
+                        else ""
+                    ),
+
+                    "name": (
+                        str(row[4]).strip()
+                        if len(row) > 4
+                        else ""
+                    ),
+
+                    "registration_date": (
+                        str(row[5]).strip()
+                        if len(row) > 5
+                        else ""
+                    ),
+
+                    "reset_code_hash": (
+                        str(row[6]).strip()
+                        if len(row) > 6
+                        else ""
+                    ),
+
+                    "reset_code_expiry": (
+                        str(row[7]).strip()
+                        if len(row) > 7
+                        else ""
+                    )
+
+                }
+
+                break
+
+        except Exception as e:
+
+            print(
+                "VERIFY RESET USER ERROR:",
+                str(e)
+            )
+
+    if not user:
+
+        session.pop(
+            "reset_user_id",
+            None
+        )
+
+        session.pop(
+            "reset_email",
+            None
+        )
+
+        return redirect(
+            url_for("forgot_password")
+        )
+
+    if request.method == "POST":
+
+        code = str(
+            request.form.get(
+                "code",
+                ""
+            )
+        ).strip()
+
+        if not verify_reset_code(
+            user,
+            code
+        ):
+
+            return render_template_string(
+                RESET_CODE_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error=(
+                    "Kod yanlışdır və ya müddəti bitib."
+                ),
+                minutes=RESET_CODE_MINUTES
+            )
+
+        session["reset_verified"] = True
+
+        session.modified = True
+
+        return redirect(
+            url_for("reset_password")
+        )
+
+    return render_template_string(
+        RESET_CODE_TEMPLATE,
+        style=ACCOUNT_BASE_STYLE,
+        minutes=RESET_CODE_MINUTES
+    )
+
+
+# =========================================================
+# RESET PASSWORD
+# =========================================================
+
+@app.route(
+    "/reset-password",
+    methods=["GET", "POST"]
+)
+def reset_password():
+
+    if not session.get(
+        "reset_verified"
+    ):
+
+        return redirect(
+            url_for("forgot_password")
+        )
+
+    user_id = session.get(
+        "reset_user_id"
+    )
+
+    if not user_id:
+
+        return redirect(
+            url_for("forgot_password")
+        )
+
+    user = None
+
+    try:
+
+        sheet = get_users_sheet()
+
+        values = sheet.get_all_values()
+
+        for row_number, row in enumerate(
+            values[1:],
+            start=2
+        ):
+
+            if not row:
+                continue
+
+            current_id = str(
+                row[0]
+                if len(row) > 0
+                else ""
+            ).strip()
+
+            if current_id != str(
+                user_id
+            ).strip():
+                continue
+
+            user = {
+
+                "row_number": row_number,
+
+                "user_id": current_id,
+
+                "username": (
+                    str(row[1]).strip()
+                    if len(row) > 1
+                    else ""
+                ),
+
+                "email": (
+                    str(row[2]).strip()
+                    if len(row) > 2
+                    else ""
+                ),
+
+                "password_hash": (
+                    str(row[3]).strip()
+                    if len(row) > 3
+                    else ""
+                ),
+
+                "name": (
+                    str(row[4]).strip()
+                    if len(row) > 4
+                    else ""
+                )
+
+            }
+
+            break
+
+    except Exception as e:
+
+        print(
+            "RESET PASSWORD USER ERROR:",
+            str(e)
+        )
+
+    if not user:
+
+        session.clear()
+
+        return redirect(
+            url_for("forgot_password")
+        )
+
+    if request.method == "POST":
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        password_confirm = request.form.get(
+            "password_confirm",
+            ""
+        )
+
+        if len(password) < 6:
+
+            return render_template_string(
+                RESET_PASSWORD_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error=(
+                    "Yeni şifrə ən azı 6 simvol olmalıdır."
+                )
+            )
+
+        if password != password_confirm:
+
+            return render_template_string(
+                RESET_PASSWORD_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error="Şifrələr eyni deyil."
+            )
+
+        password_hash = generate_password_hash(
+            password
+        )
+
+        try:
+
+            sheet = get_users_sheet()
+
+            sheet.update_cell(
+                user["row_number"],
+                4,
+                password_hash
+            )
+
+            sheet.update_cell(
+                user["row_number"],
+                7,
+                ""
+            )
+
+            sheet.update_cell(
+                user["row_number"],
+                8,
+                ""
+            )
+
+            session.clear()
+
+            return redirect(
+                url_for(
+                    "login",
+                    registered="0"
+                )
+            )
+
+        except Exception as e:
+
+            print(
+                "RESET PASSWORD SAVE ERROR:",
+                str(e)
+            )
+
+            return render_template_string(
+                RESET_PASSWORD_TEMPLATE,
+                style=ACCOUNT_BASE_STYLE,
+                error=(
+                    "Yeni şifrə yadda saxlanılarkən "
+                    "xəta baş verdi."
+                )
+            )
+
+    return render_template_string(
+        RESET_PASSWORD_TEMPLATE,
+        style=ACCOUNT_BASE_STYLE
+    )
+
+
+# =========================================================
 # HOME
 # =========================================================
 
@@ -1220,7 +3334,49 @@ def home():
                 sections=SECTIONS
             )
 
+        # =================================================
+        # HESAB MƏLUMATLARINI QORU
+        # =================================================
+
+        account_user_id = session.get(
+            "user_id"
+        )
+
+        account_username = session.get(
+            "username"
+        )
+
+        account_email = session.get(
+            "email"
+        )
+
+        account_name = session.get(
+            "account_name"
+        )
+
         session.clear()
+
+        # =================================================
+        # HESAB MƏLUMATLARINI GERİ QAYTAR
+        # =================================================
+
+        if account_user_id:
+
+            session["user_id"] = (
+                account_user_id
+            )
+
+            session["username"] = (
+                account_username
+            )
+
+            session["email"] = (
+                account_email
+            )
+
+            session["account_name"] = (
+                account_name
+            )
 
         session["name"] = name
 
@@ -1908,7 +4064,7 @@ def create_qr_image(data):
 
 
 # =========================================================
-# PDF SERTİFİKAT YARATMA FUNKSİYASI
+# PDF SERTİFİKAT YARATMA
 # =========================================================
 
 def build_certificate_pdf(
@@ -1955,10 +4111,6 @@ def build_certificate_pdf(
         "Əmək Məcəlləsi - Test Sertifikatı"
     )
 
-    # =====================================================
-    # RƏNGLƏR
-    # =====================================================
-
     dark_blue = colors.HexColor(
         "#123B63"
     )
@@ -1985,10 +4137,6 @@ def build_certificate_pdf(
 
     white = colors.white
 
-    # =====================================================
-    # ARXA FON
-    # =====================================================
-
     pdf.setFillColor(
         colors.HexColor("#F7FAFD")
     )
@@ -2001,10 +4149,6 @@ def build_certificate_pdf(
         fill=1,
         stroke=0
     )
-
-    # =====================================================
-    # XARİCİ ÇƏRÇİVƏ
-    # =====================================================
 
     pdf.setFillColor(
         dark_blue
@@ -2052,10 +4196,6 @@ def build_certificate_pdf(
         stroke=1
     )
 
-    # =====================================================
-    # YUXARI BAŞLIQ
-    # =====================================================
-
     pdf.setFillColor(
         dark_blue
     )
@@ -2085,10 +4225,6 @@ def build_certificate_pdf(
         "ƏMƏK MƏCƏLLƏSİ SINAQ PLATFORMASI"
     )
 
-    # =====================================================
-    # SERTİFİKAT BAŞLIĞI
-    # =====================================================
-
     pdf.setFillColor(
         dark_blue
     )
@@ -2116,10 +4252,6 @@ def build_certificate_pdf(
         page_width / 2 + 105,
         page_height - 158
     )
-
-    # =====================================================
-    # BADGE
-    # =====================================================
 
     badge_x = 75
     badge_y = page_height - 190
@@ -2159,10 +4291,6 @@ def build_certificate_pdf(
         "✓"
     )
 
-    # =====================================================
-    # İZAH
-    # =====================================================
-
     pdf.setFillColor(
         dark_gray
     )
@@ -2177,10 +4305,6 @@ def build_certificate_pdf(
         page_height - 195,
         "Bu sertifikat aşağıdakı iştirakçıya təqdim olunur:"
     )
-
-    # =====================================================
-    # AD
-    # =====================================================
 
     pdf.setFillColor(
         dark_blue
@@ -2233,10 +4357,6 @@ def build_certificate_pdf(
         page_height - 245
     )
 
-    # =====================================================
-    # BÖLMƏ
-    # =====================================================
-
     pdf.setFillColor(
         dark_gray
     )
@@ -2271,10 +4391,6 @@ def build_certificate_pdf(
         page_width - 250,
         17
     )
-
-    # =====================================================
-    # NƏTİCƏ BLOKU
-    # =====================================================
 
     result_box_y = section_bottom_y - 82
 
@@ -2383,10 +4499,6 @@ def build_certificate_pdf(
         f"Müddət: {duration_text}"
     )
 
-    # =====================================================
-    # AŞAĞI MƏLUMATLAR
-    # =====================================================
-
     pdf.setStrokeColor(
         colors.HexColor("#D8E2EC")
     )
@@ -2425,10 +4537,6 @@ def build_certificate_pdf(
         end_time_text
     )
 
-    # =====================================================
-    # SERTİFİKAT NÖMRƏSİ
-    # =====================================================
-
     pdf.setFillColor(
         dark_gray
     )
@@ -2458,10 +4566,6 @@ def build_certificate_pdf(
         52,
         certificate_number
     )
-
-    # =====================================================
-    # QR KOD
-    # =====================================================
 
     qr_size = 58
 
@@ -2493,10 +4597,6 @@ def build_certificate_pdf(
         qr_y - 9,
         "Sertifikatı yoxla"
     )
-
-    # =====================================================
-    # FOOTER
-    # =====================================================
 
     pdf.setFillColor(
         dark_gray
@@ -2634,8 +4734,11 @@ def download_certificate_by_number(
     certificate_number
 ):
 
-    if "name" not in session:
-        return redirect(url_for("home"))
+    if not session.get("user_id"):
+
+        return redirect(
+            url_for("login")
+        )
 
     certificate = find_certificate(
         certificate_number
@@ -2647,34 +4750,17 @@ def download_certificate_by_number(
         )
 
     session_name = str(
-        session.get("name", "")
+        session.get(
+            "account_name",
+            session.get("name", "")
+        )
     ).strip().lower()
 
     certificate_name = str(
         certificate.get("name", "")
     ).strip().lower()
 
-    session_section = normalize_section(
-        session.get("section", "")
-    )
-
-    certificate_section = normalize_section(
-        certificate.get("section", "")
-    )
-
     if session_name != certificate_name:
-
-        return redirect(
-            url_for("cabinet")
-        )
-
-    if (
-        session_section
-        and
-        certificate_section
-        !=
-        session_section
-    ):
 
         return redirect(
             url_for("cabinet")
@@ -2740,247 +4826,39 @@ def download_certificate_by_number(
 @app.route(
     "/cabinet"
 )
+@account_required
 def cabinet():
 
-    if "name" not in session:
-
-        return redirect(
-            url_for("home")
-        )
-
-    name = str(
+    account_name = str(
         session.get(
-            "name",
+            "account_name",
             ""
         )
     ).strip()
 
-    access_code = str(
+    username = str(
         session.get(
-            "access_code",
+            "username",
             ""
         )
     ).strip()
 
-    section = normalize_section(
+    email = str(
         session.get(
-            "section",
+            "email",
             ""
         )
-    )
-
-    results = []
-
-    certificates = []
-
-    # =====================================================
-    # NƏTİCƏLƏR
-    # =====================================================
-
-    try:
-
-        sheet = get_sheet()
-
-        all_results = (
-            sheet.get_all_records()
-        )
-
-        for row in all_results:
-
-            row_name = str(
-                row.get(
-                    "Ad və soyad",
-                    ""
-                )
-            ).strip()
-
-            if (
-                row_name.lower()
-                !=
-                name.lower()
-            ):
-                continue
-
-            result_section = normalize_section(
-                row.get(
-                    "Bölmə",
-                    ""
-                )
-            )
-
-            if (
-                section
-                and
-                result_section
-                !=
-                section
-            ):
-                continue
-
-            results.append({
-
-                "number": row.get(
-                    "№",
-                    ""
-                ),
-
-                "section": result_section,
-
-                "correct": row.get(
-                    "Düzgün cavab",
-                    0
-                ),
-
-                "total": row.get(
-                    "Ümumi sual",
-                    0
-                ),
-
-                "percent": row.get(
-                    "Nəticə",
-                    ""
-                ),
-
-                "date": row.get(
-                    "Tarix",
-                    ""
-                ),
-
-                "status": row.get(
-                    "Status",
-                    ""
-                ),
-
-                "duration": row.get(
-                    "Müddət",
-                    ""
-                ),
-
-                "certificate_number": row.get(
-                    "Sertifikat №",
-                    ""
-                )
-
-            })
-
-    except Exception as e:
-
-        print(
-            "CABINET RESULTS ERROR:",
-            str(e)
-        )
-
-
-    # =====================================================
-    # SERTİFİKATLAR
-    # =====================================================
-
-    try:
-
-        sheet = get_certificates_sheet()
-
-        all_certificates = (
-            sheet.get_all_records()
-        )
-
-        for row in all_certificates:
-
-            row_name = str(
-                row.get(
-                    "Ad və soyad",
-                    ""
-                )
-            ).strip()
-
-            if (
-                row_name.lower()
-                !=
-                name.lower()
-            ):
-                continue
-
-            certificate_section = normalize_section(
-                row.get(
-                    "Bölmə",
-                    ""
-                )
-            )
-
-            if (
-                section
-                and
-                certificate_section
-                !=
-                section
-            ):
-                continue
-
-            certificate_number = str(
-                row.get(
-                    "Sertifikat №",
-                    ""
-                )
-            ).strip()
-
-            if not certificate_number:
-                continue
-
-            certificates.append({
-
-                "number": certificate_number,
-
-                "section": certificate_section,
-
-                "percent": row.get(
-                    "Nəticə",
-                    ""
-                ),
-
-                "date": row.get(
-                    "Tarix",
-                    ""
-                ),
-
-                "download_url": url_for(
-                    "download_certificate_by_number",
-                    certificate_number=certificate_number
-                ),
-
-                "verify_url": url_for(
-                    "verify_certificate",
-                    certificate_number=certificate_number
-                )
-
-            })
-
-    except Exception as e:
-
-        print(
-            "CABINET CERTIFICATES ERROR:",
-            str(e)
-        )
-
-
-    latest_result = (
-        results[-1]
-        if results
-        else None
-    )
+    ).strip()
 
     return render_template(
         "cabinet.html",
-
-        name=name,
-
-        access_code=access_code,
-
-        section=section,
-
-        results=results,
-
-        certificates=certificates,
-
-        latest_result=latest_result
+        name=account_name,
+        username=username,
+        email=email,
+        results=[],
+        certificates=[],
+        latest_result=None,
+        phase_one=True
     )
 
 
@@ -3368,12 +5246,17 @@ def admin_login():
 
 @app.route("/cabinet/logout")
 def cabinet_logout():
+
     session.clear()
-    return redirect(url_for("index"))
+
+    return redirect(
+        url_for("home")
+    )
 
 
 @app.route("/admin/logout")
 def admin_logout():
+
     session.pop(
         "admin",
         None
@@ -3443,13 +5326,31 @@ def admin():
 
         certificates = []
 
+    try:
+
+        users_sheet = get_users_sheet()
+
+        users = (
+            users_sheet.get_all_records()
+        )
+
+    except Exception as e:
+
+        print(
+            "ADMIN USERS ERROR:",
+            str(e)
+        )
+
+        users = []
+
     return render_template(
         "admin.html",
         results=values,
         questions=questions,
         sections=SECTIONS,
         codes=codes,
-        certificates=certificates
+        certificates=certificates,
+        users=users
     )
 
 
@@ -3583,10 +5484,6 @@ def import_questions():
 
     try:
 
-        # =================================================
-        # EXCEL
-        # =================================================
-
         if (
             filename.endswith(".xlsx")
             or filename.endswith(".xls")
@@ -3619,12 +5516,6 @@ def import_questions():
                 )
 
                 if section not in SECTIONS:
-
-                    print(
-                        "IMPORT: Yanlış bölmə:",
-                        raw_section
-                    )
-
                     continue
 
                 question_text = (
@@ -3700,10 +5591,6 @@ def import_questions():
                     "answer": answer
 
                 })
-
-        # =================================================
-        # JSON
-        # =================================================
 
         elif filename.endswith(".json"):
 
@@ -3811,23 +5698,11 @@ def import_questions():
                 url_for("admin")
             )
 
-        # =================================================
-        # BOŞ IMPORT
-        # =================================================
-
         if not new_questions:
-
-            print(
-                "IMPORT: Yeni sual tapılmadı."
-            )
 
             return redirect(
                 url_for("admin")
             )
-
-        # =================================================
-        # KÖHNƏ SUALLARI TAM SİL
-        # =================================================
 
         questions_sheet = get_questions_sheet()
 
@@ -3864,24 +5739,6 @@ def import_questions():
             len(new_questions),
             "sual saxlanıldı."
         )
-
-        counts = {}
-
-        for q in new_questions:
-
-            sec = q["section"]
-
-            counts[sec] = (
-                counts.get(sec, 0)
-                + 1
-            )
-
-        for section in SECTIONS:
-
-            print(
-                f"IMPORT -> {section}: "
-                f"{counts.get(section, 0)}"
-            )
 
     except Exception as e:
 
