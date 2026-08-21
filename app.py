@@ -1736,85 +1736,18 @@ def get_google_client():
 # =========================================================
 
 def get_sheet():
-
     client = get_google_client()
-
-    spreadsheet = client.open(
-        GOOGLE_SHEET_NAME
-    )
-
+    spreadsheet = client.open(GOOGLE_SHEET_NAME)
     try:
-
-        sheet = spreadsheet.worksheet(
-            "Nəticələr"
-        )
-
+        return spreadsheet.worksheet("Nəticələr")
     except gspread.WorksheetNotFound:
-
-        sheet = spreadsheet.add_worksheet(
-            title="Nəticələr",
-            rows=1000,
-            cols=13
-        )
-
-    required_headers = [
-
-        "№",
-        "Ad və soyad",
-        "Bölmə",
-        "Düzgün cavab",
-        "Ümumi sual",
-        "Səhv cavab",
-        "Nəticə",
-        "Tarix",
-        "Status",
-        "Müddət",
-        "Başlama vaxtı",
-        "Bitmə vaxtı",
-        "Sertifikat №"
-
-    ]
-
-    headers = sheet.row_values(1)
-
-    if not headers:
-
-        sheet.update(
-            "A1:M1",
-            [required_headers]
-        )
-
-    else:
-
-        changed = False
-
-        for header in required_headers:
-
-            if header not in headers:
-
-                headers.append(header)
-
-                changed = True
-
-        if changed:
-
-            sheet.resize(
-                rows=max(
-                    sheet.row_count,
-                    1000
-                ),
-                cols=max(
-                    sheet.col_count,
-                    len(headers)
-                )
-            )
-
-            sheet.update(
-                "1:1",
-                [headers]
-            )
-
-    return sheet
+        sheet = spreadsheet.add_worksheet(title="Nəticələr", rows=1000, cols=13)
+        sheet.append_row([
+            "№", "Ad və soyad", "Bölmə", "Düzgün cavab", "Ümumi sual",
+            "Səhv cavab", "Nəticə", "Tarix", "Status", "Müddət",
+            "Başlama vaxtı", "Bitmə vaxtı", "Sertifikat №"
+        ])
+        return sheet
 
 
 # =========================================================
@@ -1841,44 +1774,14 @@ CERTIFICATES_HEADERS = [
 
 
 def get_certificates_sheet():
-
     client = get_google_client()
-
-    spreadsheet = client.open(
-        GOOGLE_SHEET_NAME
-    )
-
+    spreadsheet = client.open(GOOGLE_SHEET_NAME)
     try:
-
-        sheet = spreadsheet.worksheet(
-            CERTIFICATES_SHEET_NAME
-        )
-
+        return spreadsheet.worksheet(CERTIFICATES_SHEET_NAME)
     except gspread.WorksheetNotFound:
-
-        sheet = spreadsheet.add_worksheet(
-            title=CERTIFICATES_SHEET_NAME,
-            rows=2000,
-            cols=len(CERTIFICATES_HEADERS)
-        )
-
-        sheet.update(
-            "A1:K1",
-            [CERTIFICATES_HEADERS]
-        )
-
-    else:
-
-        headers = sheet.row_values(1)
-
-        if not headers:
-
-            sheet.update(
-                "A1:K1",
-                [CERTIFICATES_HEADERS]
-            )
-
-    return sheet
+        sheet = spreadsheet.add_worksheet(title=CERTIFICATES_SHEET_NAME, rows=2000, cols=len(CERTIFICATES_HEADERS))
+        sheet.append_row(CERTIFICATES_HEADERS)
+        return sheet
 
 
 # =========================================================
@@ -1924,7 +1827,7 @@ def save_certificate(
         sheet = get_certificates_sheet()
 
         row_data = [
-            certificate_number,
+            f"N-{int(now_datetime.timestamp() * 1000000)}",
             name,
             section,
             correct,
