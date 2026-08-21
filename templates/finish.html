@@ -58,7 +58,54 @@
         padding: 10px 18px;
         border-radius: 12px;
         font-weight: 700;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
+    }
+
+    .certificate-box {
+        background: linear-gradient(
+            135deg,
+            #eff6ff,
+            #f8fafc
+        );
+
+        border: 1px solid #bfdbfe;
+
+        border-radius: 15px;
+
+        padding: 15px 18px;
+
+        margin: 0 auto 30px;
+
+        max-width: 500px;
+    }
+
+    .certificate-label {
+        color: #6b7280;
+        font-size: 12px;
+        margin-bottom: 7px;
+        font-weight: 700;
+    }
+
+    .certificate-number {
+        color: #123b63;
+        font-family: monospace;
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        word-break: break-word;
+    }
+
+    .verify-link {
+        display: inline-block;
+        margin-top: 8px;
+        color: #2563eb;
+        font-size: 12px;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .verify-link:hover {
+        text-decoration: underline;
     }
 
     .score-circle {
@@ -288,10 +335,6 @@
         margin-bottom: 25px;
     }
 
-    /* =====================================================
-       DÜYMƏLƏR
-       ===================================================== */
-
     .finish-buttons {
         display: flex;
         justify-content: center;
@@ -330,27 +373,17 @@
         transform: translateY(-2px);
     }
 
-    .home-button:hover {
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.32);
-    }
-
-    .pdf-button:hover {
-        box-shadow: 0 10px 25px rgba(22, 163, 74, 0.30);
-    }
-
     @media (max-width: 600px) {
 
         .result-page {
             padding: 25px 10px;
             width: 100%;
-            box-sizing: border-box;
         }
 
         .result-card {
             width: 100%;
             padding: 35px 16px;
             border-radius: 22px;
-            box-sizing: border-box;
         }
 
         .result-title {
@@ -361,16 +394,9 @@
             font-size: 14px;
         }
 
-        .name-box {
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-
         .score-circle {
             width: 155px;
             height: 155px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .score-percent {
@@ -414,6 +440,7 @@
         .pdf-button {
             width: 100%;
         }
+
     }
 
 </style>
@@ -423,13 +450,9 @@
 
     <div class="result-card">
 
-        <!-- UĞUR İŞARƏSİ -->
-
         <div class="success-icon">
             ✓
         </div>
-
-        <!-- BAŞLIQ -->
 
         <h1 class="result-title">
             Test tamamlandı!
@@ -439,13 +462,42 @@
             Əmək Məcəlləsi testinin nəticəsi
         </p>
 
-        <!-- AD -->
-
         <div class="name-box">
             👤 {{ name }}
         </div>
 
-        <!-- FAİZ -->
+
+        <!-- =================================================
+             SERTİFİKAT NÖMRƏSİ
+        ================================================== -->
+
+        {% if certificate_number %}
+
+            <div class="certificate-box">
+
+                <div class="certificate-label">
+                    📜 SERTİFİKAT NÖMRƏSİ
+                </div>
+
+                <div class="certificate-number">
+                    {{ certificate_number }}
+                </div>
+
+                <a
+                    href="{{ url_for(
+                        'verify_certificate',
+                        certificate_number=certificate_number
+                    ) }}"
+                    target="_blank"
+                    class="verify-link"
+                >
+                    🔍 Sertifikatı onlayn yoxla
+                </a>
+
+            </div>
+
+        {% endif %}
+
 
         <div class="score-circle">
 
@@ -459,7 +511,6 @@
 
         </div>
 
-        <!-- STATİSTİKA -->
 
         <div class="stats">
 
@@ -475,6 +526,7 @@
 
             </div>
 
+
             <div class="stat">
 
                 <div class="stat-number">
@@ -486,6 +538,7 @@
                 </div>
 
             </div>
+
 
             <div class="stat">
 
@@ -501,7 +554,6 @@
 
         </div>
 
-        <!-- MESAJ -->
 
         <div class="result-message">
 
@@ -529,7 +581,6 @@
 
         </div>
 
-        <!-- İMTAHAN VAXTI -->
 
         <div class="exam-time-box">
 
@@ -558,11 +609,11 @@
 
         </div>
 
-        <!-- SUALLAR ÜZRƏ NƏTİCƏ -->
 
         <div class="answers-title">
             📋 Suallar üzrə nəticələr
         </div>
+
 
         {% for item in question_results %}
 
@@ -661,13 +712,11 @@
 
         {% endfor %}
 
-        <!-- SON MƏLUMAT -->
 
         <div class="finish-info">
-            Nəticəniz sistemdə yadda saxlanıldı.
+            Nəticəniz və sertifikat məlumatlarınız sistemdə yadda saxlanıldı.
         </div>
 
-        <!-- DÜYMƏLƏR -->
 
         <div class="finish-buttons">
 
@@ -675,7 +724,7 @@
                 href="{{ url_for('download_certificate') }}"
                 class="pdf-button"
             >
-                📄 NƏTİCƏNİ PDF YÜKLƏ
+                📄 SERTİFİKATI YÜKLƏ
             </a>
 
             <a
