@@ -5725,19 +5725,22 @@ def admin_export():
 
     headers = [
 
-        "№",
-        "Ad və soyad",
-        "Bölmə",
-        "Düzgün cavab",
-        "Ümumi sual",
-        "Səhv cavab",
-        "Nəticə",
-        "Tarix",
-        "Status",
-        "Müddət",
-        "Başlama vaxtı",
-        "Bitmə vaxtı",
-        "Sertifikat №"
+        RESULTS_HEADERS = [
+    "№",
+    "İstifadəçi ID",
+    "Ad və soyad",
+    "Bölmə",
+    "Düzgün",
+    "Ümumi",
+    "Səhv",
+    "Faiz",
+    "Tarix",
+    "Status",
+    "Müddət",
+    "Başlama vaxtı",
+    "Bitmə vaxtı",
+    "Sertifikat nömrəsi"
+]
 
     ]
 
