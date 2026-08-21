@@ -3184,12 +3184,21 @@ def reset_password():
 # HOME
 # =========================================================
 
+# =========================================================
+# HOME
+# =========================================================
+
 @app.route(
     "/",
     methods=["GET", "POST"]
 )
 def home():
 
+    # 1. Ən başda yoxlayırıq: İstifadəçi daxil olubmu?
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    # 2. Giriş edibsə, qalan bütün kodlar normal işləyir:
     if request.method == "POST":
 
         name = request.form.get(
