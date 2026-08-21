@@ -144,6 +144,15 @@
     box-sizing: border-box;
 }
 
+/* Readonly (avtomatik gələn ad) üçün xüsusi görünüş */
+.name-input[readonly] {
+    background: #f8fafc;
+    color: #1e293b;
+    font-weight: 700;
+    border-color: #cbd5e1;
+    cursor: not-allowed;
+}
+
 .name-input:focus,
 .code-input:focus,
 .section-select:focus {
@@ -317,79 +326,58 @@
         <div class="welcome-body">
 
             <p class="description">
-
                 Əmək Məcəlləsi üzrə biliklərinizi yoxlamaq
                 üçün hazırlanmış test sisteminə xoş gəlmisiniz.
-
                 Testə başlamaq üçün bölməni seçin,
                 ad və soyadınızı və sizə verilmiş
                 giriş kodunu daxil edin.
-
             </p>
 
 
             <div class="features">
 
                 <div class="feature">
-
                     <div class="feature-icon">
                         📝
                     </div>
-
                     <div>
-
                         <strong>
                             Bölmə üzrə test
                         </strong>
-
                         <span>
                             Seçdiyiniz bölmənin sualları
                         </span>
-
                     </div>
-
                 </div>
 
 
                 <div class="feature">
-
                     <div class="feature-icon">
                         🔐
                     </div>
-
                     <div>
-
                         <strong>
                             Birdəfəlik giriş
                         </strong>
-
                         <span>
                             Kod yalnız bir dəfə istifadə olunur
                         </span>
-
                     </div>
-
                 </div>
 
 
                 <div class="feature">
-
                     <div class="feature-icon">
                         🎯
                     </div>
-
                     <div>
-
                         <strong>
                             Qiymətləndirmə
                         </strong>
-
                         <span>
                             Nəticə test sonunda hesablanır
                         </span>
-
                     </div>
-
                 </div>
 
             </div>
@@ -409,7 +397,6 @@
                 autocomplete="off"
             >
 
-
                 <!-- AD VƏ SOYAD -->
 
                 <div class="form-group">
@@ -422,8 +409,8 @@
                         type="text"
                         name="name"
                         class="name-input"
-                        placeholder="Məsələn: Pərviz Hüseynov"
-                        value="{{ name|default('') }}"
+                        value="{{ user_name }}"
+                        readonly
                         required
                         autocomplete="off"
                     >
@@ -493,10 +480,8 @@
                     >
 
                     <div class="info-box">
-
                         🔒 Giriş kodu yalnız seçilmiş bölmə üçün
                         keçərlidir və bir dəfə istifadə oluna bilər.
-
                     </div>
 
                 </div>
@@ -506,11 +491,8 @@
                     type="submit"
                     class="start-button"
                 >
-
                     TESTƏ BAŞLA →
-
                 </button>
-
 
             </form>
 
@@ -529,9 +511,7 @@
 
 
             <div class="security">
-
                 🔒 Nəticəniz test tamamlandıqdan sonra qeydə alınır.
-
             </div>
 
         </div>
