@@ -1889,47 +1889,16 @@ def generate_certificate_number():
 
     characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
-    while True:
+    random_part = "".join(
+        secrets.choice(characters)
+        for _ in range(8)
+    )
 
-        random_part = "".join(
-            secrets.choice(characters)
-            for _ in range(6)
-        )
+    certificate_number = (
+        f"ƏMƏK-{datetime.now().year}-{random_part}"
+    )
 
-        certificate_number = (
-            f"ƏMƏK-{datetime.now().year}-{random_part}"
-        )
-
-        try:
-
-            sheet = get_certificates_sheet()
-
-            values = sheet.get_all_values()
-
-            existing_numbers = {
-
-                str(row[0]).strip().upper()
-
-                for row in values[1:]
-                if row
-
-            }
-
-            if (
-                certificate_number.upper()
-                not in existing_numbers
-            ):
-
-                return certificate_number
-
-        except Exception as e:
-
-            print(
-                "CERTIFICATE NUMBER CHECK ERROR:",
-                str(e)
-            )
-
-            return certificate_number
+    return certificate_number
 
 
 # =========================================================
