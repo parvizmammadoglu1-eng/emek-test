@@ -459,7 +459,7 @@ def generate_certificate_number():
         )
 
         certificate_number = (
-            f"EMEK-2026-{random_part}"
+            f"ƏMƏK-{datetime.now().year}-{random_part}"
         )
 
         try:
