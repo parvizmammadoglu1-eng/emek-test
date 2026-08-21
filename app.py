@@ -3184,17 +3184,18 @@ def reset_password():
 # HOME
 # =========================================================
 
+# =========================================================
+# HOME
+# =========================================================
+
 @app.route("/", methods=["GET", "POST"])
 def home():
-    # 1. Ən başda yoxlayırıq: İstifadəçi daxil olubmu?
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    # Sessiyadan istifadəçinin adını çəkirik
     logged_in_name = session.get("user_name", "") 
 
     if request.method == "POST":
-        # Əgər input boş gələrsə, birbaşa sessiyadakı adı götürürük
         name = request.form.get("name", "").strip()
         
         if not name:
@@ -3266,7 +3267,6 @@ def home():
                 user_name=logged_in_name
             )
 
-    # GET sorğusu gəldikdə və ya səhifə ilk açıldıqda ad avtomatik ötürülür
     return render_template(
         "home.html",
         sections=SECTIONS,
