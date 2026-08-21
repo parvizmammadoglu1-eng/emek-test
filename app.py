@@ -495,7 +495,7 @@ def generate_certificate_number():
 
 
 # =========================================================
-# SERTİFİKAT YARAT
+# SERTİFİKAT SAXLA
 # =========================================================
 
 def save_certificate(
@@ -1751,7 +1751,7 @@ def register_pdf_font():
 
 
 # =========================================================
-# PDF MƏTNİ SƏTİRLƏRƏ BÖLMƏ
+# PDF MƏTNİ SƏTİRLƏRƏ BÖL
 # =========================================================
 
 def draw_wrapped_centered(
@@ -1853,77 +1853,20 @@ def create_qr_image(data):
 
 
 # =========================================================
-# PDF SERTİFİKAT
+# PDF SERTİFİKAT YARATMA FUNKSİYASI
 # =========================================================
 
-@app.route(
-    "/download-certificate"
-)
-def download_certificate():
-
-    if "name" not in session:
-        return redirect(url_for("home"))
-
-    if "section" not in session:
-        return redirect(url_for("home"))
-
-    if not session.get("exam_finished"):
-        return redirect(url_for("finish"))
-
-    name = session.get(
-        "name",
-        ""
-    )
-
-    section = session.get(
-        "section",
-        ""
-    )
-
-    correct = session.get(
-        "finish_correct",
-        0
-    )
-
-    total = session.get(
-        "finish_total",
-        0
-    )
-
-    percent = session.get(
-        "finish_percent",
-        0
-    )
-
-    status = session.get(
-        "finish_status",
-        ""
-    )
-
-    duration_text = session.get(
-        "finish_duration_text",
-        ""
-    )
-
-    end_time_text = session.get(
-        "finish_end_time_text",
-        "-"
-    )
-
-    certificate_number = session.get(
-        "certificate_number",
-        ""
-    )
-
-    if not certificate_number:
-
-        return redirect(
-            url_for("finish")
-        )
-
-    # =====================================================
-    # QR URL
-    # =====================================================
+def build_certificate_pdf(
+    name,
+    section,
+    correct,
+    total,
+    percent,
+    status,
+    duration_text,
+    end_time_text,
+    certificate_number
+):
 
     verify_url = (
         request.host_url.rstrip("/")
@@ -1941,10 +1884,6 @@ def download_certificate():
     qr_image = ImageReader(
         qr_output
     )
-
-    # =====================================================
-    # PDF
-    # =====================================================
 
     output = BytesIO()
 
@@ -2197,7 +2136,9 @@ def download_certificate():
         25
     )
 
-    safe_display_name = name.strip()
+    safe_display_name = str(
+        name or ""
+    ).strip()
 
     if len(safe_display_name) > 45:
 
@@ -2302,8 +2243,6 @@ def download_certificate():
         stroke=1
     )
 
-    # Faiz
-
     pdf.setFillColor(
         green
     )
@@ -2334,8 +2273,6 @@ def download_certificate():
         "Yekun nəticə"
     )
 
-    # Düzgün cavab
-
     pdf.setFillColor(
         dark_blue
     )
@@ -2365,8 +2302,6 @@ def download_certificate():
         result_box_y + 22,
         "Düzgün cavab"
     )
-
-    # Status
 
     pdf.setFillColor(
         dark_blue
@@ -2473,10 +2408,6 @@ def download_certificate():
     # QR KOD
     # =====================================================
 
-    # QR kod aşağı sərhəddən yuxarı qaldırıldı.
-    # Beləliklə QR kod və "Sertifikatı yoxla"
-    # yazısı daxili çərçivənin daxilində qalır.
-
     qr_size = 58
 
     qr_x = page_width - 125
@@ -2542,19 +2473,78 @@ def download_certificate():
         "Elektron sertifikat"
     )
 
-    # =====================================================
-    # PDF BİTİR
-    # =====================================================
-
     pdf.showPage()
 
     pdf.save()
 
     output.seek(0)
 
+    return output
+
+
+# =========================================================
+# SERTİFİKAT YÜKLƏ
+# =========================================================
+
+@app.route(
+    "/download-certificate"
+)
+def download_certificate():
+
+    if "name" not in session:
+        return redirect(url_for("home"))
+
+    if "section" not in session:
+        return redirect(url_for("home"))
+
+    if not session.get("exam_finished"):
+        return redirect(url_for("finish"))
+
+    certificate_number = session.get(
+        "certificate_number",
+        ""
+    )
+
+    if not certificate_number:
+        return redirect(url_for("finish"))
+
+    certificate = find_certificate(
+        certificate_number
+    )
+
+    if not certificate:
+        return redirect(url_for("finish"))
+
+    output = build_certificate_pdf(
+
+        name=certificate["name"],
+
+        section=certificate["section"],
+
+        correct=certificate["correct"],
+
+        total=certificate["total"],
+
+        percent=certificate["percent"].replace(
+            "%",
+            ""
+        ),
+
+        status=certificate["status"],
+
+        duration_text=certificate["duration"],
+
+        end_time_text=certificate["end_time"],
+
+        certificate_number=certificate[
+            "certificate_number"
+        ]
+
+    )
+
     safe_name = "".join(
         c
-        for c in name
+        for c in certificate["name"]
         if c.isalnum()
         or c in (
             " ",
@@ -2575,6 +2565,367 @@ def download_certificate():
         as_attachment=True,
         download_name=filename,
         mimetype="application/pdf"
+    )
+
+
+# =========================================================
+# KABİNETDƏN SERTİFİKAT YÜKLƏ
+# =========================================================
+
+@app.route(
+    "/download-certificate/<certificate_number>"
+)
+def download_certificate_by_number(
+    certificate_number
+):
+
+    if "name" not in session:
+        return redirect(url_for("home"))
+
+    certificate = find_certificate(
+        certificate_number
+    )
+
+    if not certificate:
+        return redirect(
+            url_for("cabinet")
+        )
+
+    session_name = str(
+        session.get("name", "")
+    ).strip().lower()
+
+    certificate_name = str(
+        certificate.get("name", "")
+    ).strip().lower()
+
+    session_section = normalize_section(
+        session.get("section", "")
+    )
+
+    certificate_section = normalize_section(
+        certificate.get("section", "")
+    )
+
+    if session_name != certificate_name:
+
+        return redirect(
+            url_for("cabinet")
+        )
+
+    if (
+        session_section
+        and
+        certificate_section
+        !=
+        session_section
+    ):
+
+        return redirect(
+            url_for("cabinet")
+        )
+
+    output = build_certificate_pdf(
+
+        name=certificate["name"],
+
+        section=certificate["section"],
+
+        correct=certificate["correct"],
+
+        total=certificate["total"],
+
+        percent=certificate["percent"].replace(
+            "%",
+            ""
+        ),
+
+        status=certificate["status"],
+
+        duration_text=certificate["duration"],
+
+        end_time_text=certificate["end_time"],
+
+        certificate_number=certificate[
+            "certificate_number"
+        ]
+
+    )
+
+    safe_name = "".join(
+        c
+        for c in certificate["name"]
+        if c.isalnum()
+        or c in (
+            " ",
+            "_",
+            "-"
+        )
+    ).strip()
+
+    if not safe_name:
+        safe_name = "istifadeci"
+
+    filename = (
+        f"{safe_name}_sertifikat.pdf"
+    )
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/pdf"
+    )
+
+
+# =========================================================
+# ŞƏXSİ KABİNET
+# =========================================================
+
+@app.route(
+    "/cabinet"
+)
+def cabinet():
+
+    if "name" not in session:
+
+        return redirect(
+            url_for("home")
+        )
+
+    name = str(
+        session.get(
+            "name",
+            ""
+        )
+    ).strip()
+
+    access_code = str(
+        session.get(
+            "access_code",
+            ""
+        )
+    ).strip()
+
+    section = normalize_section(
+        session.get(
+            "section",
+            ""
+        )
+    )
+
+    results = []
+
+    certificates = []
+
+    # =====================================================
+    # NƏTİCƏLƏR
+    # =====================================================
+
+    try:
+
+        sheet = get_sheet()
+
+        all_results = (
+            sheet.get_all_records()
+        )
+
+        for row in all_results:
+
+            row_name = str(
+                row.get(
+                    "Ad və soyad",
+                    ""
+                )
+            ).strip()
+
+            if (
+                row_name.lower()
+                !=
+                name.lower()
+            ):
+                continue
+
+            result_section = normalize_section(
+                row.get(
+                    "Bölmə",
+                    ""
+                )
+            )
+
+            if (
+                section
+                and
+                result_section
+                !=
+                section
+            ):
+                continue
+
+            results.append({
+
+                "number": row.get(
+                    "№",
+                    ""
+                ),
+
+                "section": result_section,
+
+                "correct": row.get(
+                    "Düzgün cavab",
+                    0
+                ),
+
+                "total": row.get(
+                    "Ümumi sual",
+                    0
+                ),
+
+                "percent": row.get(
+                    "Nəticə",
+                    ""
+                ),
+
+                "date": row.get(
+                    "Tarix",
+                    ""
+                ),
+
+                "status": row.get(
+                    "Status",
+                    ""
+                ),
+
+                "duration": row.get(
+                    "Müddət",
+                    ""
+                ),
+
+                "certificate_number": row.get(
+                    "Sertifikat №",
+                    ""
+                )
+
+            })
+
+    except Exception as e:
+
+        print(
+            "CABINET RESULTS ERROR:",
+            str(e)
+        )
+
+
+    # =====================================================
+    # SERTİFİKATLAR
+    # =====================================================
+
+    try:
+
+        sheet = get_certificates_sheet()
+
+        all_certificates = (
+            sheet.get_all_records()
+        )
+
+        for row in all_certificates:
+
+            row_name = str(
+                row.get(
+                    "Ad və soyad",
+                    ""
+                )
+            ).strip()
+
+            if (
+                row_name.lower()
+                !=
+                name.lower()
+            ):
+                continue
+
+            certificate_section = normalize_section(
+                row.get(
+                    "Bölmə",
+                    ""
+                )
+            )
+
+            if (
+                section
+                and
+                certificate_section
+                !=
+                section
+            ):
+                continue
+
+            certificate_number = str(
+                row.get(
+                    "Sertifikat №",
+                    ""
+                )
+            ).strip()
+
+            if not certificate_number:
+                continue
+
+            certificates.append({
+
+                "number": certificate_number,
+
+                "section": certificate_section,
+
+                "percent": row.get(
+                    "Nəticə",
+                    ""
+                ),
+
+                "date": row.get(
+                    "Tarix",
+                    ""
+                ),
+
+                "download_url": url_for(
+                    "download_certificate_by_number",
+                    certificate_number=certificate_number
+                ),
+
+                "verify_url": url_for(
+                    "verify_certificate",
+                    certificate_number=certificate_number
+                )
+
+            })
+
+    except Exception as e:
+
+        print(
+            "CABINET CERTIFICATES ERROR:",
+            str(e)
+        )
+
+
+    latest_result = (
+        results[-1]
+        if results
+        else None
+    )
+
+    return render_template(
+        "cabinet.html",
+
+        name=name,
+
+        access_code=access_code,
+
+        section=section,
+
+        results=results,
+
+        certificates=certificates,
+
+        latest_result=latest_result
     )
 
 
@@ -3418,7 +3769,6 @@ def import_questions():
 
         # =================================================
         # KÖHNƏ SUALLARI TAM SİL
-        # VƏ YENİ SUALLARI YAZ
         # =================================================
 
         questions_sheet = get_questions_sheet()
