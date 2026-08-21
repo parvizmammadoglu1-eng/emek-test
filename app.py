@@ -4800,9 +4800,7 @@ def download_certificate_by_number(
 # ŞƏXSİ KABİNET
 # =========================================================
 
-@app.route(
-    "/cabinet"
-)
+@app.route("/cabinet")
 @account_required
 def cabinet():
 
@@ -4827,14 +4825,57 @@ def cabinet():
         )
     ).strip()
 
+    user_id = str(
+        session.get(
+            "user_id",
+            ""
+        )
+    ).strip()
+
+    results = []
+
+    try:
+
+        sheet = get_sheet()
+
+        values = sheet.get_all_records()
+
+        for row in values:
+
+            row_user_id = str(
+                row.get(
+                    "İstifadəçi ID",
+                    ""
+                )
+            ).strip()
+
+            if row_user_id == user_id:
+
+                results.append(row)
+
+    except Exception as e:
+
+        print(
+            "CABINET RESULTS ERROR:",
+            str(e)
+        )
+
+    # Ən son nəticə əvvəl görünsün
+    results.reverse()
+
+    latest_result = None
+
+    if results:
+        latest_result = results[0]
+
     return render_template(
         "cabinet.html",
         name=account_name,
         username=username,
         email=email,
-        results=[],
+        results=results,
         certificates=[],
-        latest_result=None,
+        latest_result=latest_result,
         phase_one=True
     )
 
