@@ -2869,7 +2869,7 @@ bu e-maili nəzərə almayın.
                 style=ACCOUNT_BASE_STYLE,
                 error=(
                     "Təsdiq kodu göndərilərkən xəta baş verdi. "
-                    "SMTP məlumatlarını yoxlayın."
+                    "Resend API açarını yoxlayın."
                 ),
                 email=email
             )
