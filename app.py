@@ -1733,11 +1733,6 @@ def get_google_client():
 # =========================================================
 # NƏTİCƏLƏR SHEET
 # =========================================================
-#
-# DÜZƏLİŞ: "İstifadəçi ID" sütunu əlavə olundu. Bu sütun
-# olmadığı üçün /cabinet səhifəsi heç vaxt nəticələri tapa
-# bilmirdi (aşağıdakı cabinet() funksiyasına bax).
-# =========================================================
 
 RESULTS_HEADERS = [
 
@@ -1825,11 +1820,10 @@ def get_sheet():
 
 def append_result_row(sheet, data):
     """
-    DÜZƏLİŞ: sətri sabit indekslər əvəzinə, sheet-in HAZIRKI
-    başlıq sırasına (sheet.row_values(1)) əsasən qurur.
-    Beləliklə sütunların sırası hər hansı səbəbdən (köhnə
-    fayl, yeni sütun əlavəsi və s.) fərqli olsa belə, hər
-    dəyər öz sütununa düşür və məlumat "yoxa çıxmır".
+    Sətri sabit indekslər əvəzinə sheet-in hazırkı başlıq
+    sırasına (sheet.row_values(1)) əsasən qurur. Beləliklə
+    sütunların sırası fərqli olsa belə, hər dəyər öz sütununa
+    düşür və məlumat itmir.
     """
 
     current_headers = sheet.row_values(1)
@@ -1850,16 +1844,9 @@ def append_result_row(sheet, data):
 
 def read_sheet_as_dicts(sheet):
     """
-    DÜZƏLİŞ: sheet.get_all_records() başlıq sətrinin unikal
-    və boş olmamasını tələb edir - əks halda xəta atır. Əgər
-    Google Sheets-də hər hansı sütun adı təkrarlanırsa və ya
-    boşdursa (məsələn, əl ilə əlavə edilmiş boş sütun), bu
-    xəta try/except tərəfindən sükutla udulur və nəticə
-    HEÇ VAXT görünmür - baxmayaraq ki, sətir sheet-ə yazılıb.
-
-    Bu funksiya həmin riski aradan qaldırır: başlıqları və
-    dəyərləri özümüz uyğunlaşdırırıq, boş/təkrar başlıqları
-    sadəcə görməzdən gəlirik, sətirləri itirmirik.
+    sheet.get_all_records() başlıq sətrinin unikal və boş
+    olmamasını tələb edir. Bu funksiya başlıqları və
+    dəyərləri özümüz uyğunlaşdıraraq bu riski aradan qaldırır.
     """
 
     values = sheet.get_all_values()
@@ -3249,7 +3236,6 @@ def home():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    # Burada user_name yox, account_name istifadə etmək daha düzgündür
     logged_in_name = session.get(
         "account_name",
         ""
@@ -3277,10 +3263,6 @@ def home():
             ).strip()
         )
 
-        # =========================================
-        # AD VƏ SOYAD YOXLAMASI
-        # =========================================
-
         if not name:
 
             return render_template(
@@ -3292,10 +3274,6 @@ def home():
                 sections=SECTIONS,
                 user_name=logged_in_name
             )
-
-        # =========================================
-        # BÖLMƏ YOXLAMASI
-        # =========================================
 
         if selected_section not in SECTIONS:
 
@@ -3309,10 +3287,6 @@ def home():
                 user_name=logged_in_name
             )
 
-        # =========================================
-        # GİRİŞ KODU YOXLAMASI
-        # =========================================
-
         if not access_code:
 
             return render_template(
@@ -3324,10 +3298,6 @@ def home():
                 sections=SECTIONS,
                 user_name=logged_in_name
             )
-
-        # =========================================
-        # SUALLARI YOXLAYIRIQ
-        # =========================================
 
         section_questions = load_questions(
             selected_section
@@ -3344,10 +3314,6 @@ def home():
                 sections=SECTIONS,
                 user_name=logged_in_name
             )
-
-        # =========================================
-        # GİRİŞ KODUNU YOXLAYIRIQ
-        # =========================================
 
         code_valid, error_message = use_access_code(
             access_code,
@@ -3367,10 +3333,6 @@ def home():
                 user_name=logged_in_name
             )
 
-        # =========================================
-        # HESAB MƏLUMATLARINI QORU
-        # =========================================
-
         account_user_id = session.get(
             "user_id"
         )
@@ -3387,15 +3349,7 @@ def home():
             "account_name"
         )
 
-        # =========================================
-        # İMTAHAN SESSION-UNU TƏMİZLƏ
-        # =========================================
-
         session.clear()
-
-        # =========================================
-        # HESAB MƏLUMATLARINI GERİ QAYTAR
-        # =========================================
 
         if account_user_id:
 
@@ -3403,10 +3357,6 @@ def home():
             session["username"] = account_username
             session["email"] = account_email
             session["account_name"] = account_name
-
-        # =========================================
-        # İMTAHAN MƏLUMATLARI
-        # =========================================
 
         session["name"] = name
         session["access_code"] = access_code
@@ -3425,20 +3375,12 @@ def home():
 
         session.modified = True
 
-        # =========================================
-        # İMTAHANA KEÇ
-        # =========================================
-
         return redirect(
             url_for(
                 "question",
                 n=0
             )
         )
-
-    # =========================================
-    # NORMAL SƏHİFƏ AÇILIŞI
-    # =========================================
 
     return render_template(
         "home.html",
@@ -3815,29 +3757,12 @@ def finish():
             f"({answered}/{total})"
         )
 
-    # =====================================================
-    # SERTİFİKAT NÖMRƏSİ
-    # =====================================================
-
     certificate_number = generate_certificate_number()
-
-    # =====================================================
-    # HESABIN İSTİFADƏÇİ ID-Sİ
-    # =====================================================
-    #
-    # DÜZƏLİŞ: bu dəyər əvvəllər sheet-ə yazılan sətirdə heç
-    # göndərilmirdi, ona görə də /cabinet heç vaxt bu
-    # istifadəçiyə aid nəticələri tapa bilmirdi.
-    # =====================================================
 
     account_user_id_for_result = session.get(
         "user_id",
         ""
     )
-
-    # =====================================================
-    # NƏTİCƏLƏR SHEET
-    # =====================================================
 
     try:
 
@@ -3876,9 +3801,6 @@ def finish():
             "GOOGLE SHEETS ERROR:",
             str(e)
         )
-    # =====================================================
-    # SERTİFİKAT SHEET
-    # =====================================================
 
     try:
 
@@ -4938,13 +4860,70 @@ def cabinet():
     if results:
         latest_result = results[0]
 
+    # =====================================================
+    # SERTİFİKATLARI NƏTİCƏLƏRDƏN QUR
+    # =====================================================
+    #
+    # DÜZƏLİŞ: əvvəllər burada həmişə "certificates=[]"
+    # göndərilirdi, ona görə kabinetdə sertifikat heç vaxt
+    # görünmürdü, baxmayaraq ki Google Sheets-də
+    # ("Nəticələr" və "Sertifikatlar" vərəqlərində) məlumat
+    # var idi. "Sertifikatlar" vərəqində istifadəçi ID sütunu
+    # olmadığı üçün onu birbaşa filtr etmək mümkün deyil,
+    # amma "results" artıq bu istifadəçiyə görə süzülüb və
+    # hər sətirdə "Sertifikat №" var - sertifikat siyahısını
+    # elə buradan qururuq.
+    # =====================================================
+
+    certificates = []
+
+    for row in results:
+
+        cert_number = str(
+            row.get("Sertifikat №", "")
+        ).strip()
+
+        if not cert_number:
+            continue
+
+        certificates.append({
+
+            "certificate_number": cert_number,
+
+            "name": row.get(
+                "Ad və soyad",
+                ""
+            ),
+
+            "section": row.get(
+                "Bölmə",
+                ""
+            ),
+
+            "percent": row.get(
+                "Nəticə",
+                ""
+            ),
+
+            "date": row.get(
+                "Tarix",
+                ""
+            ),
+
+            "status": row.get(
+                "Status",
+                ""
+            )
+
+        })
+
     return render_template(
         "cabinet.html",
         name=account_name,
         username=username,
         email=email,
         results=results,
-        certificates=[],
+        certificates=certificates,
         latest_result=latest_result,
         phase_one=True
     )
@@ -5203,906 +5182,4 @@ VERIFY_TEMPLATE = """
                         Düzgün cavab sayı
                     </div>
 
-                    <div class="value">
-                        {{ certificate.correct }}
-                        /
-                        {{ certificate.total }}
-                    </div>
-
-                </div>
-
-                <div class="item">
-
-                    <div class="label">
-                        Test tarixi
-                    </div>
-
-                    <div class="value">
-                        {{ certificate.date }}
-                    </div>
-
-                </div>
-
-                <div class="item">
-
-                    <div class="label">
-                        Müddət
-                    </div>
-
-                    <div class="value">
-                        {{ certificate.duration }}
-                    </div>
-
-                </div>
-
-                <div class="item">
-
-                    <div class="label">
-                        Status
-                    </div>
-
-                    <div class="value">
-                        {{ certificate.status }}
-                    </div>
-
-                </div>
-
-                <div class="item">
-
-                    <div class="label">
-                        Bitmə vaxtı
-                    </div>
-
-                    <div class="value">
-                        {{ certificate.end_time }}
-                    </div>
-
-                </div>
-
-            </div>
-
-        {% else %}
-
-            <div class="icon invalid-icon">
-                ✕
-            </div>
-
-            <h1>
-                Sertifikat etibarsızdır
-            </h1>
-
-            <div class="subtitle">
-                Sertifikat tapılmadı.
-            </div>
-
-            <div class="certificate-number">
-                {{ certificate_number }}
-            </div>
-
-        {% endif %}
-
-        <div class="footer">
-            Əmək Məcəlləsi üzrə elektron test sistemi
-        </div>
-
-    </div>
-
-</body>
-
-</html>
-"""
-
-
-# =========================================================
-# ADMIN LOGIN
-# =========================================================
-
-@app.route(
-    "/admin/login",
-    methods=["GET", "POST"]
-)
-def admin_login():
-
-    if request.method == "POST":
-
-        password = request.form.get(
-            "password",
-            ""
-        )
-
-        if password == ADMIN_PASSWORD:
-
-            session["admin"] = True
-
-            return redirect(
-                url_for("admin")
-            )
-
-        return render_template(
-            "admin_login.html",
-            error="Parol yanlışdır."
-        )
-
-    return render_template(
-        "admin_login.html"
-    )
-
-
-# =========================================================
-# ADMIN LOGOUT
-# =========================================================
-
-@app.route("/cabinet/logout")
-def cabinet_logout():
-
-    session.clear()
-
-    return redirect(
-        url_for("home")
-    )
-
-
-@app.route("/admin/logout")
-def admin_logout():
-
-    session.pop(
-        "admin",
-        None
-    )
-
-    return redirect(
-        url_for("admin_login")
-    )
-
-
-# =========================================================
-# ADMIN PANEL
-# =========================================================
-
-@app.route(
-    "/admin"
-)
-@admin_required
-def admin():
-
-    try:
-
-        sheet = get_sheet()
-
-        values = read_sheet_as_dicts(
-            sheet
-        )
-
-    except Exception as e:
-
-        print(
-            "ADMIN GOOGLE SHEETS ERROR:",
-            str(e)
-        )
-
-        values = []
-
-    questions = load_all_questions()
-
-    try:
-
-        codes_sheet = get_codes_sheet()
-
-        codes = read_sheet_as_dicts(
-            codes_sheet
-        )
-
-    except Exception as e:
-
-        print(
-            "ADMIN CODES ERROR:",
-            str(e)
-        )
-
-        codes = []
-
-    try:
-
-        certificates_sheet = get_certificates_sheet()
-
-        certificates = read_sheet_as_dicts(
-            certificates_sheet
-        )
-
-    except Exception as e:
-
-        print(
-            "ADMIN CERTIFICATES ERROR:",
-            str(e)
-        )
-
-        certificates = []
-
-    try:
-
-        users_sheet = get_users_sheet()
-
-        users = read_sheet_as_dicts(
-            users_sheet
-        )
-
-    except Exception as e:
-
-        print(
-            "ADMIN USERS ERROR:",
-            str(e)
-        )
-
-        users = []
-
-    return render_template(
-        "admin.html",
-        results=values,
-        questions=questions,
-        sections=SECTIONS,
-        codes=codes,
-        certificates=certificates,
-        users=users
-    )
-
-
-# =========================================================
-# CREATE CODE
-# =========================================================
-
-def create_code():
-
-    code = request.form.get(
-        "code",
-        ""
-    ).strip()
-
-    section = normalize_section(
-        request.form.get(
-            "section",
-            ""
-        ).strip()
-    )
-
-    if not code:
-        return redirect(url_for("admin"))
-
-    if section not in SECTIONS:
-        return redirect(url_for("admin"))
-
-    try:
-
-        sheet = get_codes_sheet()
-
-        values = sheet.get_all_values()
-
-        for row in values[1:]:
-
-            if not row:
-                continue
-
-            existing_code = str(
-                row[0]
-                if len(row) > 0
-                else ""
-            ).strip()
-
-            if (
-                existing_code
-                and
-                existing_code.upper()
-                ==
-                code.upper()
-            ):
-
-                return redirect(
-                    url_for("admin")
-                )
-
-        sheet.append_row(
-            [
-                code,
-                section,
-                "Aktiv",
-                "",
-                ""
-            ],
-            value_input_option="USER_ENTERED"
-        )
-
-    except Exception as e:
-
-        print(
-            "CREATE CODE ERROR:",
-            str(e)
-        )
-
-    return redirect(
-        url_for("admin")
-    )
-
-
-# =========================================================
-# ADMIN ADD CODE
-# =========================================================
-
-@app.route(
-    "/admin/add-code",
-    methods=["POST"]
-)
-@admin_required
-def admin_add_code():
-
-    return create_code()
-
-
-# =========================================================
-# ADMIN CREATE CODE
-# =========================================================
-
-@app.route(
-    "/admin/create-code",
-    methods=["POST"]
-)
-@admin_required
-def admin_create_code():
-
-    return create_code()
-
-
-# =========================================================
-# IMPORT QUESTIONS
-# =========================================================
-
-@app.route(
-    "/admin/import-questions",
-    methods=["POST"]
-)
-@admin_required
-def import_questions():
-
-    file = request.files.get(
-        "questions_file"
-    )
-
-    if not file:
-        return redirect(url_for("admin"))
-
-    filename = (
-        file.filename or ""
-    ).lower()
-
-    new_questions = []
-
-    try:
-
-        if (
-            filename.endswith(".xlsx")
-            or filename.endswith(".xls")
-        ):
-
-            workbook = load_workbook(
-                file,
-                data_only=True
-            )
-
-            sheet = workbook.active
-
-            for row in sheet.iter_rows(
-                min_row=2,
-                values_only=True
-            ):
-
-                if not row:
-                    continue
-
-                raw_section = (
-                    str(row[0]).strip()
-                    if len(row) > 0
-                    and row[0] is not None
-                    else ""
-                )
-
-                section = normalize_section(
-                    raw_section
-                )
-
-                if section not in SECTIONS:
-                    continue
-
-                question_text = (
-                    str(row[1]).strip()
-                    if len(row) > 1
-                    and row[1] is not None
-                    else ""
-                )
-
-                if not question_text:
-                    continue
-
-                option_a = (
-                    str(row[2]).strip()
-                    if len(row) > 2
-                    and row[2] is not None
-                    else ""
-                )
-
-                option_b = (
-                    str(row[3]).strip()
-                    if len(row) > 3
-                    and row[3] is not None
-                    else ""
-                )
-
-                option_c = (
-                    str(row[4]).strip()
-                    if len(row) > 4
-                    and row[4] is not None
-                    else ""
-                )
-
-                option_d = (
-                    str(row[5]).strip()
-                    if len(row) > 5
-                    and row[5] is not None
-                    else ""
-                )
-
-                answer = (
-                    str(row[6]).strip().upper()
-                    if len(row) > 6
-                    and row[6] is not None
-                    else ""
-                )
-
-                if len(answer) > 1:
-                    answer = answer[0]
-
-                if answer not in [
-                    "A",
-                    "B",
-                    "C",
-                    "D"
-                ]:
-                    continue
-
-                new_questions.append({
-
-                    "section": section,
-
-                    "question": question_text,
-
-                    "a": option_a,
-
-                    "b": option_b,
-
-                    "c": option_c,
-
-                    "d": option_d,
-
-                    "answer": answer
-
-                })
-
-        elif filename.endswith(".json"):
-
-            loaded_questions = json.load(
-                file
-            )
-
-            if isinstance(
-                loaded_questions,
-                list
-            ):
-
-                for q in loaded_questions:
-
-                    if not isinstance(
-                        q,
-                        dict
-                    ):
-                        continue
-
-                    section = normalize_section(
-                        q.get(
-                            "section",
-                            ""
-                        )
-                    )
-
-                    if section not in SECTIONS:
-                        continue
-
-                    question_text = str(
-                        q.get(
-                            "question",
-                            ""
-                        )
-                    ).strip()
-
-                    if not question_text:
-                        continue
-
-                    answer = str(
-                        q.get(
-                            "answer",
-                            ""
-                        )
-                    ).strip().upper()
-
-                    if len(answer) > 1:
-                        answer = answer[0]
-
-                    if answer not in [
-                        "A",
-                        "B",
-                        "C",
-                        "D"
-                    ]:
-                        continue
-
-                    new_questions.append({
-
-                        "section": section,
-
-                        "question": question_text,
-
-                        "a": str(
-                            q.get(
-                                "a",
-                                ""
-                            )
-                        ).strip(),
-
-                        "b": str(
-                            q.get(
-                                "b",
-                                ""
-                            )
-                        ).strip(),
-
-                        "c": str(
-                            q.get(
-                                "c",
-                                ""
-                            )
-                        ).strip(),
-
-                        "d": str(
-                            q.get(
-                                "d",
-                                ""
-                            )
-                        ).strip(),
-
-                        "answer": answer
-
-                    })
-
-        else:
-
-            print(
-                "IMPORT ERROR: "
-                "Fayl formatı dəstəklənmir."
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-        if not new_questions:
-
-            return redirect(
-                url_for("admin")
-            )
-
-        questions_sheet = get_questions_sheet()
-
-        questions_sheet.clear()
-
-        questions_sheet.update(
-            "A1:G1",
-            [QUESTIONS_HEADERS]
-        )
-
-        rows = []
-
-        for q in new_questions:
-
-            rows.append([
-
-                q["section"],
-                q["question"],
-                q["a"],
-                q["b"],
-                q["c"],
-                q["d"],
-                q["answer"]
-
-            ])
-
-        questions_sheet.update(
-            f"A2:G{len(rows) + 1}",
-            rows
-        )
-
-        print(
-            "IMPORT UĞURLU:",
-            len(new_questions),
-            "sual saxlanıldı."
-        )
-
-    except Exception as e:
-
-        print(
-            "IMPORT ERROR:",
-            str(e)
-        )
-
-    return redirect(
-        url_for("admin")
-    )
-
-
-# =========================================================
-# EXCEL EXPORT
-# =========================================================
-
-@app.route(
-    "/admin/export"
-)
-@admin_required
-def admin_export():
-
-    try:
-
-        sheet = get_sheet()
-
-        results = read_sheet_as_dicts(
-            sheet
-        )
-
-    except Exception as e:
-
-        print(
-            "EXPORT GOOGLE SHEETS ERROR:",
-            str(e)
-        )
-
-        results = []
-
-    workbook = Workbook()
-
-    worksheet = workbook.active
-
-    worksheet.title = "Test nəticələri"
-
-    headers = [
-        "№",
-        "İstifadəçi ID",
-        "Ad və soyad",
-        "Bölmə",
-        "Düzgün",
-        "Ümumi",
-        "Səhv",
-        "Faiz",
-        "Tarix",
-        "Status",
-        "Müddət",
-        "Başlama vaxtı",
-        "Bitmə vaxtı",
-        "Sertifikat nömrəsi"
-    ]
-
-    header_fill = PatternFill(
-        fill_type="solid",
-        fgColor="123B63"
-    )
-
-    header_font = Font(
-        bold=True,
-        color="FFFFFF"
-    )
-
-    thin_border = Border(
-        left=Side(style="thin"),
-        right=Side(style="thin"),
-        top=Side(style="thin"),
-        bottom=Side(style="thin")
-    )
-
-    for column, header in enumerate(
-        headers,
-        1
-    ):
-
-        cell = worksheet.cell(
-            row=1,
-            column=column,
-            value=header
-        )
-
-        cell.font = header_font
-
-        cell.fill = header_fill
-
-        cell.alignment = Alignment(
-            horizontal="center",
-            vertical="center"
-        )
-
-        cell.border = thin_border
-
-    for row_number, result in enumerate(
-        results,
-        2
-    ):
-
-        # DÜZƏLİŞ: "İstifadəçi ID" dəyəri əlavə olundu ki,
-        # sütunlar başlıqla düzgün üst-üstə düşsün.
-        values = [
-
-            result.get(
-                "№",
-                row_number - 1
-            ),
-
-            result.get(
-                "İstifadəçi ID",
-                ""
-            ),
-
-            result.get(
-                "Ad və soyad",
-                ""
-            ),
-
-            result.get(
-                "Bölmə",
-                ""
-            ),
-
-            result.get(
-                "Düzgün cavab",
-                0
-            ),
-
-            result.get(
-                "Ümumi sual",
-                0
-            ),
-
-            result.get(
-                "Səhv cavab",
-                0
-            ),
-
-            result.get(
-                "Nəticə",
-                ""
-            ),
-
-            result.get(
-                "Tarix",
-                ""
-            ),
-
-            result.get(
-                "Status",
-                ""
-            ),
-
-            result.get(
-                "Müddət",
-                ""
-            ),
-
-            result.get(
-                "Başlama vaxtı",
-                ""
-            ),
-
-            result.get(
-                "Bitmə vaxtı",
-                ""
-            ),
-
-            result.get(
-                "Sertifikat №",
-                ""
-            )
-
-        ]
-
-        for column, value in enumerate(
-            values,
-            1
-        ):
-
-            cell = worksheet.cell(
-                row=row_number,
-                column=column,
-                value=value
-            )
-
-            cell.border = thin_border
-
-            cell.alignment = Alignment(
-                vertical="center"
-            )
-
-    widths = {
-
-        "A": 8,
-        "B": 20,
-        "C": 30,
-        "D": 55,
-        "E": 15,
-        "F": 15,
-        "G": 12,
-        "H": 12,
-        "I": 22,
-        "J": 30,
-        "K": 15,
-        "L": 22,
-        "M": 22,
-        "N": 22
-
-    }
-
-    for column, width in widths.items():
-
-        worksheet.column_dimensions[
-            column
-        ].width = width
-
-    worksheet.freeze_panes = "A2"
-
-    output = BytesIO()
-
-    workbook.save(
-        output
-    )
-
-    output.seek(0)
-
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name=(
-            "emek_mecellesi_test_neticeleri.xlsx"
-        ),
-        mimetype=(
-            "application/vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        )
-    )
-
-
-# =========================================================
-# HEALTH CHECK
-# =========================================================
-
-@app.route(
-    "/health"
-)
-def health():
-
-    return "OK", 200
-
-
-# =========================================================
-# RUN
-# =========================================================
-
-if __name__ == "__main__":
-
-    app.run(
-        host="0.0.0.0",
-        port=int(
-            os.environ.get(
-                "PORT",
-                5000
-            )
-        )
-    )
+             
