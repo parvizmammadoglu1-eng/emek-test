@@ -3311,11 +3311,14 @@ def admin_login():
 # ADMIN LOGOUT
 # =========================================================
 
-@app.route(
-    "/admin/logout"
-)
-def admin_logout():
+@app.route("/cabinet/logout")
+def cabinet_logout():
+    session.clear()
+    return redirect(url_for("index"))
 
+
+@app.route("/admin/logout")
+def admin_logout():
     session.pop(
         "admin",
         None
