@@ -1848,6 +1848,57 @@ def append_result_row(sheet, data):
     )
 
 
+def read_sheet_as_dicts(sheet):
+    """
+    DÜZƏLİŞ: sheet.get_all_records() başlıq sətrinin unikal
+    və boş olmamasını tələb edir - əks halda xəta atır. Əgər
+    Google Sheets-də hər hansı sütun adı təkrarlanırsa və ya
+    boşdursa (məsələn, əl ilə əlavə edilmiş boş sütun), bu
+    xəta try/except tərəfindən sükutla udulur və nəticə
+    HEÇ VAXT görünmür - baxmayaraq ki, sətir sheet-ə yazılıb.
+
+    Bu funksiya həmin riski aradan qaldırır: başlıqları və
+    dəyərləri özümüz uyğunlaşdırırıq, boş/təkrar başlıqları
+    sadəcə görməzdən gəlirik, sətirləri itirmirik.
+    """
+
+    values = sheet.get_all_values()
+
+    if len(values) <= 1:
+        return []
+
+    headers = values[0]
+
+    records = []
+
+    for row in values[1:]:
+
+        if not any(
+            str(cell).strip()
+            for cell in row
+        ):
+            continue
+
+        record = {}
+
+        for index, header in enumerate(headers):
+
+            header = str(header).strip()
+
+            if not header:
+                continue
+
+            record[header] = (
+                row[index]
+                if index < len(row)
+                else ""
+            )
+
+        records.append(record)
+
+    return records
+
+
 # =========================================================
 # SERTİFİKATLAR SHEET
 # =========================================================
@@ -4855,7 +4906,9 @@ def cabinet():
 
         sheet = get_sheet()
 
-        values = sheet.get_all_records()
+        values = read_sheet_as_dicts(
+            sheet
+        )
 
         for row in values:
 
@@ -5316,7 +5369,9 @@ def admin():
 
         sheet = get_sheet()
 
-        values = sheet.get_all_records()
+        values = read_sheet_as_dicts(
+            sheet
+        )
 
     except Exception as e:
 
@@ -5333,7 +5388,9 @@ def admin():
 
         codes_sheet = get_codes_sheet()
 
-        codes = codes_sheet.get_all_records()
+        codes = read_sheet_as_dicts(
+            codes_sheet
+        )
 
     except Exception as e:
 
@@ -5348,8 +5405,8 @@ def admin():
 
         certificates_sheet = get_certificates_sheet()
 
-        certificates = (
-            certificates_sheet.get_all_records()
+        certificates = read_sheet_as_dicts(
+            certificates_sheet
         )
 
     except Exception as e:
@@ -5365,8 +5422,8 @@ def admin():
 
         users_sheet = get_users_sheet()
 
-        users = (
-            users_sheet.get_all_records()
+        users = read_sheet_as_dicts(
+            users_sheet
         )
 
     except Exception as e:
@@ -5801,7 +5858,9 @@ def admin_export():
 
         sheet = get_sheet()
 
-        results = sheet.get_all_records()
+        results = read_sheet_as_dicts(
+            sheet
+        )
 
     except Exception as e:
 
