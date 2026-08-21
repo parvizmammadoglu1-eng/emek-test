@@ -3184,27 +3184,46 @@ def reset_password():
 # HOME
 # =========================================================
 
-# =========================================================
-# HOME
-# =========================================================
-
 @app.route("/", methods=["GET", "POST"])
 def home():
+
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    logged_in_name = session.get("user_name", "") 
+    # Burada user_name yox, account_name istifadə etmək daha düzgündür
+    logged_in_name = session.get(
+        "account_name",
+        ""
+    ).strip()
 
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        
+
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
         if not name:
             name = logged_in_name
 
-        access_code = request.form.get("access_code", "").strip()
-        selected_section = normalize_section(request.form.get("section", "").strip())
+        access_code = request.form.get(
+            "access_code",
+            ""
+        ).strip()
+
+        selected_section = normalize_section(
+            request.form.get(
+                "section",
+                ""
+            ).strip()
+        )
+
+        # =========================================
+        # AD VƏ SOYAD YOXLAMASI
+        # =========================================
 
         if not name:
+
             return render_template(
                 "home.html",
                 error="Ad və soyad daxil edin.",
@@ -3215,7 +3234,12 @@ def home():
                 user_name=logged_in_name
             )
 
+        # =========================================
+        # BÖLMƏ YOXLAMASI
+        # =========================================
+
         if selected_section not in SECTIONS:
+
             return render_template(
                 "home.html",
                 error="Bölmə seçin.",
@@ -3226,7 +3250,12 @@ def home():
                 user_name=logged_in_name
             )
 
+        # =========================================
+        # GİRİŞ KODU YOXLAMASI
+        # =========================================
+
         if not access_code:
+
             return render_template(
                 "home.html",
                 error="Giriş kodunu daxil edin.",
@@ -3237,9 +3266,16 @@ def home():
                 user_name=logged_in_name
             )
 
-        section_questions = load_questions(selected_section)
+        # =========================================
+        # SUALLARI YOXLAYIRIQ
+        # =========================================
+
+        section_questions = load_questions(
+            selected_section
+        )
 
         if not section_questions:
+
             return render_template(
                 "home.html",
                 error=f"{selected_section} üzrə hazırda sual mövcud deyil.",
@@ -3250,6 +3286,10 @@ def home():
                 user_name=logged_in_name
             )
 
+        # =========================================
+        # GİRİŞ KODUNU YOXLAYIRIQ
+        # =========================================
+
         code_valid, error_message = use_access_code(
             access_code,
             selected_section,
@@ -3257,6 +3297,7 @@ def home():
         )
 
         if not code_valid:
+
             return render_template(
                 "home.html",
                 error=error_message,
@@ -3267,16 +3308,9 @@ def home():
                 user_name=logged_in_name
             )
 
-    return render_template(
-        "home.html",
-        sections=SECTIONS,
-        name=logged_in_name,
-        user_name=logged_in_name
-    )
-
-        # =================================================
+        # =========================================
         # HESAB MƏLUMATLARINI QORU
-        # =================================================
+        # =========================================
 
         account_user_id = session.get(
             "user_id"
@@ -3294,36 +3328,30 @@ def home():
             "account_name"
         )
 
+        # =========================================
+        # İMTAHAN SESSION-UNU TƏMİZLƏ
+        # =========================================
+
         session.clear()
 
-        # =================================================
+        # =========================================
         # HESAB MƏLUMATLARINI GERİ QAYTAR
-        # =================================================
+        # =========================================
 
         if account_user_id:
 
-            session["user_id"] = (
-                account_user_id
-            )
+            session["user_id"] = account_user_id
+            session["username"] = account_username
+            session["email"] = account_email
+            session["account_name"] = account_name
 
-            session["username"] = (
-                account_username
-            )
-
-            session["email"] = (
-                account_email
-            )
-
-            session["account_name"] = (
-                account_name
-            )
+        # =========================================
+        # İMTAHAN MƏLUMATLARI
+        # =========================================
 
         session["name"] = name
-
         session["access_code"] = access_code
-
         session["section"] = selected_section
-
         session["answers"] = {}
 
         session["exam_finished"] = False
@@ -3338,6 +3366,10 @@ def home():
 
         session.modified = True
 
+        # =========================================
+        # İMTAHANA KEÇ
+        # =========================================
+
         return redirect(
             url_for(
                 "question",
@@ -3345,12 +3377,17 @@ def home():
             )
         )
 
+    # =========================================
+    # NORMAL SƏHİFƏ AÇILIŞI
+    # =========================================
+
     return render_template(
         "home.html",
         sections=SECTIONS,
-        selected_section=""
+        name=logged_in_name,
+        selected_section="",
+        user_name=logged_in_name
     )
-
 
 # =========================================================
 # QUESTION
