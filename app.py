@@ -626,89 +626,25 @@ def login_user(
 # E-MAIL SETTINGS
 # =========================================================
 
-SMTP_HOST = os.environ.get(
-    "SMTP_HOST",
-    "smtp.gmail.com"
-)
+import os
+import resend
 
-SMTP_PORT = int(
-    os.environ.get(
-        "SMTP_PORT",
-        "587"
-    )
-)
-
-SMTP_USERNAME = os.environ.get(
-    "SMTP_USERNAME",
-    ""
-)
-
-SMTP_PASSWORD = os.environ.get(
-    "SMTP_PASSWORD",
-    ""
-)
-
-SMTP_FROM_EMAIL = os.environ.get(
-    "SMTP_FROM_EMAIL",
-    ""
-)
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 
-def send_email(
-    recipient,
-    subject,
-    body
-):
-
-    if not SMTP_USERNAME or not SMTP_PASSWORD:
-
-        raise RuntimeError(
-            "SMTP məlumatları Render Environment Variables "
-            "bölməsində yoxdur."
-        )
-
-    sender = (
-        SMTP_FROM_EMAIL
-        or
-        SMTP_USERNAME
-    )
-
-    message = MIMEMultipart()
-
-    message["From"] = sender
-
-    message["To"] = recipient
-
-    message["Subject"] = subject
-
-    message.attach(
-        MIMEText(
-            body,
-            "plain",
-            "utf-8"
-        )
-    )
-
-    with smtplib.SMTP(
-        SMTP_HOST,
-        SMTP_PORT,
-        timeout=30
-    ) as server:
-
-        server.starttls()
-
-        server.login(
-            SMTP_USERNAME,
-            SMTP_PASSWORD
-        )
-
-        server.sendmail(
-            sender,
-            recipient,
-            message.as_string()
-        )
-
+def send_email(recipient, subject, body):
+  try:
+    params = {
+        "from": "onboarding@resend.dev",
+        "to": [recipient],
+        "subject": subject,
+        "html": body,
+    }
+    response = resend.Emails.send(params)
     return True
+  except Exception as e:
+    print("RESEND ERROR:", str(e))
+    raise e
 
 
 # =========================================================
