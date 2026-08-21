@@ -746,13 +746,21 @@ def verify_reset_code(
         return False
 
     try:
-        # datetime.strptime ilə mətni oxuyub birbaşa Bakı vaxtı zonasına uyğunlaşdırırıq
-        expiry = datetime.strptime(
-            expiry_text,
-            "%d.%m.%Y %H:%M:%S"
-        ).replace(
-            tzinfo=ZoneInfo("Asia/Baku")
-        )
+        # Əvvəlcə saniyəli formatı yoxlayırıq, alınmasa saniyəsiz formatı oxuyuruq
+        try:
+            expiry = datetime.strptime(
+                expiry_text,
+                "%d.%m.%Y %H:%M:%S"
+            ).replace(
+                tzinfo=ZoneInfo("Asia/Baku")
+            )
+        except ValueError:
+            expiry = datetime.strptime(
+                expiry_text,
+                "%d.%m.%Y %H:%M"
+            ).replace(
+                tzinfo=ZoneInfo("Asia/Baku")
+            )
 
     except Exception as e:
 
