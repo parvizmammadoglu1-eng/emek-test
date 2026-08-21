@@ -2841,43 +2841,25 @@ bu e-maili nəzərə almayın.
 Əmək Məcəlləsi test sistemi
 """
 
-            send_email(
-                recipient=user["email"],
-                subject="Şifrə yeniləmə təsdiq kodu",
-                body=email_body
-            )
+            import os
+import resend
 
-            session["reset_user_id"] = user["user_id"]
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
-            session["reset_email"] = user["email"]
 
-            session.modified = True
-
-            return redirect(
-                url_for("verify_reset")
-            )
-
-        except Exception as e:
-
-            print(
-                "SEND RESET EMAIL ERROR:",
-                str(e)
-            )
-
-            return render_template_string(
-                FORGOT_TEMPLATE,
-                style=ACCOUNT_BASE_STYLE,
-                error=(
-                    "Təsdiq kodu göndərilərkən xəta baş verdi. "
-                    "Resend API açarını yoxlayın."
-                ),
-                email=email
-            )
-
-    return render_template_string(
-        FORGOT_TEMPLATE,
-        style=ACCOUNT_BASE_STYLE
-    )
+def send_email(recipient, subject, body):
+  try:
+    params = {
+        "from": "onboarding@resend.dev",
+        "to": [recipient],
+        "subject": subject,
+        "html": body,
+    }
+    response = resend.Emails.send(params)
+    return True
+  except Exception as e:
+    print("RESEND ERROR:", str(e))
+    raise e
 
 
 # =========================================================
