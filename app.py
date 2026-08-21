@@ -5761,8 +5761,6 @@ def admin_export():
     worksheet.title = "Test nəticələri"
 
     headers = [
-
-        RESULTS_HEADERS = [
     "№",
     "İstifadəçi ID",
     "Ad və soyad",
@@ -5778,8 +5776,6 @@ def admin_export():
     "Bitmə vaxtı",
     "Sertifikat nömrəsi"
 ]
-
-    ]
 
     header_fill = PatternFill(
         fill_type="solid",
