@@ -626,7 +626,6 @@ def login_user(
 # E-MAIL SETTINGS
 # =========================================================
 
-import os
 import resend
 
 resend.api_key = os.environ.get("RESEND_API_KEY")
@@ -1734,20 +1733,119 @@ def get_google_client():
 # =========================================================
 # NƏTİCƏLƏR SHEET
 # =========================================================
+#
+# DÜZƏLİŞ: "İstifadəçi ID" sütunu əlavə olundu. Bu sütun
+# olmadığı üçün /cabinet səhifəsi heç vaxt nəticələri tapa
+# bilmirdi (aşağıdakı cabinet() funksiyasına bax).
+# =========================================================
+
+RESULTS_HEADERS = [
+
+    "№",
+    "İstifadəçi ID",
+    "Ad və soyad",
+    "Bölmə",
+    "Düzgün cavab",
+    "Ümumi sual",
+    "Səhv cavab",
+    "Nəticə",
+    "Tarix",
+    "Status",
+    "Müddət",
+    "Başlama vaxtı",
+    "Bitmə vaxtı",
+    "Sertifikat №"
+
+]
+
 
 def get_sheet():
+
     client = get_google_client()
-    spreadsheet = client.open(GOOGLE_SHEET_NAME)
+
+    spreadsheet = client.open(
+        GOOGLE_SHEET_NAME
+    )
+
     try:
-        return spreadsheet.worksheet("Nəticələr")
+
+        sheet = spreadsheet.worksheet(
+            "Nəticələr"
+        )
+
     except gspread.WorksheetNotFound:
-        sheet = spreadsheet.add_worksheet(title="Nəticələr", rows=1000, cols=13)
-        sheet.append_row([
-            "№", "Ad və soyad", "Bölmə", "Düzgün cavab", "Ümumi sual",
-            "Səhv cavab", "Nəticə", "Tarix", "Status", "Müddət",
-            "Başlama vaxtı", "Bitmə vaxtı", "Sertifikat №"
-        ])
-        return sheet
+
+        sheet = spreadsheet.add_worksheet(
+            title="Nəticələr",
+            rows=1000,
+            cols=len(RESULTS_HEADERS)
+        )
+
+    headers = sheet.row_values(1)
+
+    if not headers:
+
+        sheet.update(
+            "A1:N1",
+            [RESULTS_HEADERS]
+        )
+
+    else:
+
+        changed = False
+
+        for header in RESULTS_HEADERS:
+
+            if header not in headers:
+
+                headers.append(header)
+
+                changed = True
+
+        if changed:
+
+            sheet.resize(
+                rows=max(
+                    sheet.row_count,
+                    1000
+                ),
+                cols=max(
+                    sheet.col_count,
+                    len(headers)
+                )
+            )
+
+            sheet.update(
+                "1:1",
+                [headers]
+            )
+
+    return sheet
+
+
+def append_result_row(sheet, data):
+    """
+    DÜZƏLİŞ: sətri sabit indekslər əvəzinə, sheet-in HAZIRKI
+    başlıq sırasına (sheet.row_values(1)) əsasən qurur.
+    Beləliklə sütunların sırası hər hansı səbəbdən (köhnə
+    fayl, yeni sütun əlavəsi və s.) fərqli olsa belə, hər
+    dəyər öz sütununa düşür və məlumat "yoxa çıxmır".
+    """
+
+    current_headers = sheet.row_values(1)
+
+    if not current_headers:
+        current_headers = RESULTS_HEADERS
+
+    row = [
+        data.get(header, "")
+        for header in current_headers
+    ]
+
+    sheet.append_row(
+        row,
+        value_input_option="USER_ENTERED"
+    )
 
 
 # =========================================================
@@ -1774,14 +1872,44 @@ CERTIFICATES_HEADERS = [
 
 
 def get_certificates_sheet():
+
     client = get_google_client()
-    spreadsheet = client.open(GOOGLE_SHEET_NAME)
+
+    spreadsheet = client.open(
+        GOOGLE_SHEET_NAME
+    )
+
     try:
-        return spreadsheet.worksheet(CERTIFICATES_SHEET_NAME)
+
+        sheet = spreadsheet.worksheet(
+            CERTIFICATES_SHEET_NAME
+        )
+
     except gspread.WorksheetNotFound:
-        sheet = spreadsheet.add_worksheet(title=CERTIFICATES_SHEET_NAME, rows=2000, cols=len(CERTIFICATES_HEADERS))
-        sheet.append_row(CERTIFICATES_HEADERS)
-        return sheet
+
+        sheet = spreadsheet.add_worksheet(
+            title=CERTIFICATES_SHEET_NAME,
+            rows=2000,
+            cols=len(CERTIFICATES_HEADERS)
+        )
+
+        sheet.update(
+            "A1:K1",
+            [CERTIFICATES_HEADERS]
+        )
+
+    else:
+
+        headers = sheet.row_values(1)
+
+        if not headers:
+
+            sheet.update(
+                "A1:K1",
+                [CERTIFICATES_HEADERS]
+            )
+
+    return sheet
 
 
 # =========================================================
@@ -1827,7 +1955,7 @@ def save_certificate(
         sheet = get_certificates_sheet()
 
         row_data = [
-            f"N-{int(now_datetime.timestamp() * 1000000)}",
+            certificate_number,
             name,
             section,
             correct,
@@ -3643,31 +3771,49 @@ def finish():
     certificate_number = generate_certificate_number()
 
     # =====================================================
+    # HESABIN İSTİFADƏÇİ ID-Sİ
+    # =====================================================
+    #
+    # DÜZƏLİŞ: bu dəyər əvvəllər sheet-ə yazılan sətirdə heç
+    # göndərilmirdi, ona görə də /cabinet heç vaxt bu
+    # istifadəçiyə aid nəticələri tapa bilmirdi.
+    # =====================================================
+
+    account_user_id_for_result = session.get(
+        "user_id",
+        ""
+    )
+
+    # =====================================================
     # NƏTİCƏLƏR SHEET
     # =====================================================
 
     try:
+
         sheet = get_sheet()
 
-        row_data = [
-            certificate_number,
-            name,
-            selected_section,
-            correct,
-            total,
-            wrong,
-            f"{percent}%",
-            created_at,
-            status,
-            duration_text,
-            start_time_text,
-            end_time_text,
-            certificate_number
-        ]
+        result_data = {
 
-        sheet.append_row(
-            row_data,
-            value_input_option="USER_ENTERED"
+            "№": certificate_number,
+            "İstifadəçi ID": account_user_id_for_result,
+            "Ad və soyad": name,
+            "Bölmə": selected_section,
+            "Düzgün cavab": correct,
+            "Ümumi sual": total,
+            "Səhv cavab": wrong,
+            "Nəticə": f"{percent}%",
+            "Tarix": created_at,
+            "Status": status,
+            "Müddət": duration_text,
+            "Başlama vaxtı": start_time_text,
+            "Bitmə vaxtı": end_time_text,
+            "Sertifikat №": certificate_number
+
+        }
+
+        append_result_row(
+            sheet,
+            result_data
         )
 
         print(
@@ -5673,21 +5819,21 @@ def admin_export():
     worksheet.title = "Test nəticələri"
 
     headers = [
-    "№",
-    "İstifadəçi ID",
-    "Ad və soyad",
-    "Bölmə",
-    "Düzgün",
-    "Ümumi",
-    "Səhv",
-    "Faiz",
-    "Tarix",
-    "Status",
-    "Müddət",
-    "Başlama vaxtı",
-    "Bitmə vaxtı",
-    "Sertifikat nömrəsi"
-]
+        "№",
+        "İstifadəçi ID",
+        "Ad və soyad",
+        "Bölmə",
+        "Düzgün",
+        "Ümumi",
+        "Səhv",
+        "Faiz",
+        "Tarix",
+        "Status",
+        "Müddət",
+        "Başlama vaxtı",
+        "Bitmə vaxtı",
+        "Sertifikat nömrəsi"
+    ]
 
     header_fill = PatternFill(
         fill_type="solid",
@@ -5733,11 +5879,18 @@ def admin_export():
         2
     ):
 
+        # DÜZƏLİŞ: "İstifadəçi ID" dəyəri əlavə olundu ki,
+        # sütunlar başlıqla düzgün üst-üstə düşsün.
         values = [
 
             result.get(
                 "№",
                 row_number - 1
+            ),
+
+            result.get(
+                "İstifadəçi ID",
+                ""
             ),
 
             result.get(
@@ -5822,18 +5975,19 @@ def admin_export():
     widths = {
 
         "A": 8,
-        "B": 30,
-        "C": 55,
-        "D": 18,
-        "E": 18,
+        "B": 20,
+        "C": 30,
+        "D": 55,
+        "E": 15,
         "F": 15,
-        "G": 15,
-        "H": 25,
-        "I": 30,
-        "J": 18,
-        "K": 25,
-        "L": 25,
-        "M": 22
+        "G": 12,
+        "H": 12,
+        "I": 22,
+        "J": 30,
+        "K": 15,
+        "L": 22,
+        "M": 22,
+        "N": 22
 
     }
 
