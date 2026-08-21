@@ -59,6 +59,60 @@ ADMIN_PASSWORD = os.environ.get(
 
 GOOGLE_SHEET_NAME = "Emek Test 2026"
 
+# =========================================================
+# İSTİFADƏÇİLƏR SHEET
+# =========================================================
+
+USERS_SHEET_NAME = "İstifadəçilər"
+
+USERS_HEADERS = [
+    "İstifadəçi adı",
+    "E-mail",
+    "Şifrə hash",
+    "Ad və soyad",
+    "Qeydiyyat tarixi"
+]
+
+
+def get_users_sheet():
+
+    client = get_google_client()
+
+    spreadsheet = client.open(
+        GOOGLE_SHEET_NAME
+    )
+
+    try:
+
+        sheet = spreadsheet.worksheet(
+            USERS_SHEET_NAME
+        )
+
+    except gspread.WorksheetNotFound:
+
+        sheet = spreadsheet.add_worksheet(
+            title=USERS_SHEET_NAME,
+            rows=2000,
+            cols=5
+        )
+
+        sheet.update(
+            "A1:E1",
+            [USERS_HEADERS]
+        )
+
+    else:
+
+        headers = sheet.row_values(1)
+
+        if not headers:
+
+            sheet.update(
+                "A1:E1",
+                [USERS_HEADERS]
+            )
+
+    return sheet
 
 # =========================================================
 # BÖLMƏLƏR
