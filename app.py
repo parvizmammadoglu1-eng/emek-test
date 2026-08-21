@@ -3774,25 +3774,27 @@ def finish():
     number = len(all_values)
 
     user_id = str(
-        session.get("user_id", "")
-    ).strip()
+    session.get("user_id", "")
+).strip()
 
-    row_data = [
-        number,
-        user_id,
-        name,
-        selected_section,
-        correct,
-        total,
-        wrong,
-        f"{percent}%",
-        created_at,
-        status,
-        duration_text,
-        start_time_text,
-        end_time_text,
-        certificate_number
-    ]
+print("DEBUG USER ID:", user_id)
+
+row_data = [
+    number,
+    user_id,
+    name,
+    selected_section,
+    correct,
+    total,
+    wrong,
+    f"{percent}%",
+    created_at,
+    status,
+    duration_text,
+    start_time_text,
+    end_time_text,
+    certificate_number
+]
 
     sheet.append_row(
         row_data,
